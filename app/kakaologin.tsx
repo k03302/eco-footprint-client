@@ -1,6 +1,8 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { WebView } from 'react-native-webview';
+import { router } from 'expo-router'
+
 
 const REST_API_KEY = 'a0f7848c5e09023c767195b1b09be8a9';
 const REDIRECT_URI = 'http://localhost:8081';
@@ -14,6 +16,8 @@ const KaKaoLogin = () => {
         if (condition != -1) {
             var authorize_code = data.substring(condition + exp.length);
             console.log(authorize_code);
+
+            router.push('/(tabs)');
         };
     }
 

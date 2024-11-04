@@ -1,9 +1,12 @@
-import { Stack } from 'expo-router/stack';
+import { Stack } from 'expo-router';
 
-export default function Layout() {
+export default function TabLayout() {
     return (
-        <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
+        <>
+            <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="kakaologin" options={{ headerShown: false }} />
+            </Stack>
+        </>
     );
 }
