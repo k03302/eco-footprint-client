@@ -20,7 +20,12 @@
                 "foregroundImage": "./assets/images/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
-            "package": "com.jobgrass.client"
+            "package": "com.jobgrass.client",
+            "config": {
+                "googleMaps": {
+                    "apiKey": "AIzaSyAZFt0qhnszhyMTFMfYqrj7sS0-wKAUXUo"
+                }
+            }
         },
         "web": {
             "bundler": "metro",
@@ -34,6 +39,9 @@
             "eas": {
                 "projectId": "cfda5041-af8f-4cb3-91f0-6fc7ee643520"
             }
-        }
+        },
+        "plugins": [
+            "expo-build-properties"
+        ]
     }
 }
