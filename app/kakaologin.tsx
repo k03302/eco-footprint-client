@@ -18,7 +18,14 @@ const KaKaoLogin = () => {
             console.log(authorize_code);
 
             router.push('/(tabs)');
-        };
+            return;
+        }
+
+        var errorIdx = data.indexOf("error=");
+        if (errorIdx != -1) {
+            router.push('/');
+            return;
+        }
     }
 
     return (

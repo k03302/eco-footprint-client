@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Text, View, Pressable } from 'react-native';
-import { Picker } from "@react-native-picker/picker";
+import { router } from 'expo-router'
 
 import * as WebBrowser from 'expo-web-browser';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
@@ -17,9 +17,7 @@ export default function App() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <GoogleLoginButton />
             <KakaoLoginButton />
-            <Picker>
-                <Picker.Item label="User A" value="A" />
-            </Picker>
+            <Button title="pass" onPress={() => { router.push('/(tabs)') }} />
         </View>
     );
 }
