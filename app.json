@@ -42,6 +42,9 @@
         },
         "plugins": [
             "expo-build-properties"
-        ]
+        ],
+        "androidNavigationBar": {
+            "visible": "sticky-immersive"
+        }
     }
 }
