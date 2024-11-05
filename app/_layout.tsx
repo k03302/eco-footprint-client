@@ -6,13 +6,16 @@ export default function Layout() {
         <>
             <Stack>
                 <Stack.Screen
-                    name="index"
+                    name="(auth)/index"
                     options={{ headerShown: false }} />
                 <Stack.Screen
-                    name="map"
+                    name="(auth)/kakaologin"
                     options={{ headerShown: false }} />
                 <Stack.Screen
-                    name="kakaologin"
+                    name="(auth)/register"
+                    options={{ headerShown: false }} />
+                <Stack.Screen
+                    name="map/index"
                     options={{ headerShown: false }} />
             </Stack>
         </>

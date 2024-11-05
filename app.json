@@ -20,12 +20,7 @@
                 "foregroundImage": "./assets/images/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
-            "package": "com.jobgrass.client",
-            "config": {
-                "googleMaps": {
-                    "apiKey": "AIzaSyAZFt0qhnszhyMTFMfYqrj7sS0-wKAUXUo"
-                }
-            }
+            "package": "com.jobgrass.client"
         },
         "web": {
             "bundler": "metro",
@@ -41,10 +36,21 @@
             }
         },
         "plugins": [
-            "expo-build-properties"
+            "expo-build-properties",
+            "react-native-google-mobile-ads"
         ],
         "androidNavigationBar": {
             "visible": "sticky-immersive"
         }
+    },
+    "android": {
+        "config": {
+            "googleMaps": {
+                "apiKey": "AIzaSyAZFt0qhnszhyMTFMfYqrj7sS0-wKAUXUo"
+            }
+        }
+    },
+    "react-native-google-mobile-ads": {
+        "android_app_id": "ca-app-pub-5756122103903893~4492218932"
     }
 }
