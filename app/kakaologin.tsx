@@ -17,7 +17,7 @@ const KaKaoLogin = () => {
             var authorize_code = data.substring(condition + exp.length);
             console.log(authorize_code);
 
-            router.push('/(tabs)');
+            router.push('/map');
             return;
         }
 

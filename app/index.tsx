@@ -17,7 +17,7 @@ export default function App() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <GoogleLoginButton />
             <KakaoLoginButton />
-            <Button title="pass" onPress={() => { router.push('/(tabs)') }} />
+            <Button title="pass" onPress={() => { router.push('/map') }} />
         </View>
     );
 }
