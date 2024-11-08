@@ -2,7 +2,7 @@ import { FileRepo } from "@/core/repository";
 import { FileData, FileInput } from "@/core/model";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-class FileJsonRepo implements FileRepo {
+class FileLocalRepo implements FileRepo {
     private prefix: string = 'file_';
 
     // Helper function to generate storage keys
@@ -65,4 +65,4 @@ class FileJsonRepo implements FileRepo {
     }
 }
 
-export default FileJsonRepo;
+export default FileLocalRepo;

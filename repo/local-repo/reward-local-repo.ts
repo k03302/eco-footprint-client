@@ -2,7 +2,7 @@ import { RewardRepo } from "@/core/repository";
 import { RewardItemMeta, RewardItem } from "@/core/model";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-class RewardJsonRepo implements RewardRepo {
+class RewardLocalRepo implements RewardRepo {
     private prefix: string = 'reward_';
 
     // Helper function to generate the storage key
@@ -74,4 +74,4 @@ class RewardJsonRepo implements RewardRepo {
     }
 }
 
-export default RewardJsonRepo;
+export default RewardLocalRepo;

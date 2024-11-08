@@ -2,7 +2,7 @@ import { UserRepo } from "@/core/repository";
 import { UserItem } from "@/core/model";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-class UserJsonRepo implements UserRepo {
+class UserLocalRepo implements UserRepo {
     private prefix: string = 'user_';
 
     // Helper function to generate the storage key
@@ -59,4 +59,4 @@ class UserJsonRepo implements UserRepo {
     }
 }
 
-export default UserJsonRepo;
+export default UserLocalRepo;

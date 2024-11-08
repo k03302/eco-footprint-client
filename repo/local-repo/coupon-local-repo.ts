@@ -2,7 +2,7 @@ import { CouponRepo } from "@/core/repository";
 import { CouponItem } from "@/core/model";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-class CouponJsonRepo implements CouponRepo {
+class CouponLocalRepo implements CouponRepo {
     private prefix: string = 'coupon_';
 
     // Helper function to generate the storage key
@@ -62,4 +62,4 @@ class CouponJsonRepo implements CouponRepo {
     }
 }
 
-export default CouponJsonRepo;
+export default CouponLocalRepo;

@@ -2,7 +2,7 @@ import { ChallengeRepo } from "@/core/repository";
 import { ChallengeItem, ChallengeItemMeta, UserItemMeta, ChallengeRecoordItem } from "@/core/model";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-class ChallengeJsonRepo implements ChallengeRepo {
+class ChallengeLocalRepo implements ChallengeRepo {
     private prefix: string = 'challenge_';
 
     // Helper function to generate the storage key
@@ -72,4 +72,4 @@ class ChallengeJsonRepo implements ChallengeRepo {
     }
 }
 
-export default ChallengeJsonRepo;
+export default ChallengeLocalRepo;
