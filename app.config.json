@@ -1,0 +1,47 @@
+{
+    "expo": {
+        "name": "client",
+        "slug": "client",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "scheme": "myapp",
+        "userInterfaceStyle": "automatic",
+        "splash": {
+            "image": "./assets/images/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.jobgrass.client"
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/adaptive-icon.png",
+                "backgroundColor": "#ffffff"
+            },
+            "package": "com.jobgrass.client"
+        },
+        "web": {
+            "bundler": "metro",
+            "output": "static",
+            "favicon": "./assets/images/favicon.png"
+        },
+        "experiments": {
+            "typedRoutes": true
+        },
+        "extra": {
+            "eas": {
+                "projectId": "cfda5041-af8f-4cb3-91f0-6fc7ee643520"
+            }
+        },
+        "plugins": [
+            "expo-build-properties",
+            "react-native-google-mobile-ads"
+        ],
+        "androidNavigationBar": {
+            "visible": "sticky-immersive"
+        }
+    }
+}
