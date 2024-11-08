@@ -1,7 +1,12 @@
 import React from "react";
+import { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router'
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 
 const REST_API_KEY = 'a0f7848c5e09023c767195b1b09be8a9';
@@ -9,24 +14,45 @@ const REDIRECT_URI = 'http://localhost:8081';
 const INJECTED_JAVASCRIPT = `window.ReactNativeWebView.postMessage('message from webView')`;
 
 const KaKaoLogin = () => {
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [idToken, setIdToken] = useState<string | null>(null);
 
-    function KakaoLoginWebView(data: string) {
-        const exp = "code=";
-        var condition = data.indexOf(exp);
-        if (condition != -1) {
-            var authorize_code = data.substring(condition + exp.length);
-            console.log(authorize_code);
 
-            router.push('/map');
-            return;
+    const getCode = (target: string) => {
+        const exp = 'code=';
+        const condition = target.indexOf(exp);
+        if (condition !== -1) {
+            const requestCode = target.substring(condition + exp.length);
+            console.log('access code: ', requestCode);
+            requestToken(requestCode);
         }
+    };
 
-        var errorIdx = data.indexOf("error=");
-        if (errorIdx != -1) {
-            router.push('/');
-            return;
-        }
-    }
+    const requestToken = async (authorize_code: string) => {
+        axios({
+            method: 'post',
+            url: 'https://kauth.kakao.com/oauth/token',
+            params: {
+                grant_type: 'authorization_code',
+                client_id: REST_API_KEY,
+                redirect_uri: REDIRECT_URI,
+                code: authorize_code
+            }
+        }).then((res) => {
+            setAccessToken(res.data.access_token);
+            setIdToken(res.data.access_token);
+            console.log("id token: ", idToken);
+            console.log("access token: ", accessToken);
+        }).catch(function (error) {
+            console.log('error', error);
+        })
+    };
+
+    useEffect(() => {
+        router.push('/map');
+    }, [idToken])
+
+
 
     return (
         <View style={Styles.container}>
@@ -39,7 +65,10 @@ const KaKaoLogin = () => {
                 }}
                 injectedJavaScript={INJECTED_JAVASCRIPT}
                 javaScriptEnabled
-                onMessage={event => { KakaoLoginWebView(event.nativeEvent["url"]); }}
+                onMessage={event => {
+                    const data = event.nativeEvent.url;
+                    getCode(data);
+                }}
             />
         </View>
     )
