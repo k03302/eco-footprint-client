@@ -5,7 +5,7 @@ export default function KakaoLoginButton() {
     return (
         <Button
             title="Login with Kakao"
-            onPress={() => router.push('kakaologin')}
+            onPress={() => router.push('/kakaologin')}
         />
     )
 }
