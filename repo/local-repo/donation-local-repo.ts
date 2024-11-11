@@ -2,7 +2,7 @@ import { DonationRepo } from "@/core/repository";
 import { DonationItem, DonationItemMeta, ItemState } from "@/core/model";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-class DonationJsonRepo implements DonationRepo {
+class DonationLocalRepo implements DonationRepo {
     private prefix: string = 'donation_';
 
     // Helper function to generate storage keys
@@ -69,4 +69,4 @@ class DonationJsonRepo implements DonationRepo {
     }
 }
 
-export default DonationJsonRepo;
+export default DonationLocalRepo;
