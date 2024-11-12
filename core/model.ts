@@ -61,7 +61,7 @@ export type FileData = {
 export type FileInput = {
     id: string;
     name: string;
-    file: FileList;
+    fileUri: string;
 }
 
 
@@ -73,7 +73,7 @@ export type UserItem = {
     currentPoints: number;
     chellengeList: ChallengeItemMeta[];
     couponList: CouponItemMeta[];
-    thumbnailId: string;
+    thumbnailId: string | null;
 }
 
 export type CouponItem = {

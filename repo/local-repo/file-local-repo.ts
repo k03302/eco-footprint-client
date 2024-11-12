@@ -1,6 +1,9 @@
 import { FileRepo } from "@/core/repository";
 import { FileData, FileInput } from "@/core/model";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+
+const filePath = FileSystem.documentDirectory + "image/";
 
 class FileLocalRepo implements FileRepo {
     private prefix: string = 'file_';
@@ -18,9 +21,14 @@ class FileLocalRepo implements FileRepo {
         const fileData: FileData = {
             id: file.id,
             name: file.name,
-            size: file.file[0].size,
-            contentType: file.file[0].type,
+            size: 0,
+            contentType: file.fileUri.split('.').pop() || "",
         };
+
+        await FileSystem.copyAsync({
+            from: file.fileUri,
+            to: filePath + file.id,
+        });
 
         // Save the file metadata in AsyncStorage
         await AsyncStorage.setItem(key, JSON.stringify(fileData));
@@ -40,9 +48,15 @@ class FileLocalRepo implements FileRepo {
         const updatedFileData: FileData = {
             id: file.id,
             name: file.name,
-            size: file.file[0].size,
-            contentType: file.file[0].type,
+            size: 0,
+            contentType: file.fileUri.split('.').pop() || "",
         };
+
+        await FileSystem.copyAsync({
+            from: file.fileUri,
+            to: filePath + file.id,
+        });
+
 
         await AsyncStorage.setItem(key, JSON.stringify(updatedFileData));
         return updatedFileData;
@@ -63,6 +77,10 @@ class FileLocalRepo implements FileRepo {
         // Return the deleted file data
         return JSON.parse(existingFileString) as FileData;
     }
+}
+
+export function getFileUri(fileId: string) {
+    return filePath + fileId;
 }
 
 export default FileLocalRepo;
