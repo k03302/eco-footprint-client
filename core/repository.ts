@@ -7,7 +7,7 @@ import {
 
 export interface UserRepo {
     createUser(userItem: UserItem): Promise<UserItem>
-    getUserInfo(userId: string): Promise<UserItem>
+    getUserInfo(userId: string): Promise<UserItem | null>
     updateUserInfo(userItem: UserItem): Promise<UserItem>
     deleteUser(userId: string): Promise<boolean>
 }
