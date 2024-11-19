@@ -4,30 +4,31 @@ import ViewAd from '@/components/ViewAd';
 
 export default function ViewAdModal({ showAdModal, setShowAdModal }: { showAdModal: boolean, setShowAdModal: React.Dispatch<React.SetStateAction<boolean>> }) {
     const [adWatchFinished, setAdWatchFinished] = useState<boolean>(false);
-    return (<View>
+    return (
         <Modal
             animationType="fade"
             visible={showAdModal}
             transparent={true}
-            onRequestClose={() => { setShowAdModal(false); }}>
-            <View style={styles.modalOverlay}>
-                {
-                    adWatchFinished ? (
-                        <>
-                            <Button title={"리워드 받기"} onPress={() => setShowAdModal(false)}></Button>
-                        </>
-                    ) : (
-                        <>
-                            <Button title={"건너뛰기"} onPress={() => setShowAdModal(false)}></Button>
-                            <ViewAd handleAdClose={() => { setAdWatchFinished(true); }}></ViewAd>
-                        </>
-                    )
+            onRequestClose={() => { setShowAdModal(false); }}
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <View style={styles.modalView}>
+                <View>
+                    {
+                        adWatchFinished ? (
+                            <>
+                                <Button title={"리워드 받기"} onPress={() => setShowAdModal(false)}></Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button title={"건너뛰기"} onPress={() => setShowAdModal(false)}></Button>
+                                <ViewAd handleAdClose={() => { setAdWatchFinished(true); }}></ViewAd>
+                            </>
+                        )
 
-                }
+                    }
+                </View>
             </View>
-
-        </Modal>
-    </View>)
+        </Modal>)
 }
 
 const styles = StyleSheet.create({
@@ -38,12 +39,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalView: {
-        width: '80%',
+        marginVertical: 100,
         backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
+        padding: 35,
         alignItems: 'center',
-        elevation: 10, // Shadow for Android
     },
     modalText: {
         fontSize: 18,

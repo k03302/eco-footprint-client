@@ -35,11 +35,16 @@ export default function UserIcon({ isMyIcon = true, userId, iconSize = UserIconS
         })();
     }, [userId]);
 
-    return (<TouchableOpacity style={styles.profilebutton}
-        onPress={onPress}>
-        <Image source={imageFileId ? require("@/assets/images/user.png")
+    return (<TouchableOpacity
+        onPress={onPress} style={styles.profilebutton}>
+        <Image source={imageFileId ? util.getFileSource(imageFileId)
             : require("@/assets/images/user.png")}
-            style={{ width: size, height: size, margin: 1 }} />
+            style={{
+                width: size,
+                height: size,
+                marginRight: 5,
+                borderRadius: size / 2
+            }} />
         {
             message ? <Text style={{ opacity: 0.9, fontSize: 16 }}>{message}</Text> : <></>
         }
@@ -49,7 +54,6 @@ export default function UserIcon({ isMyIcon = true, userId, iconSize = UserIconS
 const styles = StyleSheet.create({
 
     profilebutton: {
-        margin: 10,
         flexDirection: 'row',
         alignItems: 'center',
         width: 100,
@@ -57,5 +61,3 @@ const styles = StyleSheet.create({
     },
 
 });
-
-
