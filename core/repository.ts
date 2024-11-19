@@ -20,6 +20,7 @@ export interface CouponRepo {
 
 export interface ChallengeRepo {
     createChallenge(challengeItem: ChallengeItem): Promise<ChallengeItem>
+    getChallenge(challengeId: string): Promise<ChallengeItem>
     getAllChallenges(): Promise<ChallengeItemMeta[]>
     updateChallenge(challengeItem: ChallengeItem): Promise<ChallengeItem>
     deleteChallenge(challengeId: string): Promise<boolean>
@@ -29,11 +30,13 @@ export interface DonationRepo {
     getAllDonations(): Promise<DonationItemMeta[]>
     getDonation(donationId: string): Promise<DonationItem>
     updateDonation(donationItem: DonationItem): Promise<DonationItem>
+    createDonation(donationItem: DonationItem): Promise<DonationItem>
 }
 
 export interface RewardRepo {
     getAllRewards(): Promise<RewardItemMeta[]>
     getRewardInfo(rewardId: string): Promise<RewardItem>
+    addReward(rewardItem: RewardItem): Promise<RewardItem>
 }
 
 export interface FileRepo {
