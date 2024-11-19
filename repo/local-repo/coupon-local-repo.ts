@@ -22,8 +22,10 @@ class CouponLocalRepo implements CouponRepo {
 
     // Generate a new coupon for a user based on a reward
     async getNewCoupon(userId: string, rewardId: string): Promise<CouponItem> {
+        const newCouponId = `${userId}_${rewardId}_${Date.now()}`
+
         const newCoupon: CouponItem = {
-            id: `${userId}_${rewardId}_${Date.now()}`, // Unique ID using userId, rewardId, and timestamp
+            id: newCouponId, // Unique ID using userId, rewardId, and timestamp
             itemName: `Reward for ${rewardId}`,
             brandName: 'BrandX',
             thumbnailId: 'default_thumbnail',

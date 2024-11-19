@@ -19,6 +19,15 @@ class ChallengeLocalRepo implements ChallengeRepo {
         return challengeItem;
     }
 
+    async getChallenge(challengeId: string): Promise<ChallengeItem> {
+        const key = this.generateKey(challengeId);
+        const challengeString = await AsyncStorage.getItem(key);
+        if (!challengeString) {
+            throw new Error(`Challenge with ID ${challengeId} not found.`);
+        }
+        return JSON.parse(challengeString) as ChallengeItem;
+    }
+
     // Get all challenges from AsyncStorage
     async getAllChallenges(): Promise<ChallengeItemMeta[]> {
         const keys = await AsyncStorage.getAllKeys();

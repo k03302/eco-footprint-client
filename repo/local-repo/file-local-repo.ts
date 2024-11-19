@@ -15,6 +15,7 @@ class FileLocalRepo implements FileRepo {
 
     // Upload a new file to AsyncStorage
     async uploadFile(file: FileInput): Promise<FileData> {
+        console.log('uploadFile');
         const key = this.generateKey(file.id);
 
         // Prepare the file data
@@ -24,11 +25,15 @@ class FileLocalRepo implements FileRepo {
             size: 0,
             contentType: file.fileUri.split('.').pop() || "",
         };
-
-        await FileSystem.copyAsync({
-            from: file.fileUri,
-            to: filePath + file.id,
-        });
+        if (file.localLocation) {
+            await FileSystem.copyAsync({
+                from: file.fileUri,
+                to: filePath + file.id,
+            });
+            console.log(FileSystem.documentDirectory);
+        }
+        const fileInfo = await FileSystem.getInfoAsync(filePath + file.id);
+        console.log(fileInfo);
 
         // Save the file metadata in AsyncStorage
         await AsyncStorage.setItem(key, JSON.stringify(fileData));
@@ -79,8 +84,21 @@ class FileLocalRepo implements FileRepo {
     }
 }
 
-export function getFileUri(fileId: string) {
-    return filePath + fileId;
+export function getFileSource(fileId: string) {
+    if (bundledImageMap[fileId]) return bundledImageMap[fileId];
+    return {
+        uri: filePath + fileId
+    };
+}
+
+const bundledImageMap: { [key: string]: any } = {
+    donation1: require("@/assets/datas/donation1.png"),
+    donation2: require("@/assets/datas/donation2.png"),
+    recoord1: require("@/assets/datas/recoord1.png"),
+    recoord2: require("@/assets/datas/recoord2.png"),
+    recoord3: require("@/assets/datas/recoord3.png"),
+    reward1: require("@/assets/datas/reward1.png"),
+    reward2: require("@/assets/datas/reward2.png"),
 }
 
 export default FileLocalRepo;
