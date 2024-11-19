@@ -9,7 +9,7 @@ export type ChallengeItemMeta = {
 export type UserItemMeta = {
     id: string;
     name: string;
-    thumbnailId: string;
+    thumbnailId: string | null;
 }
 
 export type CouponItemMeta = {
@@ -23,6 +23,8 @@ export type CouponItemMeta = {
 export type ChallengeRecoordItem = {
     userId: string;
     recordId: string;
+    uploadDate: Date;
+    approved: boolean;
 }
 
 export enum ItemState {
@@ -62,6 +64,7 @@ export type FileInput = {
     id: string;
     name: string;
     fileUri: string;
+    localLocation?: boolean;
 }
 
 
@@ -89,6 +92,7 @@ export type CouponItem = {
 export type ChallengeItem = {
     id: string;
     name: string;
+    type: string;
     totalParticipants: number;
     currentParticipants: number;
     createdBy: string;
