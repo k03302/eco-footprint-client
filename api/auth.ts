@@ -14,7 +14,76 @@ enum LoginPlatformType {
     Test = 'test'
 }
 
-class LoginPlatform {
+interface LoginPlatform {
+    login(authCode: string): Promise<boolean>;
+    register(username: string, thumbnailUri: string | null): Promise<boolean>;
+    getUserInfo(): Promise<any>;
+    getUserId(): Promise<string | null>;
+    logout(): Promise<boolean>;
+    getAccessToken(): Promise<string | null>;
+    getRefreshToken(): Promise<string | null>;
+    getLoginPlatform(): Promise<string | null>;
+    isRegistered(): Promise<boolean>;
+    isLoggedIn(): Promise<boolean>;
+}
+
+
+class LoginPlatformWrapper implements LoginPlatform {
+    private loginPlatform: LoginPlatform;
+    private onLogin: (wrapper: LoginPlatformWrapper) => void;
+    private onLogout: (wrapper: LoginPlatformWrapper) => void;
+    private onRegister: (wrapper: LoginPlatformWrapper) => void;
+
+    constructor(loginPlatform: LoginPlatformAbstract,
+        onLogin: (wrapper: LoginPlatformWrapper) => void,
+        onLougout: (wrapper: LoginPlatformWrapper) => void,
+        onReigster: (wrapper: LoginPlatformWrapper) => void) {
+        this.loginPlatform = loginPlatform;
+        this.onLogin = onLogin;
+        this.onLogout = onLougout;
+        this.onRegister = onReigster;
+    }
+
+    async login(authCode: string): Promise<boolean> {
+        const result = await this.loginPlatform.login(authCode);
+        this.onLogin(this);
+        return result;
+    }
+    async register(username: string, thumbnailUri: string | null): Promise<boolean> {
+        const result = await this.loginPlatform.register(username, thumbnailUri);
+        this.onRegister(this);
+        return result;
+    }
+    async getUserInfo(): Promise<any> {
+        return await this.loginPlatform.getUserInfo();
+    }
+    async getUserId(): Promise<string | null> {
+        return await this.loginPlatform.getUserId();
+    }
+    async logout(): Promise<boolean> {
+        const result = await this.loginPlatform.logout();
+        this.onLogout(this);
+        return result;
+    }
+    async getAccessToken(): Promise<string | null> {
+        return await this.loginPlatform.getAccessToken();
+    }
+    async getRefreshToken(): Promise<string | null> {
+        return await this.loginPlatform.getRefreshToken();
+    }
+    async getLoginPlatform(): Promise<string | null> {
+        return await this.loginPlatform.getLoginPlatform();
+    }
+    async isRegistered(): Promise<boolean> {
+        return await this.loginPlatform.isRegistered();
+    }
+    async isLoggedIn(): Promise<boolean> {
+        return await this.loginPlatform.isLoggedIn();
+    }
+}
+
+
+class LoginPlatformAbstract implements LoginPlatform {
     private access_token_key: string;
     private refresh_token_key: string;
     private login_platform_type: LoginPlatformType;
@@ -28,27 +97,46 @@ class LoginPlatform {
     }
 
 
+
     async login(authCode: string): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
     async register(username: string, thumbnailUri: string | null): Promise<boolean> {
         try {
             const platformType = await this.getLoginPlatform();
+            console.log(platformType, this.login_platform_type);
             if (platformType !== this.login_platform_type) return false;
 
             const userId = await this.getUserId();
+            console.log(userId);
             if (!userId) return false;
 
-            /// register API
-            await repo.users.createUser({
-                id: userId,
-                name: username,
-                currentPoints: 0,
-                chellengeList: [],
-                couponList: [],
-                thumbnailId: thumbnailUri
-            });
-            /// register API
+            const fileId = userId + Date.now();
+            if (!thumbnailUri) {
+                await repo.users.createUser({
+                    id: userId,
+                    name: username,
+                    currentPoints: 0,
+                    chellengeList: [],
+                    couponList: [],
+                    thumbnailId: null
+                });
+            } else {
+                await repo.files.uploadFile({
+                    id: fileId,
+                    name: username + " thumbnail",
+                    fileUri: thumbnailUri
+                })
+
+                await repo.users.createUser({
+                    id: userId,
+                    name: username,
+                    currentPoints: 0,
+                    chellengeList: [],
+                    couponList: [],
+                    thumbnailId: fileId
+                });
+            }
 
         } catch (error) {
             console.error(error);
@@ -62,19 +150,6 @@ class LoginPlatform {
     async getUserId(): Promise<string | null> {
         throw new Error('Method not implemented.');
     }
-
-    async setToken(accessToken: string, refreshToken: string): Promise<boolean> {
-        try {
-            AsyncStorage.setItem(this.access_token_key, accessToken);
-            AsyncStorage.setItem(this.refresh_token_key, refreshToken);
-            AsyncStorage.setItem(LOGIN_PLATFORM_LOCAL, this.login_platform_type);
-        } catch (error) {
-            console.error(error);
-            return false;
-        }
-        return true;
-    }
-
     async logout(): Promise<boolean> {
         this.user_info_cache = null;
         try {
@@ -122,11 +197,28 @@ class LoginPlatform {
         }
         return true;
     }
+
+
+
+
+    async setToken(accessToken: string, refreshToken: string): Promise<boolean> {
+        try {
+            AsyncStorage.setItem(this.access_token_key, accessToken);
+            AsyncStorage.setItem(this.refresh_token_key, refreshToken);
+            AsyncStorage.setItem(LOGIN_PLATFORM_LOCAL, this.login_platform_type);
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+        return true;
+    }
 }
 
 
 
-class KakaoLogin extends LoginPlatform {
+
+
+class KakaoLogin extends LoginPlatformAbstract {
     async login(authCode: string): Promise<boolean> {
         try {
             ////// get token
@@ -155,10 +247,11 @@ class KakaoLogin extends LoginPlatform {
     }
 
     async getUserId() {
+        console.log(this.user_info_cache);
         if (this.user_info_cache) {
-            return this.user_info_cache.id;
+            return this.user_info_cache.userId;
         }
-        return (await this.getUserInfo()).id;
+        return (await this.getUserInfo()).userId;
     }
 
     async getUserInfo() {
@@ -192,7 +285,7 @@ class KakaoLogin extends LoginPlatform {
     }
 }
 
-class TestLogin extends LoginPlatform {
+class TestLogin extends LoginPlatformAbstract {
     async login(authCode: string) {
         try {
             this.setToken(authCode, authCode);
@@ -212,14 +305,27 @@ class TestLogin extends LoginPlatform {
 
 
 
+let loginPlatformCache: LoginPlatformWrapper | null = null;
 
+const onLogin = (wrapper: LoginPlatformWrapper) => {
+    loginPlatformCache = wrapper;
+}
+const onLogout = (wrapper: LoginPlatformWrapper) => {
+    loginPlatformCache = null;
+}
+const onReigster = (wrapper: LoginPlatformWrapper) => {
 
+}
+const kakao = new KakaoLogin('kakao_token_token', 'kakao_refresh_token', LoginPlatformType.Kakao);
+export const kakaoLogin = new LoginPlatformWrapper(kakao, onLogin, onLogout, onReigster);
 
-export const kakaoLogin = new KakaoLogin('kakao_token_token', 'kakao_refresh_token', LoginPlatformType.Kakao);
-export const testLogin = new TestLogin('test_access_token', 'test_refresh_token', LoginPlatformType.Test);
+const test = new TestLogin('test_access_token', 'test_refresh_token', LoginPlatformType.Test);
+export const testLogin = new LoginPlatformWrapper(test, onLogin, onLogout, onReigster);
 
-export async function getLoggedInPlatform(): Promise<LoginPlatform | null> {
-    const platforms = [kakaoLogin, testLogin];
+const platforms = [kakaoLogin, testLogin];
+
+export async function getLoggedInPlatform(): Promise<LoginPlatformWrapper | null> {
+    if (loginPlatformCache) return loginPlatformCache;
     for (const p of platforms) {
         if (await p.isLoggedIn()) {
             return p;
@@ -228,8 +334,7 @@ export async function getLoggedInPlatform(): Promise<LoginPlatform | null> {
     return null;
 }
 
-export async function getCachedPlatform(): Promise<LoginPlatform | null> {
-    const platforms = [kakaoLogin, testLogin];
+export async function getCachedPlatform(): Promise<LoginPlatformWrapper | null> {
     for (const p of platforms) {
         if (await p.isRegistered()) {
             return p;
