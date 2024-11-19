@@ -1,110 +1,133 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { Link } from 'expo-router';
+import { repo, util } from '@/api/main';
+import { RewardItemMeta } from '@/core/model';
 
 export default function ShopScreen() {
+    const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
+    const [cancelModalVisible, setCancelModalVisible] = useState<boolean>(false);
+    const [rewardList, setRewardList] = useState<RewardItemMeta[]>([]);
+    const [selectedReward, setSelectedReward] = useState<RewardItemMeta | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            setRewardList(await repo.rewards.getAllRewards());
+        })()
+    }, []);
+
+    useEffect(() => {
+        console.log(selectedReward);
+    }, [selectedReward]);
+
+
+
+    const onPressModalClose = () => {
+        setConfirmModalVisible(false);
+    }
+
+
     return (
         <View style={styles.container}>
             <Link href="/shop/coupons">
                 <View style={{ height: 55, backgroundColor: 'white' }}>
-                    <TouchableOpacity>
-                        <Image source={require("@/assets/images/couponbox_2.png")}
-                            style={[styles.couponboximage, { resizeMode: 'contain' }]} />
-                    </TouchableOpacity>
+                    <Image source={require("@/assets/images/couponbox_2.png")}
+                        style={[styles.couponboximage, { resizeMode: 'contain' }]} />
                 </View>
             </Link>
             <View style={{ flex: 9 }}>
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    <CouponComponent />
-                    <CouponComponent />
-                    <CouponComponent />
-                    <CouponComponent />
+                    {
+                        rewardList.length > 0 ? rewardList.map((rewardItem, index) => <RewardItemCard
+                            setModalVisible={setConfirmModalVisible} reward={rewardItem} setSelectedReward={setSelectedReward} key={index}
+                        >
+
+                        </RewardItemCard>) : <></>
+                    }
+
                 </ScrollView>
             </View>
+
+            <Modal
+                animationType="slide"
+                visible={confirmModalVisible}
+                transparent={true}>
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        {
+                            selectedReward ? <>
+                                <Image source={util.getFileSource(selectedReward.thumbnailId)}
+                                    style={[styles.image_coupon, { resizeMode: 'contain' }]} />
+                                <Text style={styles.text_brand_modal}>{selectedReward.brandName}</Text>
+                                <Text style={styles.text_product_modal}>{selectedReward.itemName}</Text>
+                                <View style={styles.price_container_modal}>
+                                    <Image source={require("@/assets/images/point.png")}
+                                        style={[styles.image_point_modal, { resizeMode: 'contain' }]} />
+                                    <Text style={styles.text_price_modal}>{selectedReward.price}</Text>
+                                </View>
+                                <Text style={{ fontSize: 17, marginTop: 20 }}>위 상품을 정말 구매하시겠습니까?</Text>
+                                <View style={{ flexDirection: 'row' }}>
+                                    <TouchableOpacity onPress={onPressModalClose}>
+                                        <Image source={require("@/assets/images/purchase.png")}
+                                            style={[styles.image_button, { resizeMode: 'contain' }]} />
+                                    </TouchableOpacity>
+                                    <Text>    </Text>
+                                    <TouchableOpacity onPress={onPressModalClose}>
+                                        <Image source={require("@/assets/images/cancel.png")}
+                                            style={[styles.image_button, { resizeMode: 'contain' }]} />
+                                    </TouchableOpacity>
+                                </View>
+                            </> : <></>
+                        }
+                    </View>
+                </View>
+            </Modal>
+            <Modal
+                visible={cancelModalVisible}
+                transparent={true}>
+                <View style={styles.modalView}>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20, }}>구매실패</Text>
+                    <Text style={{ fontSize: 15, marginTop: 10 }}>보유중인 포인트가 부족합니다.</Text>
+                </View>
+            </Modal>
         </View>
     );
 }
 
-const CouponComponent = () => {
-    const [isModalVisible, setisModalVisible] = useState<boolean>(false);
+const RewardItemCard = ({ setModalVisible, reward, setSelectedReward }:
+    {
+        setModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
+        reward: RewardItemMeta,
+        setSelectedReward: React.Dispatch<React.SetStateAction<RewardItemMeta | null>>
+    }
+) => {
+
 
     useEffect(() => {
     }, []);
 
     const onPressModalOpen = () => {
-        setisModalVisible(true);
+        setSelectedReward(reward);
+        setModalVisible(true);
     }
 
-    const onPressModalClose = () => {
-        setisModalVisible(false);
-    }
+
 
     return (
         <View style={styles.couponrowcontainer}>
             <TouchableOpacity onPress={onPressModalOpen}>
                 <View style={styles.box}>
-                    <Image source={require("@/assets/images/couponimage.png")}
+                    <Image source={util.getFileSource(reward.thumbnailId)}
                         style={[styles.image_product, { resizeMode: 'contain' }]} />
-                    <Text style={styles.text_brand}>스타벅스</Text>
-                    <Text style={styles.text_product}>아메리카노T</Text>
+                    <Text style={styles.text_brand}>{reward.brandName}</Text>
+                    <Text style={styles.text_product}>{reward.itemName}</Text>
                     <View style={styles.price_container}>
                         <Image source={require("@/assets/images/point.png")}
                             style={[styles.image_point, { resizeMode: 'contain' }]} />
-                        <Text style={styles.text_price}>3000</Text>
+                        <Text style={styles.text_price}>{reward.price}</Text>
                     </View>
                 </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={onPressModalOpen}>
-                <View style={styles.box}>
-                    <Image source={require("@/assets/images/couponimage.png")}
-                        style={[styles.image_product, { resizeMode: 'contain' }]} />
-                    <Text style={styles.text_brand}>스타벅스</Text>
-                    <Text style={styles.text_product}>아메리카노T</Text>
-                    <View style={styles.price_container}>
-                        <Image source={require("@/assets/images/point.png")}
-                            style={[styles.image_point, { resizeMode: 'contain' }]} />
-                        <Text style={styles.text_price}>3000</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-            <Modal
-                animationType="slide"
-                visible={isModalVisible}
-                transparent={true}>
-                <View style={styles.centeredView}>
-                    <View style={styles.modalView}>
-                        <Image source={require("@/assets/images/couponimage.png")}
-                            style={[styles.image_coupon, { resizeMode: 'contain' }]} />
-                        <Text style={styles.text_brand_modal}>스타벅스</Text>
-                        <Text style={styles.text_product_modal}>아메리카노T</Text>
-                        <View style={styles.price_container_modal}>
-                            <Image source={require("@/assets/images/point.png")}
-                                style={[styles.image_point_modal, { resizeMode: 'contain' }]} />
-                            <Text style={styles.text_price_modal}>3000</Text>
-                        </View>
-                        <Text style={{ fontSize: 17, marginTop: 20 }}>위 상품을 정말 구매하시겠습니까?</Text>
-                        <View style={{ flexDirection: 'row' }}>
-                            <TouchableOpacity onPress={onPressModalClose}>
-                                <Image source={require("@/assets/images/purchase.png")}
-                                    style={[styles.image_button, { resizeMode: 'contain' }]} />
-                            </TouchableOpacity>
-                            <Text>    </Text>
-                            <TouchableOpacity onPress={onPressModalClose}>
-                                <Image source={require("@/assets/images/cancel.png")}
-                                    style={[styles.image_button, { resizeMode: 'contain' }]} />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-            {/* <Modal
-        visible={isModalVisible}
-        transparent={true}>
-        <View style={styles.modalView}>
-          <Text style={{fontSize: 20, fontWeight: 'bold', marginTop: 20, }}>구매실패</Text>
-          <Text style={{fontSize: 15, marginTop: 10}}>보유중인 포인트가 부족합니다.</Text>
-        </View>
-      </Modal> */}
         </View>
     );
 }
@@ -128,7 +151,8 @@ const styles = StyleSheet.create({
         maxHeight: 280,
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        width: '50%'
     },
     image_product: {
         width: 150, height: 200, marginLeft: 15,

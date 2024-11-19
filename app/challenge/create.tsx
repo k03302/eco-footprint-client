@@ -1,118 +1,114 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { TouchableOpacity, Image, TextInput, Text, View, StyleSheet, Alert } from 'react-native';
+import { Link, router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
-import AsyncButton from '@/components/AsyncButton';
-import { router } from 'expo-router';
-import { createChallenge } from '@/api/user'
+import { createChallenge } from '@/api/challenge';
 
-export default function Screen() {
-    // State variables for form inputs
-    const [name, setName] = useState('');
-    const [selectedOption, setSelectedOption] = useState('');
-    const [description, setDescription] = useState('');
 
-    // Submit handler
+export default function ChallengeScreen() {
+    const [challengeName, setChallengeName] = useState<string>('');
+    const [challengeType, setChallengeType] = useState<string>('');
+    const [challengeDescription, setChallengeDescription] = useState<string>('');
+
     const handleSubmit = async () => {
-        if (name.trim() === '' || selectedOption === '' || description.trim() === '') {
+        const name = challengeName.trim();
+        const type = challengeType.trim();
+        const description = challengeDescription.trim();
+
+        if (name === '' || type === '' || description === '') {
             Alert.alert('챌린지에 필요한 모든 정보를 입력해주세요.');
             return;
         }
-        // const challengeItem = await createChallenge(name.trim(), selectedOption, description.trim());
-        // if (challengeItem) {
-        //     router.replace({ pathname: '/challenge/room', params: { id: challengeItem.id } });   
-        // } else {
-        //     Alert.alert('챌린지 생성에 실패했어요.');
-        //     router.replace('/challenge');
-        // }
+
+        const challengeItem = await createChallenge(name, type, description);
+        if (challengeItem) {
+            router.replace({ pathname: '/challenge/room/[id]', params: { id: challengeItem.id } });
+        } else {
+            Alert.alert('챌린지 생성에 실패했어요.');
+            router.replace('/challenge');
+        }
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.label}>챌린지 이름</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Enter your name"
-                value={name}
-                onChangeText={setName}
-            />
-
-            <Text style={styles.label}>챌린지 종류</Text>
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={selectedOption}
-                    onValueChange={(itemValue) => setSelectedOption(itemValue)}
-                >
-                    <Picker.Item label="" value="" />
-                    <Picker.Item label="텀블러 이용하기" value="option1" />
-                    <Picker.Item label="대중교통 이용하기" value="option2" />
-                    <Picker.Item label="쓰레기 줍기" value="option3" />
-                </Picker>
+        <View style={{ flex: 1, backgroundColor: 'white' }}>
+            <View style={{ flex: 9 }}>
+                <Text style={{ fontSize: 17, fontWeight: "bold", marginTop: 10, marginLeft: 15 }}>챌린지</Text>
+                <Text style={{ fontSize: 17, marginTop: 10, marginLeft: 15 }}>챌린지 이름</Text>
+                <View style={styles.container}>
+                    <TextInput
+                        onChangeText={(input) => { setChallengeName(input) }}
+                        value={challengeName}
+                        placeholder="챌린지 이름을 입력하세요."
+                        style={styles.namecontainer}
+                    />
+                </View>
+                <Text style={{ fontSize: 17, marginTop: 10, marginLeft: 15 }}>챌린지 종류</Text>
+                <View style={styles.pickercontainer}>
+                    <Picker
+                        selectedValue={challengeType}
+                        onValueChange={(input) => { setChallengeType(input) }}
+                    >
+                        <Picker.Item label="" value="" />
+                        <Picker.Item label="친환경 식단하기" value="친환경 식단하기" />
+                        <Picker.Item label="텀블러 이용하기" value="텀블러 이용하기" />
+                        <Picker.Item label="대중교통 이용하기" value="대중교통 이용하기" />
+                        <Picker.Item label="쓰레기 줍기" value="쓰레기 줍기" />
+                    </Picker>
+                </View>
+                <Text style={{ fontSize: 17, marginTop: 10, marginLeft: 15 }}>챌린지 설명</Text>
+                <View style={styles.container}>
+                    <TextInput
+                        editable
+                        multiline
+                        numberOfLines={20}
+                        maxLength={1000}
+                        onChangeText={(input) => { setChallengeDescription(input) }}
+                        value={challengeDescription}
+                        placeholder="챌린지 설명을 입력하세요."
+                        style={styles.descriptioncontainer}
+                    />
+                </View>
             </View>
+            <View style={{ flex: 1, alignItems: 'center' }}>
 
-            <Text style={styles.label}>챌린지 설명</Text>
-            <TextInput
-                style={styles.textArea}
-                placeholder="Enter description"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={5}
-            />
+                <TouchableOpacity onPress={handleSubmit}>
+                    <Image source={require("@/assets/images/makechallengebutton.png")}
+                        style={{ width: 265, height: 41, marginTop: 10, marginLeft: 3 }} />
+                </TouchableOpacity>
 
-            {/* Submit Button */}
-            <AsyncButton title={""} onPressAsync={handleSubmit}></AsyncButton>
+            </View>
         </View>
-    );
+    )
 }
 
+
 const styles = StyleSheet.create({
+
     container: {
-        flexGrow: 1,
-        padding: 20,
-        backgroundColor: '#f5f5f5',
+        paddingHorizontal: 16,
+        paddingTop: 16,
     },
-    label: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    input: {
-        height: 50,
-        borderColor: '#ddd',
+    namecontainer: {
+        height: 40,
+        borderColor: 'gray',
         borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        backgroundColor: '#fff',
-        marginBottom: 20,
+        paddingHorizontal: 8,
     },
-    pickerContainer: {
-        borderColor: '#ddd',
+    descriptioncontainer: {
+        height: 400,
+        borderColor: 'gray',
         borderWidth: 1,
-        borderRadius: 8,
+        paddingHorizontal: 8,
+    },
+    pickercontainer: {
+
+        borderWidth: 0.7,
         marginBottom: 20,
+
+        borderColor: 'gray',
         backgroundColor: '#fff',
-    },
-    textArea: {
-        height: 120,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        paddingTop: 10,
-        backgroundColor: '#fff',
-        textAlignVertical: 'top',
-        marginBottom: 20,
-    },
-    button: {
-        backgroundColor: '#3498db',
-        paddingVertical: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
+        paddingHorizontal: 8,
+        width: "80%",
+
     },
 });
