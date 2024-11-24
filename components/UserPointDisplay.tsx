@@ -1,23 +1,29 @@
-import { View, Image, StyleSheet, Text } from "react-native";
-import { getMyProfile } from '@/api/user';
+import { View, Image, StyleSheet, Text, Animated } from "react-native";
 import React, { useEffect, useState } from 'react';
-import PointDisplay, { PointDisplaySize } from "@/components/PointDisplay";
+import PointDisplay, { PointDisplaySizeLevel } from "@/components/PointDisplay";
 
 
-
-export default function UserPointDisplay({ displaySize }: { displaySize: PointDisplaySize }) {
+export function UserPointDisplay({ displaySizeLevel, }: { displaySizeLevel: PointDisplaySizeLevel }) {
 
     const [point, setPoint] = useState<number>(0);
+    // const profile = useProfileStore((state) => state.profile);
 
     useEffect(() => {
         (async () => {
-            const myProfile = await getMyProfile();
-            if (!myProfile) return;
-            setPoint(myProfile.currentPoints);
+            // const myProfile = await getMyProfile();
+            // if (!myProfile) return;
+            // setPoint(myProfile.currentPoints);
         })();
     }, []);
 
-    return <PointDisplay pointAmount={point} displaySize={displaySize} ></PointDisplay>
+    // useEffect(() => {
+    //     if (profile) {
+    //         setPoint(profile?.currentPoints);
+    //     }
+    //     console.log("profileCache", profile);
+    // }, [profile])
+
+    return <PointDisplay pointAmount={point} displaySizeLevel={displaySizeLevel} ></PointDisplay>
 }
 
 const styles = StyleSheet.create({

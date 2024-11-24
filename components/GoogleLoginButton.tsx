@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from 'react-native';
+import { Button, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import { ResponseType, makeRedirectUri } from 'expo-auth-session';
 
@@ -38,10 +38,17 @@ export default function GoogleLoginButton() {
         console.log(user);
     };
     return (
-        <Button
-            disabled={!googleRequest}
-            title="Login with Google"
-            onPress={() => googlePromptAsync()}
-        />
+        <TouchableOpacity onPress={() => googlePromptAsync()}>
+            <Image source={require("@/assets/images/google_login.png")}
+                style={styles.image_login_google} />
+        </TouchableOpacity>
     )
 }
+
+const styles = StyleSheet.create({
+    image_login_google: {
+        width: 252,
+        height: 54,
+        marginTop: 10
+    },
+})

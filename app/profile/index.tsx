@@ -1,46 +1,26 @@
 import { Button, View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
-import { getLoggedInPlatform } from '@/api/auth'
 import { useState } from 'react'
-import { router, Link } from 'expo-router'
+import { router } from 'expo-router'
+import UserIcon from '@/components/UserIcon';
+import { logout } from '@/utils/login';
 
 
 export default function ProfileScreen() {
     const logoutHandler = async () => {
-        const platform = await getLoggedInPlatform();
-        if (platform) {
-            platform.logout();
-        }
+
+        await logout();
         router.replace('/');
     }
 
     return (
         <View style={styles.container}>
             <View style={styles.row_profile}>
-                <Image source={require("@/assets/images/user.png")}
-                    style={[styles.image_profile, { resizeMode: 'contain' }]} />
-                <Text style={{ fontSize: 20, marginLeft: 10 }}>내이름</Text>
+                <UserIcon isMyIcon={true} showName={true}></UserIcon>
             </View>
 
             <Text style={{ fontSize: 20, marginLeft: 20 }}>관리</Text>
-            <TouchableOpacity>
-                <View style={styles.row}>
-                    <Image source={require("@/assets/images/mail.png")}
-                        style={[styles.image, { resizeMode: 'contain' }]} />
-                    <Text style={{ fontSize: 20, marginLeft: 5 }}>친구 초대</Text>
-                </View>
-            </TouchableOpacity>
 
-
-            <TouchableOpacity>
-                <View style={styles.row}>
-                    <Image source={require("@/assets/images/alarm.png")}
-                        style={[styles.image, { resizeMode: 'contain' }]} />
-                    <Text style={{ fontSize: 20, marginLeft: 5 }}>알림 설정</Text>
-                </View>
-            </TouchableOpacity>
-
-
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => { router.push('/shop/coupons') }}>
                 <View style={styles.row}>
                     <Image source={require("@/assets/images/couponbox.png")}
                         style={[styles.image, { resizeMode: 'contain' }]} />
@@ -50,7 +30,7 @@ export default function ProfileScreen() {
 
 
             <Text style={{ fontSize: 20, marginLeft: 20, marginTop: 20 }}>서비스</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => { router.push('/profile/version') }}>
                 <View style={styles.row}>
                     <Image source={require("@/assets/images/world.png")}
                         style={[styles.image, { resizeMode: 'contain' }]} />

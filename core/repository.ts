@@ -7,14 +7,14 @@ import {
 
 export interface UserRepo {
     createUser(userItem: UserItem): Promise<UserItem>
-    getUserInfo(userId: string): Promise<UserItem | null>
+    getUserInfo(userId: string): Promise<UserItem>
     updateUserInfo(userItem: UserItem): Promise<UserItem>
     deleteUser(userId: string): Promise<boolean>
 }
 
 export interface CouponRepo {
     getCoupon(couponId: string): Promise<CouponItem>
-    getNewCoupon(userId: string, rewardId: string): Promise<CouponItem>
+    getNewCoupon(rewardId: string): Promise<CouponItem>
     updateCoupon(couponItem: CouponItem): Promise<CouponItem>
 }
 
@@ -36,11 +36,11 @@ export interface DonationRepo {
 export interface RewardRepo {
     getAllRewards(): Promise<RewardItemMeta[]>
     getRewardInfo(rewardId: string): Promise<RewardItem>
-    addReward(rewardItem: RewardItem): Promise<RewardItem>
 }
 
 export interface FileRepo {
     uploadFile(file: FileInput): Promise<FileData>
-    updateFile(file: FileInput): Promise<FileData>
-    deleteFile(fileId: FileInput): Promise<FileData>
+    getFile(fileId: string): Promise<FileData>
+    updateFile(file: FileData): Promise<FileData>
+    deleteFile(fileId: string): Promise<boolean>
 }

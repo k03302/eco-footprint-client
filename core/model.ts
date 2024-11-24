@@ -8,8 +8,8 @@ export type ChallengeItemMeta = {
 
 export type UserItemMeta = {
     id: string;
-    name: string;
-    thumbnailId: string | null;
+    username: string;
+    thumbnailId: string;
 }
 
 export type CouponItemMeta = {
@@ -55,16 +55,18 @@ export type RewardItemMeta = {
 
 export type FileData = {
     id: string;
+    owner: string;
     name: string;
     size: number;
+    date: string;
     contentType: string;
+    file: string;
 }
 
 export type FileInput = {
     id: string;
     name: string;
-    fileUri: string;
-    localLocation?: boolean;
+    file: FormData;
 }
 
 
@@ -72,11 +74,11 @@ export type FileInput = {
 
 export type UserItem = {
     id: string;
-    name: string;
-    currentPoints: number;
-    chellengeList: ChallengeItemMeta[];
+    username: string;
+    point: number;
+    challengeList: ChallengeItemMeta[];
     couponList: CouponItemMeta[];
-    thumbnailId: string | null;
+    thumbnailId: string;
 }
 
 export type CouponItem = {
@@ -85,6 +87,7 @@ export type CouponItem = {
     brandName: string;
     thumbnailId: string;
     expiredAt: string;
+    description: string;
     couponId: string;
 }
 
@@ -93,6 +96,8 @@ export type ChallengeItem = {
     id: string;
     name: string;
     type: string;
+    currentProgress: number;
+    targetProgress: number;
     totalParticipants: number;
     currentParticipants: number;
     createdBy: string;
@@ -128,3 +133,72 @@ export type RewardItem = {
     provider: string;
 }
 
+
+
+export const NO_USER: UserItem = {
+    id: "",
+    username: "",
+    point: 0,
+    challengeList: [],
+    couponList: [],
+    thumbnailId: ""
+}
+
+export const NO_COUPON: CouponItem = {
+    id: "",
+    itemName: "",
+    brandName: "",
+    thumbnailId: "",
+    expiredAt: "",
+    description: "",
+    couponId: ""
+}
+
+export const NO_CHALLENGE: ChallengeItem = {
+    id: "",
+    name: "",
+    type: "",
+    currentProgress: 0,
+    targetProgress: 0,
+    totalParticipants: 0,
+    currentParticipants: 0,
+    createdBy: "",
+    participants: [],
+    participantsRecord: [],
+    dateStart: new Date(),
+    dateEnd: new Date(),
+    description: ""
+}
+
+export const NO_REWARD: RewardItem = {
+    id: "",
+    itemName: "",
+    brandName: "",
+    itemType: "",
+    description: "",
+    price: 0,
+    imageId: "",
+    thumbnailId: "",
+    provider: ""
+}
+
+export const NO_DONATION: DonationItem = {
+    id: "",
+    name: "",
+    currentPoint: 0,
+    targetPoint: 0,
+    description: "",
+    participants: [],
+    thumbnailId: "",
+    state: 0
+}
+
+export const NO_FILE: FileData = {
+    id: "",
+    name: "",
+    size: 0,
+    contentType: "",
+    owner: "",
+    date: "",
+    file: ""
+}

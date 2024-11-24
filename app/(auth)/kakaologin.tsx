@@ -4,10 +4,7 @@ import { View, StyleSheet } from "react-native";
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router'
 import axios from 'axios';
-import { kakaoLogin } from '@/api/auth'
-
-
-
+import { login } from "@/utils/login";
 
 
 const REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!;
@@ -22,11 +19,23 @@ const KaKaoLogin = () => {
         const data = event.nativeEvent.url;
         const authCode = getAuthCode(data);
         if (!authCode) return;
-        await kakaoLogin.login(authCode);
-        if (await kakaoLogin.isRegistered()) {
-            router.replace('/map');
-        } else {
-            router.replace('/register');
+        try {
+            const res = await axios({
+                method: 'post',
+                url: 'https://kauth.kakao.com/oauth/token',
+                params: {
+                    grant_type: 'authorization_code',
+                    client_id: REST_API_KEY,
+                    redirect_uri: REDIRECT_URI,
+                    code: authCode
+                }
+            })
+
+            const { id_token } = res.data;
+            login({ idToken: id_token });
+        } catch (error) {
+            alert('로그인에 실패했습니다.');
+            router.replace('/');
         }
     }
 

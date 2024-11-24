@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Button, Text, View } from 'react-native';
-import { adService } from '@/api/ad';
+import { adService } from '@/service/ad';
 
 
 export default function ViewAd({ handleAdClose }: { handleAdClose?: () => void }) {

@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { Image, View, Text } from 'react-native';
+import { UserPointDisplay } from '@/components/UserPointDisplay';
 
 export default function Layout() {
     return (
@@ -37,11 +38,7 @@ export default function Layout() {
                     options={{
                         title: '리워드샵',
                         headerRight: () => (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
-                                <Image source={require("@/assets/images/point.png")}
-                                    style={{ width: 25, height: 25 }} />
-                                <Text style={{ fontSize: 15, margin: 8 }}>3800</Text>
-                            </View>
+                            <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
                         ),
                         headerStyle: {
                             backgroundColor: '#fff',
@@ -58,11 +55,7 @@ export default function Layout() {
                     options={{
                         title: '환경 모금',
                         headerRight: () => (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
-                                <Image source={require("@/assets/images/point.png")}
-                                    style={{ width: 25, height: 25 }} />
-                                <Text style={{ fontSize: 15, margin: 8 }}>3800</Text>
-                            </View>
+                            <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
                         ),
                         headerStyle: {
                             backgroundColor: '#fff',
@@ -80,11 +73,7 @@ export default function Layout() {
                     options={{
                         title: '내 쿠폰함',
                         headerRight: () => (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
-                                <Image source={require("@/assets/images/point.png")}
-                                    style={{ width: 25, height: 25 }} />
-                                <Text style={{ fontSize: 15, margin: 8 }}>3800</Text>
-                            </View>
+                            <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
                         ),
                         headerStyle: {
                             backgroundColor: '#fff',
@@ -96,7 +85,7 @@ export default function Layout() {
                         headerBackVisible: true,
                         headerTitleAlign: 'center'
                     }} />
-                {/* <Stack.Screen
+                <Stack.Screen
                     name="challenge/register/[id]"
                     options={{
                         title: '',
@@ -105,7 +94,7 @@ export default function Layout() {
                         },
                         headerShadowVisible: false,
                         headerBackVisible: true,
-                    }} /> */}
+                    }} />
                 <Stack.Screen
                     name="challenge/create"
                     options={{
@@ -138,6 +127,20 @@ export default function Layout() {
                     name="profile/index"
                     options={{
                         title: '프로필',
+                        headerStyle: {
+                            backgroundColor: '#fff',
+                        },
+                        headerTitleStyle: {
+                            fontSize: 20,
+                        },
+                        headerShadowVisible: true,
+                        headerBackVisible: true,
+                        headerTitleAlign: 'center'
+                    }} />
+                <Stack.Screen
+                    name="profile/version"
+                    options={{
+                        title: '버전 정보',
                         headerStyle: {
                             backgroundColor: '#fff',
                         },

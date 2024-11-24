@@ -1,49 +1,73 @@
-import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from "react";
-import { Link } from 'expo-router';
-import { repo, util } from '@/api/main';
-import { RewardItemMeta } from '@/core/model';
+import { router } from 'expo-router';
+import { repo, util } from '@/service/main';
+import { CouponItem, RewardItemMeta } from '@/core/model';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ShopScreen() {
     const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
-    const [cancelModalVisible, setCancelModalVisible] = useState<boolean>(false);
+    const [couponModalVisible, setCouponModalVisible] = useState<boolean>(false);
     const [rewardList, setRewardList] = useState<RewardItemMeta[]>([]);
     const [selectedReward, setSelectedReward] = useState<RewardItemMeta | null>(null);
+    const [selectedCoupon, setSelectedCoupon] = useState<CouponItem | null>(null);
 
     useEffect(() => {
         (async () => {
-            setRewardList(await repo.rewards.getAllRewards());
+            const rewards = await repo.rewards.getAllRewards();
+            setRewardList(rewards);
+            console.log(rewards);
         })()
     }, []);
 
-    useEffect(() => {
-        console.log(selectedReward);
-    }, [selectedReward]);
+    // useEffect(() => {
+    //     console.log(selectedReward);
+    // }, [selectedReward]);
 
-
-
-    const onPressModalClose = () => {
+    const purchaseHandler = () => {
+        (async () => {
+            // if (!selectedReward) return;
+            // const couponInfo = await purchaseReward(selectedReward.id);
+            // if (couponInfo) {
+            //     setSelectedCoupon(couponInfo);
+            //     setConfirmModalVisible(false);
+            //     setCouponModalVisible(true);
+            // } else {
+            //     setConfirmModalVisible(false);
+            //     alert("포인트가 부족합니다.");
+            // }
+        })()
+    }
+    const cancelHandler = () => {
         setConfirmModalVisible(false);
+    }
+
+
+    if (!rewardList) {
+        return <ActivityIndicator size="large"></ActivityIndicator>
     }
 
 
     return (
         <View style={styles.container}>
-            <Link href="/shop/coupons">
+            <TouchableOpacity onPress={() => { router.push('/shop/coupons') }}>
                 <View style={{ height: 55, backgroundColor: 'white' }}>
                     <Image source={require("@/assets/images/couponbox_2.png")}
                         style={[styles.couponboximage, { resizeMode: 'contain' }]} />
                 </View>
-            </Link>
+            </TouchableOpacity>
+
             <View style={{ flex: 9 }}>
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    {
-                        rewardList.length > 0 ? rewardList.map((rewardItem, index) => <RewardItemCard
-                            setModalVisible={setConfirmModalVisible} reward={rewardItem} setSelectedReward={setSelectedReward} key={index}
-                        >
+                    <View style={{ flexDirection: 'row' }}>
+                        {
+                            rewardList.length > 0 ? rewardList.map((rewardItem, index) => <RewardItemCard
+                                setModalVisible={setConfirmModalVisible} reward={rewardItem} setSelectedReward={setSelectedReward} key={index}
+                            >
 
-                        </RewardItemCard>) : <></>
-                    }
+                            </RewardItemCard>) : <></>
+                        }
+                    </View>
 
                 </ScrollView>
             </View>
@@ -56,7 +80,8 @@ export default function ShopScreen() {
                     <View style={styles.modalView}>
                         {
                             selectedReward ? <>
-                                <Image source={util.getFileSource(selectedReward.thumbnailId)}
+                                <Image
+                                    // source={util.getFileSource(selectedReward.thumbnailId)}
                                     style={[styles.image_coupon, { resizeMode: 'contain' }]} />
                                 <Text style={styles.text_brand_modal}>{selectedReward.brandName}</Text>
                                 <Text style={styles.text_product_modal}>{selectedReward.itemName}</Text>
@@ -67,12 +92,12 @@ export default function ShopScreen() {
                                 </View>
                                 <Text style={{ fontSize: 17, marginTop: 20 }}>위 상품을 정말 구매하시겠습니까?</Text>
                                 <View style={{ flexDirection: 'row' }}>
-                                    <TouchableOpacity onPress={onPressModalClose}>
+                                    <TouchableOpacity onPress={purchaseHandler}>
                                         <Image source={require("@/assets/images/purchase.png")}
                                             style={[styles.image_button, { resizeMode: 'contain' }]} />
                                     </TouchableOpacity>
                                     <Text>    </Text>
-                                    <TouchableOpacity onPress={onPressModalClose}>
+                                    <TouchableOpacity onPress={cancelHandler}>
                                         <Image source={require("@/assets/images/cancel.png")}
                                             style={[styles.image_button, { resizeMode: 'contain' }]} />
                                     </TouchableOpacity>
@@ -82,14 +107,29 @@ export default function ShopScreen() {
                     </View>
                 </View>
             </Modal>
-            <Modal
-                visible={cancelModalVisible}
+
+            {/* <Modal
+                animationType="slide"
+                visible={couponModalVisible}
                 transparent={true}>
-                <View style={styles.modalView}>
-                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20, }}>구매실패</Text>
-                    <Text style={{ fontSize: 15, marginTop: 10 }}>보유중인 포인트가 부족합니다.</Text>
-                </View>
-            </Modal>
+                <TouchableOpacity onPress={() => { setCouponModalVisible(false) }}>
+                    <View style={styles.centeredView}>
+                        <View style={styles.modalView}>
+                            {
+                                selectedReward ? <>
+                                    <Image source={util.getFileSource(selectedReward.thumbnailId)}
+                                        style={[styles.image_coupon, { resizeMode: 'contain' }]} />
+                                    <Text style={styles.text_brand_modal}>{selectedReward.brandName}</Text>
+                                    <Text style={styles.text_product_modal}>{selectedReward.itemName}</Text>
+                                    <Image source={require("@/assets/images/barcode.png")}
+                                        style={[styles.image_barcode, { resizeMode: 'contain' }]} />
+                                </> : <></>
+                            }
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Modal> */}
+
         </View>
     );
 }
@@ -117,7 +157,8 @@ const RewardItemCard = ({ setModalVisible, reward, setSelectedReward }:
         <View style={styles.couponrowcontainer}>
             <TouchableOpacity onPress={onPressModalOpen}>
                 <View style={styles.box}>
-                    <Image source={util.getFileSource(reward.thumbnailId)}
+                    <Image
+                        // source={util.getFileSource(reward.thumbnailId)}
                         style={[styles.image_product, { resizeMode: 'contain' }]} />
                     <Text style={styles.text_brand}>{reward.brandName}</Text>
                     <Text style={styles.text_product}>{reward.itemName}</Text>
@@ -251,4 +292,8 @@ const styles = StyleSheet.create({
     text_price_modal: {
         fontSize: 15, marginLeft: 3,
     },
+    image_barcode: {
+        width: 300, height: 100,
+    }
+
 });

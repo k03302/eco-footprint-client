@@ -11,8 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { getLoggedInPlatform } from '@/api/auth';
-import AsyncButton from '@/components/AsyncButton';
+import { repo } from '@/service/main';
 
 export default function UserProfile() {
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -45,20 +44,16 @@ export default function UserProfile() {
             return;
         }
 
-        const loginPlatform = await getLoggedInPlatform();
-        if (!loginPlatform) {
-            router.replace('/');
-            return;
-        }
+        // repo.users.updateUserInfo();
 
-        if (await loginPlatform.register(username, imageUri)) {
-            router.replace('/map');
-            return;
-        } else {
-            alert("가입 실패. 다시 입력해주세요.");
-            setImageUri(null);
-            setUsername("");
-        }
+        // if (await loginPlatform.register(username, imageUri)) {
+        //     router.replace('/map');
+        //     return;
+        // } else {
+        //     alert("가입 실패. 다시 입력해주세요.");
+        //     setImageUri(null);
+        //     setUsername("");
+        // }
     };
 
     return (
@@ -87,7 +82,7 @@ export default function UserProfile() {
             />
 
             {/* Submit Button */}
-            <AsyncButton title="Submit" onPressAsync={handleSubmit} />
+            <Button title="Submit" onPress={handleSubmit} />
         </View>
     );
 }

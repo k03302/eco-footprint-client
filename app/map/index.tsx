@@ -5,13 +5,17 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as turf from '@turf/turf';
 import { Pedometer } from 'expo-sensors';
-import MapTab from '@/components/MapTab';
-import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/api/map';
-import { adService } from '@/api/ad';
+import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/service/map';
+import { adService } from '@/service/ad';
 import ViewAdModal from '@/components/ViewAdModal';
 import { hasDatePassed } from '@/utils/time';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import UserIcon from '@/components/UserIcon';
+import { UserPointDisplay } from '@/components/UserPointDisplay';
+import { DonationItemMeta } from '@/core/model';
+import { repo, util } from '@/service/main';
+import * as Progress from 'react-native-progress';
+
 
 const enum CAM_MODE {
     DEFAULT = 'default mode',
@@ -27,8 +31,8 @@ const BLOCK_LOAD_DELTA = 0.0005;
 const UNIT_ZOOM_DELTA = 0.001;
 const ITEM_ICON_SIZE = 50;
 const POLYGON_FILL_COLOR = "rgba(0, 255, 0, 0.3)";
-
-
+const CARBON_DECREASE_PER_METER = 0.2;
+const MAX_ITEM_COUNTER = 1;
 
 
 
@@ -37,6 +41,12 @@ const POLYGON_FILL_COLOR = "rgba(0, 255, 0, 0.3)";
 export default function App() {
     const [stepCount, setStepCount] = useState<number>(0);
     const [carbonDecrease, setCarbonDecrease] = useState<number>(0);
+    const [moveDistance, setMoveDistance] = useState<number>(0);
+    const [itemCounter, setItemCounter] = useState<number>(0);
+
+    const [donationList, setDonationList] = useState<DonationItemMeta[]>([]);
+    const [selectedDonation, setSelectedDonation] = useState<DonationItemMeta | null>(null);
+
 
     const [polygonList, setPolygonList] = useState<PolygonCoordinates[]>([]);
     const [itemList, setItemList] = useState<(LocationCoordinate)[]>([]);
@@ -45,6 +55,7 @@ export default function App() {
     const [newPolygonList, setNewPolygonList] = useState<PolygonCoordinates[]>([]);
     const [newItemList, setNewItemList] = useState<(LocationCoordinate)[]>([]);
     const [newFootstepList, setNewFootstepList] = useState<RotatableCoordinate[]>([]);
+
 
 
     const [initMapLocation, setInitMapLocation] = useState<Location.LocationObject | undefined>(undefined);
@@ -56,21 +67,50 @@ export default function App() {
 
     const [showAdModal, setShowAdModal] = useState<boolean>(false);
 
+
+
     const mapRef = useRef<MapView | null>(null);
 
 
+    useEffect(() => {
+        (async () => {
+            //            setDonationList(await repo.donations.getAllDonations());
+        })()
+    }, [])
+
+
+    const viewAdHandler = () => {
+        setShowAdModal(false);
+        adService.showAd();
+    }
+
     const onItemPressed = useCallback((latitude: number, longitude: number, index: number) => {
+
+
         mapService.consumeItemAt(latitude, longitude);
-        const newItemList = [...itemList];
-        setItemList(newItemList);
-        setShowAdModal(true);
-        console.log('item pressed');
+
+        if (itemCounter >= MAX_ITEM_COUNTER) {
+            const randomIndex = Math.floor(Math.random() * donationList.length);
+            setSelectedDonation(donationList[randomIndex]);
+            setShowAdModal(true);
+            setItemCounter(0);
+        } else {
+            // getRewardPoint();
+            setItemCounter(itemCounter + 1);
+        }
+        console.log('item pressed', itemCounter);
     }, [currentRegion]);
 
     // foreground에서 newLocation을 받았을 때의 콜백함수
     const onNewLocationForeground = useCallback((newLocation: Location.LocationObject) => {
         //console.log('newLocation', newLocation);
         // if the midnight passed, initialize map state
+
+
+        const moveDistanceInMeter = mapService.getBlockCount() * mapService.getBlockSizeInMeter();
+        setCarbonDecrease(moveDistanceInMeter * CARBON_DECREASE_PER_METER);
+        setMoveDistance(moveDistanceInMeter)
+
         if (lastLocationDate) {
             if (hasDatePassed(lastLocationDate)) {
                 initializeMapState();
@@ -104,7 +144,6 @@ export default function App() {
                 setPolygonList(overlays.rects);
                 setItemList(overlays.items);
                 setFootstepList(overlays.footsteps);
-                console.log(overlays.footsteps);
             });
     }, []);
 
@@ -112,8 +151,20 @@ export default function App() {
         if (!adService.isAdLoaded() && !adService.isAdOnLoading()) {
             adService.loadAd();
         }
-    }, []);
 
+        adService.registerEarnedHandler(async ({ amount, type }) => {
+            adService.loadAd();
+            console.log(selectedDonation);
+            if (selectedDonation) {
+                // const userInfo = await participateDonation(selectedDonation.id);
+            }
+
+        });
+
+        return () => {
+            adService.registerEarnedHandler(() => { });
+        }
+    }, []);
     useEffect(() => {
         (async () => {
             const locationStatus = await requestLocationPermissions();
@@ -181,6 +232,8 @@ export default function App() {
     const initializeMapState = useCallback(() => {
         setStepCount(0);
         setCarbonDecrease(0);
+        setMoveDistance(0);
+        setItemCounter(0);
         setPolygonList([]);
         setItemList([]);
         setFootstepList([]);
@@ -254,7 +307,7 @@ export default function App() {
                                     </Marker>)
                                 })
                             }
-                            {
+                            {/* {
                                 footstepList.map((footstepPose, index) => <CatPaw
                                     key={`catpaw${index}`}
                                     rotation={footstepPose.rotation} coordinate={footstepPose.location}
@@ -262,7 +315,7 @@ export default function App() {
                                 >
 
                                 </CatPaw>)
-                            }
+                            } */}
 
 
                             {
@@ -274,7 +327,7 @@ export default function App() {
                                     key={`poly${index}`}
                                 />)
                             }
-                            {/* {
+                            {
                                 newItemList.map((itemCoord, index) => {
 
                                     return (<Marker
@@ -292,8 +345,8 @@ export default function App() {
                                         />
                                     </Marker>)
                                 })
-                            } */}
-                            {
+                            }
+                            {/* {
                                 newFootstepList.map((footstepPose, index) => <CatPaw
                                     key={`catpaw${index}`}
                                     rotation={footstepPose.rotation} coordinate={footstepPose.location}
@@ -301,14 +354,19 @@ export default function App() {
                                 >
 
                                 </CatPaw>)
-                            }
-                        </MapView> : <ActivityIndicator></ActivityIndicator>
+                            } */}
+                        </MapView> : <ActivityIndicator size='large'></ActivityIndicator>
 
 
                 }
+
+
+                <View style={styles.pointdisplay}>
+                    <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
+                </View>
             </View>
 
-            <ViewAdModal showAdModal={showAdModal} setShowAdModal={setShowAdModal} />
+
 
             <View style={styles.moveinfocontainer}>
                 <View style={styles.movecount}>
@@ -317,35 +375,86 @@ export default function App() {
                 </View>
                 <View style={styles.extracount}>
                     <Text style={{ opacity: 0.8, fontSize: 10 }}>탄소저감량  </Text>
-                    <Text style={{ fontSize: 18 }}>{carbonDecrease}</Text>
+                    <Text style={{ fontSize: 18 }}>{carbonDecrease.toFixed(1)}g</Text>
                     <Text style={{ fontSize: 20 }}>   </Text>
-                    <Text style={{ fontSize: 18 }}>192m</Text>
-                    <Text style={{ opacity: 0.8, fontSize: 10 }}>  걸은거리</Text>
+                    <Text style={{ fontSize: 18 }}>{moveDistance.toFixed(1)}m</Text>
+                    <Text style={{ opacity: 0.8, fontSize: 10 }}> 이동거리</Text>
 
                 </View>
             </View>
 
+            <Modal
+                animationType='slide'
+                visible={showAdModal}
+                transparent={true}>
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        {
+                            selectedDonation ? <View style={styles.frame}>
+                                <View style={styles.imageWrapper}>
+                                    <Image
+                                        // source={util.getFileSource(selectedDonation.thumbnailId)}
+                                        style={styles.image}
+                                    />
+                                </View>
+
+                                <View style={styles.overlay}>
+                                    <Progress.Bar
+                                        progress={selectedDonation.currentPoint / selectedDonation.targetPoint}
+                                        width={150}
+                                        color="#3b5998"
+                                        style={styles.progressBar}
+                                    />
+                                    <Text style={styles.progressText}>
+                                        {(selectedDonation.currentPoint / selectedDonation.targetPoint * 100).toFixed(0)}%
+                                    </Text>
+                                </View>
+                            </View> : <></>
+
+                        }
+
+                        <View style={{ flexDirection: 'row', }}>
+                            <TouchableOpacity onPress={() => { setShowAdModal(false); }}>
+                                <Image source={require("@/assets/images/rejectbutton.png")}
+                                    style={[styles.image_button,]} />
+                            </TouchableOpacity>
+                            <Text>   </Text>
+                            <TouchableOpacity onPress={viewAdHandler}>
+                                <Image source={require("@/assets/images/pluspointbutton.png")}
+                                    style={[styles.image_button]} />
+                            </TouchableOpacity>
+                        </View>
+
+                    </View>
+                </View>
+            </Modal>
+
             <View style={styles.tabcontainer}>
-                <Link href="/challenge">
+                <TouchableOpacity style={styles.tabbutton} onPress={() => { router.push("/challenge") }}>
                     <Image source={require("@/assets/images/challenge.png")}
                         style={{ width: 35, height: 35, margin: 1 }} />
                     <Text style={{ opacity: 0.9, fontSize: 12 }}>챌린지</Text>
-                </Link>
-                <Link href="/fundraising">
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabbutton} onPress={() => { router.push("/fundraising") }}>
                     <Image source={require("@/assets/images/donation.png")}
                         style={{ width: 35, height: 35, margin: 1 }} />
                     <Text style={{ opacity: 0.9, fontSize: 12 }}>환경 모금</Text>
-                </Link>
-                <Link href="/shop">
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabbutton} onPress={() => { router.push("/shop") }}>
                     <Image source={require("@/assets/images/shop.png")}
                         style={{ width: 35, height: 35, margin: 1 }} />
                     <Text style={{ opacity: 0.9, fontSize: 12 }}>리워드 샵</Text>
-                </Link>
-
+                </TouchableOpacity>
             </View>
+
+
         </View>
     );
 }
+
+
+
+
 
 function CatPaw({ coordinate, rotation, keyIndex }: { coordinate: LocationCoordinate, rotation: number, keyIndex: number }) {
     const footRadius = mapService.getBlockSizeInMeter() / 5;
@@ -420,6 +529,12 @@ const styles = StyleSheet.create({
         width: 100,
         height: 50,
     },
+    pointdisplay: {
+        position: 'absolute',
+        bottom: 10,
+        left: 10,
+        zIndex: 100,
+    },
     profilebutton: {
         margin: 10,
         flexDirection: 'row',
@@ -454,6 +569,76 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center'
     },
+    adviewcontainer: {
+        width: '100%'
+
+    },
+    frame: {
+        width: 300,
+        height: 400,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative', // 겹친 요소를 위한 상대적 위치 설정        
+    },
+    imageWrapper: {
+        width: '100%',
+        height: '75%',
+        borderRadius: 20,
+        overflow: 'hidden', // 라운딩된 모서리를 유지
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    overlay: {
+        position: 'absolute',
+        bottom: 0,
+        width: 220,
+        height: 100,
+        backgroundColor: '#ffffff',
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    progressBar: {
+        marginBottom: 5,
+    },
+    progressText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    centeredView: {
+        flex: 1,
+        alignContent: "center",
+        textAlignVertical: 'center',
+        backgroundColor: "rgba(0, 0, 0, 0.3)#",
+    },
+    modalView: {
+        marginTop: 130,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 35,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    image_donation: {
+        width: 400,
+        height: 500
+    },
+    image_button: {
+        width: 114,
+        height: 38
+    }
 });
 
 
