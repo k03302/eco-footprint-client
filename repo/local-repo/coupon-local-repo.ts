@@ -31,6 +31,7 @@ class CouponLocalRepo implements CouponRepo {
             thumbnailId: 'default_thumbnail',
             expiredAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Expires in 30 days
             couponId: rewardId,
+            description: ''
         };
 
         const key = this.generateKey(newCoupon.id);

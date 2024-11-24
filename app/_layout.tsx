@@ -37,9 +37,6 @@ export default function Layout() {
                     name="shop/index"
                     options={{
                         title: '리워드샵',
-                        headerRight: () => (
-                            <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
-                        ),
                         headerStyle: {
                             backgroundColor: '#fff',
                         },
@@ -54,9 +51,6 @@ export default function Layout() {
                     name="fundraising/index"
                     options={{
                         title: '환경 모금',
-                        headerRight: () => (
-                            <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
-                        ),
                         headerStyle: {
                             backgroundColor: '#fff',
                         },
@@ -72,9 +66,6 @@ export default function Layout() {
                     name="shop/coupons"
                     options={{
                         title: '내 쿠폰함',
-                        headerRight: () => (
-                            <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
-                        ),
                         headerStyle: {
                             backgroundColor: '#fff',
                         },

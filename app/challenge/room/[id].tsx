@@ -197,7 +197,6 @@ export default function ChallengeScreen() {
     if (!challengeItem || !myProfileInfo) {
         return <ActivityIndicator size="large"></ActivityIndicator>
     }
-    console.log(challengeItem.currentProgress);
     return (
         <View style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -211,13 +210,13 @@ export default function ChallengeScreen() {
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>현재 챌린지 진행률</Text>
                     <View style={{ alignItems: 'center' }}>
                         <Progress.Bar
-                            progress={challengeItem.currentProgress / challengeItem.targetProgress}
+                            progress={0}
                             width={150}
                             color="#3b5998"
                             style={styles.progressBar}
                         />
                     </View>
-                    <Text> {challengeItem.currentProgress} / {challengeItem.targetProgress} </Text>
+                    <Text> {0} / {0} </Text>
                     <DrawLine />
                 </View>
                 <View style={styles.container_myrecord}>

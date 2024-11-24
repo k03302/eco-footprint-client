@@ -6,7 +6,7 @@ import * as TaskManager from 'expo-task-manager';
 import * as turf from '@turf/turf';
 import { Pedometer } from 'expo-sensors';
 import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/service/map';
-import { adService } from '@/service/ad';
+import { adService } from '@/api/ad';
 import ViewAdModal from '@/components/ViewAdModal';
 import { hasDatePassed } from '@/utils/time';
 import { router } from 'expo-router';
@@ -152,7 +152,7 @@ export default function App() {
             adService.loadAd();
         }
 
-        adService.registerEarnedHandler(async ({ amount, type }) => {
+        adService.registerEarnedHandler(async () => {
             adService.loadAd();
             console.log(selectedDonation);
             if (selectedDonation) {

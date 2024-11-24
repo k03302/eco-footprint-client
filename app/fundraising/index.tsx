@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
 import { repo, util } from '@/service/main';
 import { DonationItemMeta } from '@/core/model';
-import { adService } from '@/service/ad';
+import { adService } from '@/api/ad';
 // import { participateDonation } from '@/service/user';
 
 function AdViewCard({ donationInfo, onRewardEarned }: { donationInfo: DonationItemMeta, onRewardEarned: () => void }) {

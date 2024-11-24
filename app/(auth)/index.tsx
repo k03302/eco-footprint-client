@@ -5,7 +5,7 @@ import { router } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
 import KakaoLoginButton from '@/components/KakaoLoginButton';
-import { getIdToken, login } from '@/utils/login';
+import { getIdToken, login } from '@/api/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Allows deep linking to function properly in Expo Go

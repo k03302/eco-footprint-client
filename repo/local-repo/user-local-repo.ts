@@ -23,11 +23,11 @@ class UserLocalRepo implements UserRepo {
     }
 
     // Get user info by userId
-    async getUserInfo(userId: string): Promise<UserItem | null> {
+    async getUserInfo(userId: string): Promise<UserItem> {
         const key = this.generateKey(userId);
         const userString = await AsyncStorage.getItem(key);
         if (!userString) {
-            return null;
+            throw new Error(`User with ID ${userId} doesn't exists.`);
         }
 
         return JSON.parse(userString) as UserItem;

@@ -4,7 +4,7 @@ import { View, StyleSheet } from "react-native";
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router'
 import axios from 'axios';
-import { login } from "@/utils/login";
+import { login } from "@/api/auth";
 
 
 const REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!;

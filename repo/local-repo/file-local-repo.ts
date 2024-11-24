@@ -6,6 +6,9 @@ import * as FileSystem from 'expo-file-system';
 const filePath = FileSystem.documentDirectory + "image/";
 
 class FileLocalRepo implements FileRepo {
+    async getFile(fileId: string): Promise<FileData> {
+        throw new Error("Method not implemented.");
+    }
     private prefix: string = 'file_';
 
     // Helper function to generate storage keys
@@ -24,6 +27,9 @@ class FileLocalRepo implements FileRepo {
             name: file.name,
             size: 0,
             contentType: file.fileUri.split('.').pop() || "",
+            owner: "",
+            date: "",
+            file: ""
         };
         if (file.localLocation) {
             await FileSystem.copyAsync({
@@ -33,7 +39,7 @@ class FileLocalRepo implements FileRepo {
             console.log(FileSystem.documentDirectory);
         }
         const fileInfo = await FileSystem.getInfoAsync(filePath + file.id);
-        console.log(fileInfo);
+        console.log("fileInfo", fileInfo);
 
         // Save the file metadata in AsyncStorage
         await AsyncStorage.setItem(key, JSON.stringify(fileData));
@@ -55,6 +61,9 @@ class FileLocalRepo implements FileRepo {
             name: file.name,
             size: 0,
             contentType: file.fileUri.split('.').pop() || "",
+            owner: "",
+            date: "",
+            file: ""
         };
 
         await FileSystem.copyAsync({
@@ -68,19 +77,19 @@ class FileLocalRepo implements FileRepo {
     }
 
     // Delete a file from AsyncStorage
-    async deleteFile(fileInput: FileInput): Promise<FileData> {
-        const key = this.generateKey(fileInput.id);
+    async deleteFile(fileId: string): Promise<boolean> {
+        const key = this.generateKey(fileId);
         const existingFileString = await AsyncStorage.getItem(key);
 
         if (!existingFileString) {
-            throw new Error(`File with ID ${fileInput.id} not found.`);
+            throw new Error(`File with ID ${fileId} not found.`);
         }
 
         // Remove the file from AsyncStorage
         await AsyncStorage.removeItem(key);
 
         // Return the deleted file data
-        return JSON.parse(existingFileString) as FileData;
+        return true;
     }
 }
 

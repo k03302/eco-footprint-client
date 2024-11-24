@@ -37,12 +37,12 @@ class RewardLocalRepo implements RewardRepo {
     }
 
     // Add a new reward to AsyncStorage
-    async addReward(rewardItem: RewardItem): Promise<RewardItem> {
+    async addReward(rewardItem: RewardItem): Promise<boolean> {
         const key = this.generateKey(rewardItem.id);
 
         // Save the reward details
         await AsyncStorage.setItem(key, JSON.stringify(rewardItem));
-        return rewardItem;
+        return true;
     }
 
     // Update an existing reward

@@ -66,7 +66,8 @@ export type FileData = {
 export type FileInput = {
     id: string;
     name: string;
-    file: FormData;
+    fileUri: string;
+    localLocation?: boolean;
 }
 
 
@@ -96,8 +97,6 @@ export type ChallengeItem = {
     id: string;
     name: string;
     type: string;
-    currentProgress: number;
-    targetProgress: number;
     totalParticipants: number;
     currentParticipants: number;
     createdBy: string;
@@ -158,8 +157,6 @@ export const NO_CHALLENGE: ChallengeItem = {
     id: "",
     name: "",
     type: "",
-    currentProgress: 0,
-    targetProgress: 0,
     totalParticipants: 0,
     currentParticipants: 0,
     createdBy: "",

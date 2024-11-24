@@ -80,18 +80,18 @@ files.uploadFile(reward1Image);
 
 const user1meta: UserItemMeta = {
     id: 'user1',
-    name: 'user1',
-    thumbnailId: null
+    username: 'user1',
+    thumbnailId: ''
 }
 const user2meta: UserItemMeta = {
     id: 'user2',
-    name: 'user2',
-    thumbnailId: null
+    username: 'user2',
+    thumbnailId: ''
 }
 const user3meta: UserItemMeta = {
     id: 'user3',
-    name: 'user3',
-    thumbnailId: null
+    username: 'user3',
+    thumbnailId: ''
 }
 
 
@@ -153,20 +153,20 @@ const challenge2meta: ChallengeItemMeta = {
 
 const user1: UserItem = {
     ...user1meta,
-    currentPoints: 0,
-    chellengeList: [challenge1meta],
+    point: 0,
+    challengeList: [challenge1meta],
     couponList: [],
 }
 const user2: UserItem = {
     ...user2meta,
-    currentPoints: 0,
-    chellengeList: [challenge2meta],
+    point: 0,
+    challengeList: [challenge2meta],
     couponList: []
 }
 const user3: UserItem = {
     ...user3meta,
-    currentPoints: 0,
-    chellengeList: [challenge2meta],
+    point: 0,
+    challengeList: [challenge2meta],
     couponList: []
 }
 
