@@ -1,20 +1,23 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Alert, BackHandler, Text, Image, ActivityIndicator, Modal, TouchableOpacity, Button } from 'react-native';
-import MapView, { Polygon, Marker, Region, Details, Circle } from 'react-native-maps';
+import MapView, { Polygon, Marker, Region, Details, Circle, LongPressEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as turf from '@turf/turf';
 import { Pedometer } from 'expo-sensors';
-import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/service/map';
+import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/api/map';
 import { adService } from '@/api/ad';
 import ViewAdModal from '@/components/ViewAdModal';
 import { hasDatePassed } from '@/utils/time';
 import { router } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
+
 import UserIcon from '@/components/UserIcon';
 import { UserPointDisplay } from '@/components/UserPointDisplay';
 import { DonationItemMeta } from '@/core/model';
 import { repo, util } from '@/service/main';
 import * as Progress from 'react-native-progress';
+import { getMyProfile } from '@/api/user';
 
 
 const enum CAM_MODE {
@@ -70,19 +73,41 @@ export default function App() {
 
 
     const mapRef = useRef<MapView | null>(null);
-
+    const isFocused = useIsFocused();
 
     useEffect(() => {
-        (async () => {
-            //            setDonationList(await repo.donations.getAllDonations());
-        })()
-    }, [])
+        if (isFocused) {
+            (async () => {
+                //            setDonationList(await repo.donations.getAllDonations());
+                const userInfo = await getMyProfile();
+                console.log(userInfo);
+            })()
+        }
+
+
+    }, [isFocused]);
 
 
     const viewAdHandler = () => {
         setShowAdModal(false);
         adService.showAd();
     }
+
+    const onMapPressed = (event: LongPressEvent) => {
+        const coords = event.nativeEvent.coordinate;
+        mapService.addPoint(coords.latitude, coords.longitude);
+    }
+
+    const onOverlayUpdate = () => {
+        console.log('overlay update');
+        const newOverlays = mapService.getUpdatedOverlays();
+        if (newOverlays) {
+            setNewPolygonList(newOverlays.rects);
+            setNewItemList(newOverlays.items);
+            setNewFootstepList(newOverlays.footsteps);
+        }
+    }
+
 
     const onItemPressed = useCallback((latitude: number, longitude: number, index: number) => {
 
@@ -120,13 +145,6 @@ export default function App() {
 
         setUserLocation(newLocation.coords);
 
-        const newOverlays = mapService.getNewOverlays();
-        if (newOverlays) {
-            setNewPolygonList(newOverlays.rects);
-            setNewItemList(newOverlays.items);
-            setNewFootstepList(newOverlays.footsteps);
-        }
-
 
         // update mapservice
         if (!mapRef.current) return;
@@ -146,6 +164,10 @@ export default function App() {
                 setFootstepList(overlays.footsteps);
             });
     }, []);
+
+    useEffect(() => {
+        mapService.registerOverlayUpdateHandler(onOverlayUpdate);
+    })
 
     useEffect(() => {
         if (!adService.isAdLoaded() && !adService.isAdOnLoading()) {
@@ -273,6 +295,7 @@ export default function App() {
                             showsBuildings={false}
                             showsCompass={false}
                             showsMyLocationButton={true}
+                            onLongPress={onMapPressed}
                         >
                             {
                                 userLocation && <Marker coordinate={userLocation}>

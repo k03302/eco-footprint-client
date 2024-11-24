@@ -111,6 +111,7 @@ class MapBlockService {
     private blockScaler: number;
     private blockCount: number = 0;
 
+    private overlayUpdateHandler = () => { };
 
     private onCalculatingOverlay: boolean = false;
     private lastInitStampCache: number | null = null;
@@ -125,6 +126,13 @@ class MapBlockService {
         return METER_PER_DEGREE * this.blockSize;
     }
 
+    getBlockCount() {
+        return this.blockCount;
+    }
+
+    async registerOverlayUpdateHandler(handler: () => void) {
+        this.overlayUpdateHandler = handler;
+    }
 
     async initialize() {
         this.blockInfoMap = new Map<string, BlockInfoData>();
@@ -201,12 +209,12 @@ class MapBlockService {
     //     return items;
     // }
 
-    getNewOverlays() {
+    getUpdatedOverlays() {
         const rects: PolygonCoordinates[] = [];
         const items: LocationCoordinate[] = [];
         const footsteps: RotatableCoordinate[] = [];
 
-
+        console.log(this.newBlockIndexBuffer);
         for (const blockIndex of this.newBlockIndexBuffer) {
             const blockInfo = this.blockInfoMap.get(blockIndex);
             if (blockInfo) {
@@ -240,6 +248,7 @@ class MapBlockService {
         this.onCalculatingOverlay = true;
 
         this.newBlockIndexBuffer = [];
+        this.overlayUpdateHandler();
 
         const rects: PolygonCoordinates[] = [];
         const items: LocationCoordinate[] = [];
@@ -295,7 +304,6 @@ class MapBlockService {
         if (this.newBlockIndexBuffer.length < MAX_BLOCK_BUFFER_SIZE) {
             this.newBlockIndexBuffer.push(blockIndex);
         }
-        this.newBlockIndexBuffer.push(blockIndex);
 
 
         const latAsInteger = Math.floor(latitude * this.blockScaler);
@@ -341,6 +349,8 @@ class MapBlockService {
 
         this.secondLastBlockInfo = this.lastBlockInfo;
         this.lastBlockInfo = newBlockInfo;
+
+        this.overlayUpdateHandler();
     }
 }
 
