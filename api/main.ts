@@ -65,12 +65,6 @@ const reward1Image: FileInput = {
     fileUri: '../assets/datas/reward1.png',
     localLocation: true
 }
-files.uploadFile(donation1Image);
-files.uploadFile(donation2Image);
-files.uploadFile(recoord1Image);
-files.uploadFile(recoord2Image);
-files.uploadFile(recoord3Image);
-files.uploadFile(reward1Image);
 
 
 
@@ -248,6 +242,12 @@ const reward2: RewardItem = {
 
 
 
+files.uploadFile(donation1Image);
+files.uploadFile(donation2Image);
+files.uploadFile(recoord1Image);
+files.uploadFile(recoord2Image);
+files.uploadFile(recoord3Image);
+files.uploadFile(reward1Image);
 
 
 users.createUser(user1);

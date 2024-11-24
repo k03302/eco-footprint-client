@@ -3,9 +3,9 @@ import { hasDatePassed } from '@/utils/time'
 
 const MIDNIGHT_MAP_INITIALIZED_KEY = 'map_initialized';
 
-const UNIT_SIZE = 0.00001;
-const UNIT_SCALER = 100000;
-const UNIT_COUNT = 5;
+const UNIT_SIZE = 0.0001;
+const UNIT_SCALER = 10000;
+const UNIT_COUNT = 1;
 export const METER_PER_DEGREE = 100000;
 export const DEGREE_PER_METER = 0.00001;
 const MAX_BLOCK_BUFFER_SIZE = 100;
@@ -106,29 +106,33 @@ class MapBlockService {
 
     private secondLastBlockInfo: BlockInfoData | null = null;
     private lastBlockInfo: BlockInfoData | null = null;
-    private blockSizeInDegree: number;
+    private blockSize: number;
     private blockUnitCount: number;
     private blockScaler: number;
     private blockCount: number = 0;
 
+    private overlayUpdateHandler = () => { };
 
     private onCalculatingOverlay: boolean = false;
     private lastInitStampCache: number | null = null;
 
     constructor(blockUnitCount: number) {
         this.blockUnitCount = blockUnitCount;
-        this.blockSizeInDegree = blockUnitCount * UNIT_SIZE;
+        this.blockSize = blockUnitCount * UNIT_SIZE;
         this.blockScaler = Math.floor(UNIT_SCALER / blockUnitCount);
     }
 
     getBlockSizeInMeter() {
-        return METER_PER_DEGREE * this.blockSizeInDegree;
+        return METER_PER_DEGREE * this.blockSize;
     }
 
     getBlockCount() {
         return this.blockCount;
     }
 
+    async registerOverlayUpdateHandler(handler: () => void) {
+        this.overlayUpdateHandler = handler;
+    }
 
     async initialize() {
         this.blockInfoMap = new Map<string, BlockInfoData>();
@@ -179,7 +183,7 @@ class MapBlockService {
     }
 
     getResidentBlockIndex(latitude: number, longitude: number, latCount: number, lngCount: number) {
-        return this.getBlockIndex(latitude + this.blockSizeInDegree * latCount, longitude + this.blockSizeInDegree * lngCount);
+        return this.getBlockIndex(latitude + this.blockSize * latCount, longitude + this.blockSize * lngCount);
     }
 
     // getItemsInRegion(latCenter: number, lngCenter: number, latDelta: number, lngDelta: number) {
@@ -205,23 +209,23 @@ class MapBlockService {
     //     return items;
     // }
 
-    getNewOverlays() {
+    getUpdatedOverlays() {
         const rects: PolygonCoordinates[] = [];
         const items: LocationCoordinate[] = [];
         const footsteps: RotatableCoordinate[] = [];
 
-
+        console.log(this.newBlockIndexBuffer);
         for (const blockIndex of this.newBlockIndexBuffer) {
             const blockInfo = this.blockInfoMap.get(blockIndex);
             if (blockInfo) {
-                const latRound = blockInfo.latAsInteger * this.blockSizeInDegree;
-                const lngRound = blockInfo.lngAsInteger * this.blockSizeInDegree;
+                const latRound = blockInfo.latAsInteger * this.blockSize;
+                const lngRound = blockInfo.lngAsInteger * this.blockSize;
 
                 rects.push([
                     { latitude: latRound, longitude: lngRound },
-                    { latitude: latRound, longitude: lngRound + this.blockSizeInDegree },
-                    { latitude: latRound + this.blockSizeInDegree, longitude: lngRound + this.blockSizeInDegree },
-                    { latitude: latRound + this.blockSizeInDegree, longitude: lngRound },
+                    { latitude: latRound, longitude: lngRound + this.blockSize },
+                    { latitude: latRound + this.blockSize, longitude: lngRound + this.blockSize },
+                    { latitude: latRound + this.blockSize, longitude: lngRound },
                     { latitude: latRound, longitude: lngRound },
                 ]);
                 if (blockInfo.itemPos) {
@@ -244,16 +248,17 @@ class MapBlockService {
         this.onCalculatingOverlay = true;
 
         this.newBlockIndexBuffer = [];
+        this.overlayUpdateHandler();
 
         const rects: PolygonCoordinates[] = [];
         const items: LocationCoordinate[] = [];
         const footsteps: RotatableCoordinate[] = [];
 
 
-        const latTotalCount = Math.floor(latDelta / this.blockSizeInDegree);
-        const lngTotalCount = Math.floor(lngDelta / this.blockSizeInDegree);
-        const latCenterRound = Math.floor(latCenter * this.blockScaler) * this.blockSizeInDegree;
-        const lngCenterRound = Math.floor(lngCenter * this.blockScaler) * this.blockSizeInDegree;
+        const latTotalCount = Math.floor(latDelta / this.blockSize);
+        const lngTotalCount = Math.floor(lngDelta / this.blockSize);
+        const latCenterRound = Math.floor(latCenter * this.blockScaler) * this.blockSize;
+        const lngCenterRound = Math.floor(lngCenter * this.blockScaler) * this.blockSize;
 
 
         for (let latCount = -latTotalCount; latCount < latTotalCount; latCount++) {
@@ -262,11 +267,11 @@ class MapBlockService {
                 const blockInfo = this.blockInfoMap.get(blockIndex);
                 if (blockInfo) {
                     rects.push([
-                        { latitude: latCenterRound + this.blockSizeInDegree * latCount, longitude: lngCenterRound + this.blockSizeInDegree * lngCount },
-                        { latitude: latCenterRound + this.blockSizeInDegree * latCount, longitude: lngCenterRound + this.blockSizeInDegree * (lngCount + 1) },
-                        { latitude: latCenterRound + this.blockSizeInDegree * (latCount + 1), longitude: lngCenterRound + this.blockSizeInDegree * (lngCount + 1) },
-                        { latitude: latCenterRound + this.blockSizeInDegree * (latCount + 1), longitude: lngCenterRound + this.blockSizeInDegree * lngCount },
-                        { latitude: latCenterRound + this.blockSizeInDegree * latCount, longitude: lngCenterRound + this.blockSizeInDegree * lngCount },
+                        { latitude: latCenterRound + this.blockSize * latCount, longitude: lngCenterRound + this.blockSize * lngCount },
+                        { latitude: latCenterRound + this.blockSize * latCount, longitude: lngCenterRound + this.blockSize * (lngCount + 1) },
+                        { latitude: latCenterRound + this.blockSize * (latCount + 1), longitude: lngCenterRound + this.blockSize * (lngCount + 1) },
+                        { latitude: latCenterRound + this.blockSize * (latCount + 1), longitude: lngCenterRound + this.blockSize * lngCount },
+                        { latitude: latCenterRound + this.blockSize * latCount, longitude: lngCenterRound + this.blockSize * lngCount },
                     ]);
                     if (blockInfo.itemPos) {
                         items.push(blockInfo.itemPos);
@@ -293,20 +298,19 @@ class MapBlockService {
 
 
 
-        this.blockCount += 1;
+
 
 
         if (this.newBlockIndexBuffer.length < MAX_BLOCK_BUFFER_SIZE) {
             this.newBlockIndexBuffer.push(blockIndex);
         }
-        this.newBlockIndexBuffer.push(blockIndex);
 
 
         const latAsInteger = Math.floor(latitude * this.blockScaler);
         const lngAsInteger = Math.floor(longitude * this.blockScaler);
 
-        const randomItemLat = latAsInteger * this.blockSizeInDegree + this.blockSizeInDegree * Math.random();
-        const randomItemLng = lngAsInteger * this.blockSizeInDegree + this.blockSizeInDegree * Math.random();
+        const randomItemLat = latAsInteger * this.blockSize + this.blockSize * Math.random();
+        const randomItemLng = lngAsInteger * this.blockSize + this.blockSize * Math.random();
 
         const newBlockInfo = {
             latAsInteger: latAsInteger,
@@ -337,14 +341,17 @@ class MapBlockService {
 
 
                 lastBlockInfo.footstepDirection = lastBlockInfo.firstMoveDirection;
-                const randomItemLat = latAsInteger * this.blockSizeInDegree + this.blockSizeInDegree * Math.random();
-                const randomItemLng = lngAsInteger * this.blockSizeInDegree + this.blockSizeInDegree * Math.random();
+                const randomItemLat = latAsInteger * this.blockSize + this.blockSize * Math.random();
+                const randomItemLng = lngAsInteger * this.blockSize + this.blockSize * Math.random();
                 lastBlockInfo.footstepPos = { latitude: randomItemLat, longitude: randomItemLng };
             }
         }
 
         this.secondLastBlockInfo = this.lastBlockInfo;
         this.lastBlockInfo = newBlockInfo;
+
+        this.blockCount += 1;
+        this.overlayUpdateHandler();
     }
 }
 
