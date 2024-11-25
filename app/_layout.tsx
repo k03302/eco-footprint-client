@@ -1,6 +1,4 @@
 import { Stack } from 'expo-router';
-import { Image, View, Text } from 'react-native';
-import { UserPointDisplay } from '@/components/UserPointDisplay';
 
 export default function Layout() {
     return (

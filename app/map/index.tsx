@@ -13,12 +13,12 @@ import { router } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 
 import UserIcon from '@/components/UserIcon';
-import { UserPointDisplay } from '@/components/UserPointDisplay';
 import { DonationItemMeta } from '@/core/model';
 import { repo, util } from '@/api/main';
 import * as Progress from 'react-native-progress';
 import { getMyProfile } from '@/api/user';
 import { PedometerResult } from 'expo-sensors/build/Pedometer';
+import PointDisplay from '@/components/PointDisplay';
 
 
 const enum CAM_MODE {
@@ -392,7 +392,7 @@ export default function App() {
 
 
                 <View style={styles.pointdisplay}>
-                    <UserPointDisplay displaySizeLevel={2}></UserPointDisplay>
+                    <PointDisplay pointAmount={0} displaySizeLevel={2}></PointDisplay>
                 </View>
             </View>
 
