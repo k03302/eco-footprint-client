@@ -288,7 +288,7 @@ export default function App() {
         <View style={styles.container}>
 
             <View style={styles.profilecontainer}>
-                <UserIcon isMyIcon={true} message={"프로필"} onPress={() => { router.push('/profile') }} />
+                <UserIcon message={"프로필"} onPress={() => { router.push('/profile') }} />
             </View>
 
             <View style={styles.mapcontainer}>
