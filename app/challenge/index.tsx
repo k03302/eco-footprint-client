@@ -2,11 +2,18 @@ import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView } from 'rea
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ChallengeItemMeta } from '@/core/model';
-import { repo } from '@/service/main';
+import { repo } from '@/api/main';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function ChallengeScreen() {
     const [myChallengeList, setMyChallengeList] = useState<ChallengeItemMeta[]>([]);
     const [challengeList, setChallengeList] = useState<ChallengeItemMeta[]>([]);
+
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+
+    }, [isFocused])
 
     useEffect(() => {
         (async () => {

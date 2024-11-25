@@ -1,9 +1,10 @@
 import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { repo, util } from '@/service/main';
+import { repo, util } from '@/api/main';
 import { DonationItemMeta } from '@/core/model';
-import { adService } from '@/api/ad';
+import { adService } from '@/service/ad';
+import { useIsFocused } from '@react-navigation/native';
 // import { participateDonation } from '@/service/user';
 
 function AdViewCard({ donationInfo, onRewardEarned }: { donationInfo: DonationItemMeta, onRewardEarned: () => void }) {
@@ -122,7 +123,11 @@ function AdViewCard({ donationInfo, onRewardEarned }: { donationInfo: DonationIt
 export default function DonationScreen() {
     const [fundraisingList, setFundraisingList] = useState<DonationItemMeta[]>([]);
     const [version, setVersion] = useState<number>(0);
+    const isFocused = useIsFocused();
 
+    useEffect(() => {
+
+    }, [isFocused])
 
     useEffect(() => {
         (async () => {

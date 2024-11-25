@@ -1,11 +1,17 @@
 import { Button, View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { router } from 'expo-router'
 import UserIcon from '@/components/UserIcon';
 import { logout } from '@/utils/login';
+import { useIsFocused } from '@react-navigation/native';
 
 
 export default function ProfileScreen() {
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+
+    }, [isFocused])
     const logoutHandler = async () => {
 
         await logout();

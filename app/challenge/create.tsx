@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, Image, TextInput, Text, View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
+import { useIsFocused } from '@react-navigation/native';
 
 
 export default function ChallengeScreen() {
     const [challengeName, setChallengeName] = useState<string>('');
     const [challengeType, setChallengeType] = useState<string>('');
     const [challengeDescription, setChallengeDescription] = useState<string>('');
+
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+
+    }, [isFocused])
 
     const handleSubmit = async () => {
         const name = challengeName.trim();

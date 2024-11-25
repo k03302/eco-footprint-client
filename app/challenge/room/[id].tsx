@@ -3,10 +3,11 @@ import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { ChallengeItem, ChallengeRecoordItem, UserItemMeta } from '@/core/model';
-import { repo, util } from '@/service/main';
+import { repo, util } from '@/api/main';
 import * as ImagePicker from 'expo-image-picker';
 import * as Progress from 'react-native-progress';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useIsFocused } from '@react-navigation/native';
 
 
 const DrawLine = () => {
@@ -147,7 +148,11 @@ export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
     const [challengeItem, setChallengeItem] = useState<ChallengeItem | null>(null);
     const [myProfileInfo, setMyProfileInfo] = useState<UserItemMeta | null>(null);
+    const isFocused = useIsFocused();
 
+    useEffect(() => {
+
+    }, [isFocused])
 
     useEffect(() => {
         (async () => {

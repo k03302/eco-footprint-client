@@ -1,15 +1,20 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, Touchable, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
-import { repo, util } from '@/service/main';
+import { repo, util } from '@/api/main';
 import { CouponItemMeta, RewardItem } from '@/core/model';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function CouponScreen() {
     const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
     const [couponList, setCouponList] = useState<CouponItemMeta[]>([]);
     const [selectedCoupon, setSelectedCoupon] = useState<CouponItemMeta | null>(null);
     const [selectedReward, setSelectedReward] = useState<RewardItem | null>(null);
+    const isFocused = useIsFocused();
 
+    useEffect(() => {
+
+    }, [isFocused])
     useEffect(() => {
         (async () => {
             // const userInfo = await getMyProfile();

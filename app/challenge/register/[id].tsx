@@ -2,8 +2,9 @@ import { TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, ActivityIn
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ChallengeItem } from '@/core/model';
-import { repo } from '@/service/main';
+import { repo } from '@/api/main';
 import UserIcon from '@/components/UserIcon';
+import { useIsFocused } from '@react-navigation/native';
 
 const DrawLine = () => {
     return (
@@ -17,6 +18,12 @@ const DrawLine = () => {
 export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
     const [challengeInfo, setChallengeInfo] = useState<ChallengeItem | null>(null);
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+
+    }, [isFocused])
+
 
     const participateChallengeHandler = async () => {
         //await participateChallenge(challengeId);

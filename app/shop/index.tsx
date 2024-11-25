@@ -1,9 +1,9 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
-import { repo, util } from '@/service/main';
+import { repo, util } from '@/api/main';
 import { CouponItem, RewardItemMeta } from '@/core/model';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 
 export default function ShopScreen() {
     const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
@@ -11,7 +11,11 @@ export default function ShopScreen() {
     const [rewardList, setRewardList] = useState<RewardItemMeta[]>([]);
     const [selectedReward, setSelectedReward] = useState<RewardItemMeta | null>(null);
     const [selectedCoupon, setSelectedCoupon] = useState<CouponItem | null>(null);
+    const isFocused = useIsFocused();
 
+    useEffect(() => {
+
+    }, [isFocused])
     useEffect(() => {
         (async () => {
             const rewards = await repo.rewards.getAllRewards();
