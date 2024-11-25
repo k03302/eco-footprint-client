@@ -5,8 +5,8 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as turf from '@turf/turf';
 import { Pedometer } from 'expo-sensors';
-import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/api/map';
-import { adService } from '@/api/ad';
+import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/service/map';
+import { adService } from '@/service/ad';
 import ViewAdModal from '@/components/ViewAdModal';
 import { hasDatePassed } from '@/utils/time';
 import { router } from 'expo-router';
@@ -15,9 +15,10 @@ import { useIsFocused } from '@react-navigation/native';
 import UserIcon from '@/components/UserIcon';
 import { UserPointDisplay } from '@/components/UserPointDisplay';
 import { DonationItemMeta } from '@/core/model';
-import { repo, util } from '@/service/main';
+import { repo, util } from '@/api/main';
 import * as Progress from 'react-native-progress';
 import { getMyProfile } from '@/api/user';
+import { PedometerResult } from 'expo-sensors/build/Pedometer';
 
 
 const enum CAM_MODE {
@@ -36,6 +37,7 @@ const ITEM_ICON_SIZE = 50;
 const POLYGON_FILL_COLOR = "rgba(0, 255, 0, 0.3)";
 const CARBON_DECREASE_PER_METER = 0.2;
 const MAX_ITEM_COUNTER = 1;
+const MIN_METER_PER_STEP = 1;
 
 
 
@@ -62,11 +64,12 @@ export default function App() {
 
 
     const [initMapLocation, setInitMapLocation] = useState<Location.LocationObject | undefined>(undefined);
-    // const [cameraMode, setCameraMode] = useState<CAM_MODE>(CAM_MODE.FOLLOW_USER);
     const [userLocation, setUserLocation] = useState<Location.LocationObjectCoords | null>(null);
-    // const [lastBlockLoadedRegion, setLastBlockLoadedRegion] = useState<Region | null>(null);
     const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
-    const [lastLocationDate, setLastLocationDate] = useState<Date | null>(null);
+
+
+    let lastLocationdate: Date = new Date();
+
 
     const [showAdModal, setShowAdModal] = useState<boolean>(false);
 
@@ -87,6 +90,15 @@ export default function App() {
 
     }, [isFocused]);
 
+    const onPedometerUpdate = (result: PedometerResult) => {
+        setStepCount(result.steps);
+    }
+
+    const updateUserAchievement = useCallback(() => {
+        const moveDistanceInMeter = mapService.getBlockCount() * mapService.getBlockSizeInMeter();
+        setCarbonDecrease(moveDistanceInMeter * CARBON_DECREASE_PER_METER);
+        setMoveDistance(moveDistanceInMeter);
+    }, []);
 
     const viewAdHandler = () => {
         setShowAdModal(false);
@@ -100,6 +112,7 @@ export default function App() {
 
     const onOverlayUpdate = () => {
         console.log('overlay update');
+        updateUserAchievement();
         const newOverlays = mapService.getUpdatedOverlays();
         if (newOverlays) {
             setNewPolygonList(newOverlays.rects);
@@ -132,16 +145,12 @@ export default function App() {
         // if the midnight passed, initialize map state
 
 
-        const moveDistanceInMeter = mapService.getBlockCount() * mapService.getBlockSizeInMeter();
-        setCarbonDecrease(moveDistanceInMeter * CARBON_DECREASE_PER_METER);
-        setMoveDistance(moveDistanceInMeter)
+        updateUserAchievement();
 
-        if (lastLocationDate) {
-            if (hasDatePassed(lastLocationDate)) {
-                initializeMapState();
-            }
+        if (hasDatePassed(lastLocationdate)) {
+            initializeMapState();
         }
-        setLastLocationDate(new Date());
+        lastLocationdate = new Date();
 
         setUserLocation(newLocation.coords);
 
@@ -206,9 +215,7 @@ export default function App() {
                 onNewLocationForeground
             );
 
-            Pedometer.watchStepCount(result => {
-                setStepCount(result.steps);
-            });
+            Pedometer.watchStepCount(onPedometerUpdate);
 
             const currentLocation = await Location.getCurrentPositionAsync();
             setInitMapLocation(currentLocation);
