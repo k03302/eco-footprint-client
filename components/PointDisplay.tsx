@@ -8,7 +8,7 @@ export enum PointDisplaySizeLevel {
     SMALL = 1
 }
 
-export default function PointDisplay({ pointAmount = 0, displaySizeLevel }
+export function PointDisplay({ pointAmount = 0, displaySizeLevel }
     : { pointAmount: number, displaySizeLevel: PointDisplaySizeLevel }) {
     const iconSize = (displaySizeLevel === PointDisplaySizeLevel.BIG) ? 25 : 15;
     const fontSize = (displaySizeLevel === PointDisplaySizeLevel.BIG) ? 18 : 15

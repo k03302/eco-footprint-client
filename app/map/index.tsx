@@ -11,14 +11,14 @@ import { hasDatePassed } from '@/utils/time';
 import { router } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 
-import UserIcon from '@/components/UserIcon';
+import { UserIcon } from '@/components/UserIcon';
 import { DonationItem, DonationItemMeta, UserItem } from '@/core/model';
 import { getFileSource, repo } from '@/api/main';
 import * as Progress from 'react-native-progress';
 import { getMyProfile, getRewardPoint, participateDonation } from '@/api/user';
 import { PedometerResult } from 'expo-sensors/build/Pedometer';
-import PointDisplay from '@/components/PointDisplay';
-import MapRewardModal from '@/components/map/MapRewardModal';
+import { PointDisplay } from '@/components/PointDisplay';
+import { MapRewardModal } from '@/components/map/MapRewardModal';
 
 
 const enum CAM_MODE {

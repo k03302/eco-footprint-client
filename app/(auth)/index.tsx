@@ -3,12 +3,12 @@ import { Button, TouchableOpacity, Image, StyleSheet, View, Pressable } from 're
 import { router } from 'expo-router'
 
 import * as WebBrowser from 'expo-web-browser';
-import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
-import KakaoLoginButton from '@/components/auth/KakaoLoginButton';
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
+import { KakaoLoginButton } from '@/components/auth/KakaoLoginButton';
 import { getIdToken, login } from '@/api/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initialize } from '@/api/main';
-import KakaoLoginFakeButton from '@/components/auth/KakaoLoginFakeButton';
+import { KakaoLoginFakeButton } from '@/components/auth/KakaoLoginFakeButton';
 
 // Allows deep linking to function properly in Expo Go
 WebBrowser.maybeCompleteAuthSession();

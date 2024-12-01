@@ -10,7 +10,7 @@ enum UserIconSize {
 
 const DEFAULT_USER_IMAGE_PATH = "@/assets/images/user.png"
 
-export default function UserIcon({ imgSource, iconSize = UserIconSize.SMALL, onPress, message = "" }
+export function UserIcon({ imgSource, iconSize = UserIconSize.SMALL, onPress, message = "" }
     : { imgSource?: ImageSourcePropType, iconSize?: UserIconSize, onPress?: () => void, message?: string }) {
     const size = (iconSize === UserIconSize.BIG) ? 70 : 38;
 

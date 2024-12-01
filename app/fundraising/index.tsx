@@ -5,10 +5,10 @@ import { repo } from '@/api/main';
 import { DonationItem, DonationItemMeta, NO_DONATION, NO_USER, UserItem } from '@/core/model';
 import { adService } from '@/service/ad';
 import { useIsFocused } from '@react-navigation/native';
-import DonationUnit from '@/components/donation/DonationUnit';
+import { DonationUnit } from '@/components/donation/DonationUnit';
 import { getMyProfile, participateDonation } from '@/api/user';
-import PointDisplay from '@/components/PointDisplay';
-import DonationModal from '@/components/donation/DonationModal';
+import { PointDisplay } from '@/components/PointDisplay';
+import { DonationModal } from '@/components/donation/DonationModal';
 
 
 export default function DonationScreen() {

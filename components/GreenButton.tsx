@@ -14,7 +14,7 @@ interface ButtonProps extends PressableProps {
     variant?: 'primary' | 'secondary';
 }
 
-const GreenButton: React.FC<ButtonProps> = ({
+export const GreenButton: React.FC<ButtonProps> = ({
     title,
     style,
     variant = 'primary',
@@ -43,7 +43,6 @@ const GreenButton: React.FC<ButtonProps> = ({
     );
 };
 
-export default GreenButton;
 
 const styles = StyleSheet.create({
     button: {

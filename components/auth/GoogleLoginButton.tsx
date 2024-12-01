@@ -5,7 +5,7 @@ import { ResponseType, makeRedirectUri } from 'expo-auth-session';
 
 
 
-export default function GoogleLoginButton() {
+export function GoogleLoginButton() {
     const [googleUserInfo, setGoogleUserInfo] = useState({});
 
     // Configure the Google provider

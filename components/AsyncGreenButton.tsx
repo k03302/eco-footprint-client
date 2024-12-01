@@ -15,7 +15,7 @@ interface AsyncButtonProps extends PressableProps {
     variant?: 'primary' | 'secondary';
 }
 
-const AsyncGreenButton: React.FC<AsyncButtonProps> = ({
+export const AsyncGreenButton: React.FC<AsyncButtonProps> = ({
     title,
     onPressAsync,
     style,
@@ -53,8 +53,6 @@ const AsyncGreenButton: React.FC<AsyncButtonProps> = ({
         </Pressable>
     );
 };
-
-export default AsyncGreenButton;
 
 const styles = StyleSheet.create({
     button: {

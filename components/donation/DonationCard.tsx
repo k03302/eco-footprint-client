@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
 import { getFileSource } from '@/api/main';
 
-export default function DonationCard({ donationInfo }: { donationInfo: DonationItem }) {
+export function DonationCard({ donationInfo }: { donationInfo: DonationItem }) {
     return (<View style={styles.frame}>
         <View style={styles.imageWrapper}>
             <Image

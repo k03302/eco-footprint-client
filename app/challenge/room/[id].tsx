@@ -11,7 +11,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { HorizontalLine } from '@/components/HorizontalLine';
 import { ChallengeGallery } from '@/components/challenge/Gallery';
 import { getMyProfile } from '@/api/user';
-import ChallengeModal from '@/components/challenge/ChallengeModal';
+import { ChallengeModal } from '@/components/challenge/ChallengeModal';
 import { setApproveProofShot, uploadProofShoot } from '@/api/challenge';
 import { getDayDifference } from '@/utils/time';
 

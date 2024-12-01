@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ChallengeItem } from '@/core/model';
 import { getFileSource, repo } from '@/api/main';
-import UserIcon from '@/components/UserIcon';
+import { UserIcon } from '@/components/UserIcon';
 import { useIsFocused } from '@react-navigation/native';
 import { participateChallenge } from '@/api/challenge';
 import { HorizontalLine } from '@/components/HorizontalLine';

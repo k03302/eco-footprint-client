@@ -5,9 +5,9 @@ import { getFileSource, repo } from '@/api/main';
 import { DonationItem, DonationItemMeta, NO_DONATION } from '@/core/model';
 import { adService } from '@/service/ad';
 import { participateDonation } from '@/api/user';
-import DonationCard from '@/components/donation/DonationCard';
+import { DonationCard } from '@/components/donation/DonationCard';
 
-export default function DonationUnit({ donationId, onSelected }:
+export function DonationUnit({ donationId, onSelected }:
     { donationId: string, onSelected: (info: DonationItem) => void }) {
 
     const [donationInfo, setDonationInfo] = useState<DonationItem | null>(null);

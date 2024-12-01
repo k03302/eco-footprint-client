@@ -2,7 +2,7 @@ import { Modal, View, StyleSheet } from 'react-native';
 
 
 
-export default function SimpleModal({ modalVisible, setModalVisible, ContentComponent }:
+export function SimpleModal({ modalVisible, setModalVisible, ContentComponent }:
     {
         modalVisible: boolean, setModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
         ContentComponent?: React.ComponentType

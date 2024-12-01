@@ -1,7 +1,7 @@
 import { Button, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { router } from 'expo-router'
 
-export default function KakaoLoginButton() {
+export function KakaoLoginButton() {
     return (
         <TouchableOpacity onPress={() => router.push('/kakaologin')}>
             <Image source={require("@/assets/images/kakao_login.png")}
