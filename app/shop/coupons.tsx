@@ -57,7 +57,8 @@ export default function CouponScreen() {
             <Modal
                 animationType="slide"
                 visible={confirmModalVisible}
-                transparent={true}>
+                transparent={true}
+                onRequestClose={onPressModalClose}>
 
                 <View style={styles.centeredView}>
                     <TouchableOpacity onPress={() => { setConfirmModalVisible(false) }}>

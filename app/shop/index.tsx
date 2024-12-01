@@ -104,7 +104,8 @@ export default function ShopScreen() {
             <Modal
                 animationType="slide"
                 visible={confirmModalVisible}
-                transparent={true}>
+                transparent={true}
+                onRequestClose={() => { setConfirmModalVisible(false) }}>
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
                         {

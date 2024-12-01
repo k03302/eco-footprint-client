@@ -53,7 +53,8 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
     return (<Modal
         animationType='slide'
         visible={modalVisible}
-        transparent={true}>
+        transparent={true}
+        onRequestClose={closeAdHandler}>
         <TouchableOpacity style={styles.centeredView} onPress={() => { closeAdHandler }}>
             <View style={styles.modalView}>
 
