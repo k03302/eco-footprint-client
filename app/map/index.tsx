@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Alert, BackHandler, Text, Image, ActivityIndicator, Modal, TouchableOpacity, Button } from 'react-native';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { View, StyleSheet, Alert, BackHandler, Text, Image, ActivityIndicator, Modal, TouchableOpacity, Button, Touchable } from 'react-native';
 import MapView, { Polygon, Marker, Region, Details, Circle, LongPressEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
@@ -7,18 +7,18 @@ import * as turf from '@turf/turf';
 import { Pedometer } from 'expo-sensors';
 import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/service/map';
 import { adService } from '@/service/ad';
-import ViewAdModal from '@/components/ViewAdModal';
 import { hasDatePassed } from '@/utils/time';
 import { router } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 
 import UserIcon from '@/components/UserIcon';
-import { DonationItemMeta } from '@/core/model';
-import { repo, util } from '@/api/main';
+import { DonationItem, DonationItemMeta, UserItem } from '@/core/model';
+import { getFileSource, repo } from '@/api/main';
 import * as Progress from 'react-native-progress';
-import { getMyProfile } from '@/api/user';
+import { getMyProfile, getRewardPoint, participateDonation } from '@/api/user';
 import { PedometerResult } from 'expo-sensors/build/Pedometer';
 import PointDisplay from '@/components/PointDisplay';
+import MapRewardModal from '@/components/MapRewardModal';
 
 
 const enum CAM_MODE {
@@ -27,17 +27,29 @@ const enum CAM_MODE {
     FOLLOW_NEAREST_ITEM = 'follow nearest item'
 }
 
+const SEC_TO_MSEC = 1000;
+const KM_TO_M = 1000;
 
 const LOCATION_TASK_NAME = 'background-location-task';
-const CAM_MOVE_ANIMATION_DURATION = 1000;
-const FORGROUND_LOCATION_PERIOD = 3000;
-const BLOCK_LOAD_DELTA = 0.0005;
-const UNIT_ZOOM_DELTA = 0.001;
+const FORGROUND_LOCATION_PERIOD_SEC = 1;
+const FORGROUND_LOCATION_ACTIVE_TIME_SEC = 5;
+const FORGROUND_LOCATION_PERIOD_MSEC = FORGROUND_LOCATION_PERIOD_SEC * SEC_TO_MSEC;
+const FORGROUND_LOCATION_ACTIVE_TIME_MSEC = FORGROUND_LOCATION_ACTIVE_TIME_SEC * SEC_TO_MSEC;
+
+const MAX_MOVE_METER_PER_SEC = 5;
+const MAX_MOVE_METER_PER_LOCATION = FORGROUND_LOCATION_PERIOD_SEC * MAX_MOVE_METER_PER_SEC;
+const MAX_STEP_PER_METER = 1;
+const MAX_STEP_PER_SEC = 0.5;
+const MAX_STEP_PER_LOCATION = MAX_STEP_PER_METER * MAX_MOVE_METER_PER_LOCATION;
+const NOISE_MOVE_DISTANCE_METER = 1;
+
+const UNIT_ZOOM_DELTA = 0.005;
 const ITEM_ICON_SIZE = 50;
+const FOOTSTEP_ICON_SIZE = 20;
 const POLYGON_FILL_COLOR = "rgba(0, 255, 0, 0.3)";
 const CARBON_DECREASE_PER_METER = 0.2;
-const MAX_ITEM_COUNTER = 1;
-const MIN_METER_PER_STEP = 1;
+const AD_ITEM_PERIOD = 2;
+
 
 
 
@@ -46,11 +58,8 @@ const MIN_METER_PER_STEP = 1;
 export default function App() {
     const [stepCount, setStepCount] = useState<number>(0);
     const [carbonDecrease, setCarbonDecrease] = useState<number>(0);
-    const [moveDistance, setMoveDistance] = useState<number>(0);
-    const [itemCounter, setItemCounter] = useState<number>(0);
-
-    const [donationList, setDonationList] = useState<DonationItemMeta[]>([]);
-    const [selectedDonation, setSelectedDonation] = useState<DonationItemMeta | null>(null);
+    const [currentItemCount, setCurrentItemCount] = useState<number>(0);
+    const [takenItemCount, setTakenItemCount] = useState<number>(0);
 
 
     const [polygonList, setPolygonList] = useState<PolygonCoordinates[]>([]);
@@ -63,54 +72,66 @@ export default function App() {
 
 
 
-    const [initMapLocation, setInitMapLocation] = useState<Location.LocationObject | undefined>(undefined);
-    const [userLocation, setUserLocation] = useState<Location.LocationObjectCoords | null>(null);
+    const [initMapLocation, setInitMapLocation] = useState<LocationCoordinate | undefined>(undefined);
+    const [userLocation, setUserLocation] = useState<LocationCoordinate | null>(null);
     const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
 
 
-    let lastLocationdate: Date = new Date();
+    const [locationActive, setForgroundLocationActive] = useState<boolean>(true);
+
+    const [totalStepCount, setTotalStepCount] = useState<number>(0);
+    const [validStepCount, setValidStepCount] = useState<number>(0);
+    const [lastLocationdate, setLastLocationDate] = useState<Date>(new Date());
+    const [lastPedometerDate, setLastPedometerDate] = useState<Date>(new Date());
 
 
     const [showAdModal, setShowAdModal] = useState<boolean>(false);
-
+    const [userInfo, setUserInfo] = useState<UserItem | null>(null);
+    const [donationList, setDonationList] = useState<DonationItemMeta[]>([]);
+    const [selectedDonation, setSelectedDonation] = useState<DonationItem | null>(null);
 
 
     const mapRef = useRef<MapView | null>(null);
     const isFocused = useIsFocused();
+    const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
+
+
+    const updatePageInfo = async () => {
+        const userInfo = await getMyProfile();
+        setUserInfo(userInfo);
+        setDonationList(await repo.donations.getAllDonations());
+    }
 
     useEffect(() => {
-        if (isFocused) {
-            (async () => {
-                //            setDonationList(await repo.donations.getAllDonations());
-                const userInfo = await getMyProfile();
-                console.log(userInfo);
-            })()
-        }
-
-
+        if (!isFocused) return;
+        updatePageInfo();
     }, [isFocused]);
 
-    const onPedometerUpdate = (result: PedometerResult) => {
-        setStepCount(result.steps);
-    }
+    useEffect(() => {
+        if (!hasToUpdate) return;
+        updatePageInfo().then(() => {
+            setHasToUpdate(false);
+        });
+    }, [hasToUpdate]);
+
 
     const updateUserAchievement = useCallback(() => {
         const moveDistanceInMeter = mapService.getBlockCount() * mapService.getBlockSizeInMeter();
         setCarbonDecrease(moveDistanceInMeter * CARBON_DECREASE_PER_METER);
-        setMoveDistance(moveDistanceInMeter);
     }, []);
 
-    const viewAdHandler = () => {
+    const viewAdHandler = useCallback(() => {
         setShowAdModal(false);
         adService.showAd();
-    }
+    }, []);
 
-    const onMapPressed = (event: LongPressEvent) => {
+    const onMapPressed = useCallback((event: LongPressEvent) => {
         const coords = event.nativeEvent.coordinate;
         mapService.addPoint(coords.latitude, coords.longitude);
-    }
+        setCurrentItemCount(mapService.getItemCount());
+    }, []);
 
-    const onOverlayUpdate = () => {
+    const onOverlayUpdate = useCallback(() => {
         console.log('overlay update');
         updateUserAchievement();
         const newOverlays = mapService.getUpdatedOverlays();
@@ -119,30 +140,38 @@ export default function App() {
             setNewItemList(newOverlays.items);
             setNewFootstepList(newOverlays.footsteps);
         }
+    }, []);
+
+
+    const onItemPressed = (latitude: number, longitude: number, index: number) => {
+        const success = mapService.consumeItemAt(latitude, longitude);
+
+        if (!success) return;
+        setTakenItemCount(takenItemCount + 1);
+        setCurrentItemCount(mapService.getItemCount());
+
+
+        if (takenItemCount % AD_ITEM_PERIOD === AD_ITEM_PERIOD - 1) {
+            if (donationList.length === 0) return;
+            const randomIndex = Math.floor(Math.random() * donationList.length);
+            const donationId = donationList[randomIndex].id;
+            repo.donations.getDonation(donationId).then((donationInfo) => {
+                setSelectedDonation(donationInfo);
+                setShowAdModal(true);
+            })
+
+        } else {
+            getRewardPoint().then(() => {
+                setHasToUpdate(true);
+            });
+        }
+
+
+        console.log('item pressed', currentItemCount);
     }
 
-
-    const onItemPressed = useCallback((latitude: number, longitude: number, index: number) => {
-
-
-        mapService.consumeItemAt(latitude, longitude);
-
-        if (itemCounter >= MAX_ITEM_COUNTER) {
-            const randomIndex = Math.floor(Math.random() * donationList.length);
-            setSelectedDonation(donationList[randomIndex]);
-            setShowAdModal(true);
-            setItemCounter(0);
-        } else {
-            // getRewardPoint();
-            setItemCounter(itemCounter + 1);
-        }
-        console.log('item pressed', itemCounter);
-    }, [currentRegion]);
-
     // foreground에서 newLocation을 받았을 때의 콜백함수
-    const onNewLocationForeground = useCallback((newLocation: Location.LocationObject) => {
-        //console.log('newLocation', newLocation);
-        // if the midnight passed, initialize map state
+    const onNewLocationForeground = (newLocation: Location.LocationObject) => {
 
 
         updateUserAchievement();
@@ -150,28 +179,62 @@ export default function App() {
         if (hasDatePassed(lastLocationdate)) {
             initializeMapState();
         }
-        lastLocationdate = new Date();
+        const currentDate = new Date();
+        const millisecDelta = currentDate.getTime() - lastLocationdate.getTime();
+        const secDelta = millisecDelta / SEC_TO_MSEC;
+        setLastLocationDate(currentDate);
 
-        setUserLocation(newLocation.coords);
+
+        //console.log('ok', userLocation, newLocation.coords);
+        if (userLocation === null) {
+            setUserLocation({ latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude });
+            // update mapservice
+            if (!mapRef.current) return;
+            const coords = newLocation.coords;
+            mapService.addPoint(coords.latitude, coords.longitude);
+            return;
+        }
+
+        // get distance
+        const distanceDeltaInMeter = turf.distance(turf.point([userLocation.longitude, userLocation.latitude]),
+            turf.point([newLocation.coords.longitude, newLocation.coords.latitude]),
+            'kilometres') * KM_TO_M;
+        setUserLocation({ latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude });
+
+        const maxStepDelta = distanceDeltaInMeter * MAX_STEP_PER_METER;
+        if (secDelta * MAX_MOVE_METER_PER_SEC <= distanceDeltaInMeter) return;
 
 
         // update mapservice
         if (!mapRef.current) return;
         const coords = newLocation.coords;
         mapService.addPoint(coords.latitude, coords.longitude);
-    }, []);
+    }
 
+
+    // 지도를 움직였을 때의 콜백함수
     const onRegionChangeComplete = useCallback((region: Region, details: Details) => {
         setCurrentRegion(region);
 
         console.log('region changed');
-        mapService.getOverlaysInRegion(region.latitude, region.longitude, region.latitudeDelta, region.longitudeDelta)
-            .then((overlays) => {
-                if (!overlays) return;
-                setPolygonList(overlays.rects);
-                setItemList(overlays.items);
-                setFootstepList(overlays.footsteps);
-            });
+        const overlays = mapService.getOverlaysInRegion(region.latitude, region.longitude, region.latitudeDelta, region.longitudeDelta)
+        if (overlays) {
+            setPolygonList(overlays.rects);
+            setItemList(overlays.items);
+            setFootstepList(overlays.footsteps);
+        }
+    }, []);
+
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            const currentDate = new Date();
+            const millisecDiff = currentDate.getTime() - lastLocationdate.getTime();
+            setForgroundLocationActive(millisecDiff < FORGROUND_LOCATION_ACTIVE_TIME_MSEC);
+        }, FORGROUND_LOCATION_PERIOD_MSEC);
+
+        // Cleanup the interval on component unmount
+        return () => clearInterval(intervalId);
     }, []);
 
     useEffect(() => {
@@ -181,19 +244,6 @@ export default function App() {
     useEffect(() => {
         if (!adService.isAdLoaded() && !adService.isAdOnLoading()) {
             adService.loadAd();
-        }
-
-        adService.registerEarnedHandler(async () => {
-            adService.loadAd();
-            console.log(selectedDonation);
-            if (selectedDonation) {
-                // const userInfo = await participateDonation(selectedDonation.id);
-            }
-
-        });
-
-        return () => {
-            adService.registerEarnedHandler(() => { });
         }
     }, []);
     useEffect(() => {
@@ -209,16 +259,25 @@ export default function App() {
             Location.watchPositionAsync(
                 {
                     accuracy: Location.Accuracy.High,
-                    timeInterval: FORGROUND_LOCATION_PERIOD,
+                    timeInterval: FORGROUND_LOCATION_PERIOD_MSEC,
                     distanceInterval: 1,
                 },
                 onNewLocationForeground
             );
 
-            Pedometer.watchStepCount(onPedometerUpdate);
+            Pedometer.watchStepCount((result) => {
+                const nowDate = new Date();
+                const dateDiffSec = (nowDate.getTime() - lastPedometerDate.getTime()) / SEC_TO_MSEC;
+                const maxStepCount = MAX_STEP_PER_SEC * dateDiffSec;
+                setLastPedometerDate(nowDate);
+                const stepCountDiff = result.steps - stepCount;
+                const validStepCountDiff = Math.floor(stepCountDiff > maxStepCount ? maxStepCount : stepCountDiff);
+                setValidStepCount(validStepCount + validStepCountDiff);
+                setStepCount(result.steps);
+            });
 
             const currentLocation = await Location.getCurrentPositionAsync();
-            setInitMapLocation(currentLocation);
+            setInitMapLocation(currentLocation.coords);
             !!mapRef.current?.animateToRegion({
                 latitude: currentLocation.coords.latitude,
                 longitude: currentLocation.coords.longitude,
@@ -261,22 +320,33 @@ export default function App() {
     const initializeMapState = useCallback(() => {
         setStepCount(0);
         setCarbonDecrease(0);
-        setMoveDistance(0);
-        setItemCounter(0);
+        setCurrentItemCount(0);
         setPolygonList([]);
         setItemList([]);
         setFootstepList([]);
         setNewPolygonList([]);
         setNewItemList([]);
         setNewFootstepList([]);
+        setTakenItemCount(0);
+        setCurrentItemCount(0);
+        setTotalStepCount(0);
+        setValidStepCount(0);
+        setLastLocationDate(new Date());
+        setLastPedometerDate(new Date());
         mapService.initialize();
     }, []);
+
+
+
+
+
+
 
     const handleMapLoad = useCallback(() => {
         if (initMapLocation) {
             !!mapRef.current?.animateToRegion({
-                latitude: initMapLocation.coords.latitude,
-                longitude: initMapLocation.coords.longitude,
+                latitude: initMapLocation.latitude,
+                longitude: initMapLocation.longitude,
                 latitudeDelta: UNIT_ZOOM_DELTA, // Zoom level
                 longitudeDelta: UNIT_ZOOM_DELTA, // Zoom level
             }, 0);
@@ -284,11 +354,107 @@ export default function App() {
     }, [initMapLocation]);
 
 
+    const mapPolygons = useMemo(() => {
+        return polygonList.map((polygonCoords, index) => <Polygon
+            coordinates={polygonCoords}
+            fillColor={POLYGON_FILL_COLOR}
+            strokeWidth={0}
+            zIndex={100}
+            key={`p${index}`}
+        />)
+    }, [polygonList])
+
+    const itemMarkers = useMemo(() => {
+        return itemList.map((itemCoord, index) => {
+
+            return (<Marker
+                coordinate={itemCoord}
+                key={`i${index}`}
+                onPress={() => {
+                    onItemPressed(itemCoord.latitude, itemCoord.longitude, index);
+                }}
+
+            >
+                <Image
+                    source={require('@/assets/images/sprout.png')}
+                    style={{ width: ITEM_ICON_SIZE, height: ITEM_ICON_SIZE }}
+                    resizeMode="contain"
+                />
+            </Marker>)
+        })
+    }, [itemList]);
+
+    const footstepMarkers = useMemo(() => {
+        return footstepList.map((footstepPose, index) => {
+            return (<Marker
+                coordinate={footstepPose.location}
+                rotation={footstepPose.rotation}
+                key={`f${index}`}
+            >
+                <Image
+                    source={require('@/assets/images/catpaw.png')}
+                    style={{ width: FOOTSTEP_ICON_SIZE, height: FOOTSTEP_ICON_SIZE }}
+                    resizeMode="contain"
+                />
+            </Marker>)
+        })
+    }, [footstepList])
+
+    const newMapPolygons = useMemo(() => {
+        return newPolygonList.map((polygonCoords, index) => <Polygon
+            coordinates={polygonCoords}
+            fillColor={POLYGON_FILL_COLOR}
+            strokeWidth={0}
+            zIndex={100}
+            key={`np${index}`}
+        />)
+    }, [newPolygonList]);
+
+    const newItemMarkers = useMemo(() => {
+        return newItemList.map((itemCoord, index) => {
+
+            return (<Marker
+                coordinate={itemCoord}
+                key={`ni${index}`}
+                onPress={() => {
+                    onItemPressed(itemCoord.latitude, itemCoord.longitude, index);
+                }}
+
+            >
+                <Image
+                    source={require('@/assets/images/sprout.png')}
+                    style={{ width: ITEM_ICON_SIZE, height: ITEM_ICON_SIZE }}
+                    resizeMode="contain"
+                />
+            </Marker>)
+        })
+    }, [newItemList]);
+
+    const newFootstepMarkers = useMemo(() => {
+        return newFootstepList.map((footstepPose, index) => {
+            return (<Marker
+                coordinate={footstepPose.location}
+                rotation={footstepPose.rotation}
+                key={`f${index}`}
+            >
+                <Image
+                    source={require('@/assets/images/catpaw.png')}
+                    style={{ width: FOOTSTEP_ICON_SIZE, height: FOOTSTEP_ICON_SIZE }}
+                    resizeMode="contain"
+                />
+            </Marker>)
+        })
+    }, [newFootstepList]);
+
+
     return (
         <View style={styles.container}>
 
             <View style={styles.profilecontainer}>
-                <UserIcon message={"프로필"} onPress={() => { router.push('/profile') }} />
+                <UserIcon
+                    imgSource={userInfo && userInfo.thumbnailId ? { uri: userInfo.thumbnailId } : undefined}
+                    message={"프로필"}
+                    onPress={() => { router.push('/profile') }} />
             </View>
 
             <View style={styles.mapcontainer}>
@@ -303,161 +469,67 @@ export default function App() {
                             showsCompass={false}
                             showsMyLocationButton={true}
                             onLongPress={onMapPressed}
+                            moveOnMarkerPress={false}
                         >
                             {
-                                userLocation && <Marker coordinate={userLocation}>
-
-                                </Marker>
+                                userLocation && <Marker coordinate={userLocation}></Marker>
                             }
-                            {
-                                polygonList.map((polygonCoords, index) => <Polygon
-                                    coordinates={polygonCoords}
-                                    fillColor={POLYGON_FILL_COLOR}
-                                    strokeWidth={0}
-                                    zIndex={100}
-                                    key={`poly${index}`}
-                                />)
-                            }
-                            {
-                                itemList.map((itemCoord, index) => {
-
-                                    return (<Marker
-                                        coordinate={itemCoord}
-                                        key={`item${index}`}
-                                        onPress={() => {
-                                            onItemPressed(itemCoord.latitude, itemCoord.longitude, index);
-                                        }}
-
-                                    >
-                                        <Image
-                                            source={require('@/assets/images/sprout.png')}
-                                            style={{ width: ITEM_ICON_SIZE, height: ITEM_ICON_SIZE }}
-                                            resizeMode="contain"
-                                        />
-                                    </Marker>)
-                                })
-                            }
-                            {/* {
-                                footstepList.map((footstepPose, index) => <CatPaw
-                                    key={`catpaw${index}`}
-                                    rotation={footstepPose.rotation} coordinate={footstepPose.location}
-                                    keyIndex={index}
-                                >
-
-                                </CatPaw>)
-                            } */}
-
-
-                            {
-                                newPolygonList.map((polygonCoords, index) => <Polygon
-                                    coordinates={polygonCoords}
-                                    fillColor={POLYGON_FILL_COLOR}
-                                    strokeWidth={0}
-                                    zIndex={100}
-                                    key={`poly${index}`}
-                                />)
-                            }
-                            {
-                                newItemList.map((itemCoord, index) => {
-
-                                    return (<Marker
-                                        coordinate={itemCoord}
-                                        key={`item${index}`}
-                                        onPress={() => {
-                                            onItemPressed(itemCoord.latitude, itemCoord.longitude, index);
-                                        }}
-
-                                    >
-                                        <Image
-                                            source={require('@/assets/images/sprout.png')}
-                                            style={{ width: ITEM_ICON_SIZE, height: ITEM_ICON_SIZE }}
-                                            resizeMode="contain"
-                                        />
-                                    </Marker>)
-                                })
-                            }
-                            {/* {
-                                newFootstepList.map((footstepPose, index) => <CatPaw
-                                    key={`catpaw${index}`}
-                                    rotation={footstepPose.rotation} coordinate={footstepPose.location}
-                                    keyIndex={index}
-                                >
-
-                                </CatPaw>)
-                            } */}
-                        </MapView> : <ActivityIndicator size='large'></ActivityIndicator>
+                            {mapPolygons}
+                            {itemMarkers}
+                            {footstepMarkers}
+                            {newMapPolygons}
+                            {newItemMarkers}
+                            {newFootstepMarkers}
+                        </MapView> : <ActivityIndicator size='large' color={'white'}></ActivityIndicator>
 
 
                 }
 
-
+                {/* point display */}
                 <View style={styles.pointdisplay}>
-                    <PointDisplay pointAmount={0} displaySizeLevel={2}></PointDisplay>
+                    <PointDisplay pointAmount={userInfo ? userInfo.point : 0} displaySizeLevel={2}></PointDisplay>
                 </View>
+                {/* track item button */}
+                <View style={styles.trackitemdisplay}>
+                    <TouchableOpacity onPress={() => { }}>
+
+                    </TouchableOpacity>
+                </View>
+
+                <View style={{
+                    zIndex: 100,
+                    position: 'absolute',
+                    top: 10, left: 10, width: 10, height: 10,
+                    borderRadius: 5,
+                    borderColor: 'black',
+                    borderWidth: 0.5,
+                    backgroundColor: locationActive ? 'green' : 'gray',
+                }} />
+
+
             </View>
 
 
 
             <View style={styles.moveinfocontainer}>
                 <View style={styles.movecount}>
-                    <Text style={{ fontSize: 40 }}>{stepCount}</Text>
-                    <Text style={{ fontSize: 18 }}> 걸음</Text>
+                    <Text style={{ fontSize: 20 }}>탄소저감량  </Text>
+                    <Text style={{ fontSize: 40 }}>{carbonDecrease.toFixed(1)}g</Text>
+
                 </View>
                 <View style={styles.extracount}>
-                    <Text style={{ opacity: 0.8, fontSize: 10 }}>탄소저감량  </Text>
-                    <Text style={{ fontSize: 18 }}>{carbonDecrease.toFixed(1)}g</Text>
-                    <Text style={{ fontSize: 20 }}>   </Text>
-                    <Text style={{ fontSize: 18 }}>{moveDistance.toFixed(1)}m</Text>
-                    <Text style={{ opacity: 0.8, fontSize: 10 }}> 이동거리</Text>
-
+                    {/* <Text style={{ opacity: 0.8, fontSize: 10 }}>걸음수  </Text>
+                    <Text style={{ fontSize: 18 }}>{validStepCount.toFixed(0)}</Text> */}
+                    <Text style={{ opacity: 0.8, fontSize: 10 }}>남은 아이템 개수   </Text>
+                    <Text style={{ fontSize: 18 }}>{currentItemCount}</Text>
                 </View>
             </View>
 
-            <Modal
-                animationType='slide'
-                visible={showAdModal}
-                transparent={true}>
-                <View style={styles.centeredView}>
-                    <View style={styles.modalView}>
-                        {
-                            selectedDonation ? <View style={styles.frame}>
-                                <View style={styles.imageWrapper}>
-                                    <Image
-                                        // source={util.getFileSource(selectedDonation.thumbnailId)}
-                                        style={styles.image}
-                                    />
-                                </View>
-
-                                <View style={styles.overlay}>
-                                    <Progress.Bar
-                                        progress={selectedDonation.currentPoint / selectedDonation.targetPoint}
-                                        width={150}
-                                        color="#3b5998"
-                                        style={styles.progressBar}
-                                    />
-                                    <Text style={styles.progressText}>
-                                        {(selectedDonation.currentPoint / selectedDonation.targetPoint * 100).toFixed(0)}%
-                                    </Text>
-                                </View>
-                            </View> : <></>
-
-                        }
-
-                        <View style={{ flexDirection: 'row', }}>
-                            <TouchableOpacity onPress={() => { setShowAdModal(false); }}>
-                                <Image source={require("@/assets/images/rejectbutton.png")}
-                                    style={[styles.image_button,]} />
-                            </TouchableOpacity>
-                            <Text>   </Text>
-                            <TouchableOpacity onPress={viewAdHandler}>
-                                <Image source={require("@/assets/images/pluspointbutton.png")}
-                                    style={[styles.image_button]} />
-                            </TouchableOpacity>
-                        </View>
-
-                    </View>
-                </View>
-            </Modal>
+            {
+                selectedDonation ? <MapRewardModal modalVisible={showAdModal} setModalVisible={setShowAdModal}
+                    donationInfo={selectedDonation} earnedHandler={() => { setHasToUpdate(true) }}
+                ></MapRewardModal> : <></>
+            }
 
             <View style={styles.tabcontainer}>
                 <TouchableOpacity style={styles.tabbutton} onPress={() => { router.push("/challenge") }}>
@@ -486,51 +558,51 @@ export default function App() {
 
 
 
-function CatPaw({ coordinate, rotation, keyIndex }: { coordinate: LocationCoordinate, rotation: number, keyIndex: number }) {
-    const footRadius = mapService.getBlockSizeInMeter() / 5;
-    const footToeDistance = footRadius * 2;
-    const toeRadius = footRadius / 2;
+// function CatPaw({coordinate, rotation, keyIndex}: {coordinate: LocationCoordinate, rotation: number, keyIndex: number }) {
+//     const footRadius = mapService.getBlockSizeInMeter() / 5;
+//     const footToeDistance = footRadius * 2;
+//     const toeRadius = footRadius / 2;
 
-    const toeAngleDelta = 30;
-    const degToRad = Math.PI / 180;
+//     const toeAngleDelta = 30;
+//     const degToRad = Math.PI / 180;
 
-    const leftToeRadian = (rotation + toeAngleDelta) * degToRad;
-    const centerToeRadian = rotation * degToRad;
-    const rightToeRadian = (rotation - toeAngleDelta) * degToRad;
+//     const leftToeRadian = (rotation + toeAngleDelta) * degToRad;
+//     const centerToeRadian = rotation * degToRad;
+//     const rightToeRadian = (rotation - toeAngleDelta) * degToRad;
 
-    const leftTeoLocation = {
-        latitude: coordinate.latitude - footToeDistance * Math.sin(leftToeRadian) * DEGREE_PER_METER,
-        longitude: coordinate.longitude + footToeDistance * Math.cos(leftToeRadian) * DEGREE_PER_METER
-    };
-    const centerTeoLocation = {
-        latitude: coordinate.latitude - footToeDistance * Math.sin(centerToeRadian) * DEGREE_PER_METER,
-        longitude: coordinate.longitude + footToeDistance * Math.cos(centerToeRadian) * DEGREE_PER_METER
-    };
-    const rightTeoLocation = {
-        latitude: coordinate.latitude - footToeDistance * Math.sin(rightToeRadian) * DEGREE_PER_METER,
-        longitude: coordinate.longitude + footToeDistance * Math.cos(rightToeRadian) * DEGREE_PER_METER
-    };
+//     const leftTeoLocation = {
+//         latitude: coordinate.latitude + footToeDistance * Math.cos(leftToeRadian) * DEGREE_PER_METER,
+//         longitude: coordinate.longitude - footToeDistance * Math.sin(leftToeRadian) * DEGREE_PER_METER
+//     };
+//     const centerTeoLocation = {
+//         latitude: coordinate.latitude + footToeDistance * Math.cos(centerToeRadian) * DEGREE_PER_METER,
+//         longitude: coordinate.longitude - footToeDistance * Math.sin(centerToeRadian) * DEGREE_PER_METER
+//     };
+//     const rightTeoLocation = {
+//         latitude: coordinate.latitude + footToeDistance * Math.cos(rightToeRadian) * DEGREE_PER_METER,
+//         longitude: coordinate.longitude - footToeDistance * Math.sin(rightToeRadian) * DEGREE_PER_METER
+//     };
 
 
-    return (
-        <>
-            {/* foot */}
-            <Circle center={coordinate} radius={footRadius} strokeWidth={0} fillColor={"#000000"} key={`foot${keyIndex}`} zIndex={1000}>
-            </Circle>
+//     return (
+//         <>
+//             {/* foot */}
+//             <Circle center={coordinate} radius={footRadius} strokeWidth={0} fillColor={"#000000"} key={`foot${keyIndex}`} zIndex={1000}>
+//             </Circle>
 
-            {/* toes */}
-            <Circle center={leftTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`left${keyIndex}`} zIndex={1000}>
+//             {/* toes */}
+//             <Circle center={leftTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`left${keyIndex}`} zIndex={1000}>
 
-            </Circle>
-            <Circle center={centerTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`center${keyIndex}`} zIndex={1000}>
+//             </Circle>
+//             <Circle center={centerTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`center${keyIndex}`} zIndex={1000}>
 
-            </Circle>
-            <Circle center={rightTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`right${keyIndex}`} zIndex={1000}>
+//             </Circle>
+//             <Circle center={rightTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`right${keyIndex}`} zIndex={1000}>
 
-            </Circle>
-        </>
-    );
-}
+//             </Circle>
+//         </>
+//     );
+// }
 
 
 const styles = StyleSheet.create({
@@ -540,10 +612,12 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        backgroundColor: 'gray'
+        backgroundColor: 'lightgray'
     },
     mapcontainer: {
         flex: 9,
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     tabcontainer: {
         flex: 1,
@@ -563,6 +637,12 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 10,
         left: 10,
+        zIndex: 100,
+    },
+    trackitemdisplay: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
         zIndex: 100,
     },
     profilebutton: {
@@ -592,7 +672,8 @@ const styles = StyleSheet.create({
     movecount: {
         flex: 3,
         flexDirection: 'row',
-        alignItems: 'flex-end'
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     extracount: {
         flex: 2,
