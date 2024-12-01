@@ -2,7 +2,7 @@ import { getFileSource } from "@/api/main"
 import { ChallengeItem, ChallengeRecoordItem, UserItemMeta } from "@/core/model"
 import { MaterialIcons } from "@expo/vector-icons"
 import { ImageSourcePropType, View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from "react-native"
-import UserIcon from "../UserIcon"
+import { UserIcon } from "../UserIcon"
 import { hasDatePassed } from "@/utils/time"
 import { memo, useEffect, useState } from "react"
 import * as Progress from 'react-native-progress';
