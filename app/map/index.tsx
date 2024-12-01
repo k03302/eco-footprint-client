@@ -5,7 +5,7 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as turf from '@turf/turf';
 import { Pedometer } from 'expo-sensors';
-import { mapService, LocationCoordinate, RotatableCoordinate, PolygonCoordinates, DEGREE_PER_METER } from '@/service/map';
+import { mapService, MapCoordData, MapCoordAngleData, DEGREE_PER_METER } from '@/service/map';
 import { adService } from '@/service/ad';
 import { hasDatePassed } from '@/utils/time';
 import { router } from 'expo-router';
@@ -62,13 +62,13 @@ export default function App() {
     const [takenItemCount, setTakenItemCount] = useState<number>(0);
 
 
-    const [polygonList, setPolygonList] = useState<PolygonCoordinates[]>([]);
-    const [itemList, setItemList] = useState<(LocationCoordinate)[]>([]);
-    const [footstepList, setFootstepList] = useState<RotatableCoordinate[]>([]);
+    const [polygonList, setPolygonList] = useState<MapCoordData[][]>([]);
+    const [itemList, setItemList] = useState<MapCoordData[]>([]);
+    const [footstepList, setFootstepList] = useState<MapCoordAngleData[]>([]);
 
     const [mapLoaded, setMapLoaded] = useState<boolean>(false);
     const [mapUpdated, setMapUpdated] = useState<boolean>(false);
-    const [userLocation, setUserLocation] = useState<LocationCoordinate | null>(null);
+    const [userLocation, setUserLocation] = useState<MapCoordData | null>(null);
     const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
 
 
@@ -161,9 +161,6 @@ export default function App() {
                 setHasToUpdate(true);
             });
         }
-
-
-        console.log('item pressed', currentItemCount);
     }
 
     // foreground에서 newLocation을 받았을 때의 콜백함수

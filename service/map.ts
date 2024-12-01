@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hasDatePassed } from '@/utils/time'
-import { Direction, LocationCoordinate, PolygonCoordinates, RotatableCoordinate } from '@/utils/geo';
+import { BlockDirection, MapCoordData, MapCoordAngleData } from '@/utils/geo';
 
 const MIDNIGHT_MAP_INITIALIZED_KEY = 'map_initialized';
 
@@ -17,11 +17,11 @@ type BlockInfoData = {
     latAsInteger: number;
     lngAsInteger: number;
     timestamp: number;
-    firstMoveDirection: number[];
-    adjointDirection: number[][];
-    itemPos: LocationCoordinate | null;
-    footstepPos: LocationCoordinate | null;
-    footstepDirection: number[];
+    firstMoveDirection: BlockDirection;
+    adjointDirection: BlockDirection[];
+    itemPos: MapCoordData | null;
+    footstepPos: MapCoordData | null;
+    footstepDirection: BlockDirection;
     isLeftFoot: boolean;
 }
 
@@ -31,7 +31,7 @@ class MapBlockService {
     private blockInfoMap = new Map<string, BlockInfoData>();
     private newBlockIndexBuffer: string[] = [];
 
-    private itemLocations: LocationCoordinate[] = [];
+    private itemLocations: MapCoordData[] = [];
     private averageItemCountPerBlock: number = 0.2;
 
     private lastBlockInfo: BlockInfoData | null = null;
@@ -122,7 +122,7 @@ class MapBlockService {
     }
 
     getItemsInRegion(latCenter: number, lngCenter: number, latDelta: number, lngDelta: number) {
-        const items: LocationCoordinate[] = [];
+        const items: MapCoordData[] = [];
         const latTotalCount = Math.floor(latDelta / this.blockSize);
         const lngTotalCount = Math.floor(lngDelta / this.blockSize);
         const latCenterRound = Math.floor(latCenter * this.blockScaler) * this.blockSize;
@@ -157,9 +157,9 @@ class MapBlockService {
 
 
     getUpdatedOverlays() {
-        const rects: PolygonCoordinates[] = [];
-        const items: LocationCoordinate[] = [];
-        const footsteps: RotatableCoordinate[] = [];
+        const rects: MapCoordData[][] = [];
+        const items: MapCoordData[] = [];
+        const footsteps: MapCoordAngleData[] = [];
 
         console.log(this.newBlockIndexBuffer);
         for (const blockIndex of this.newBlockIndexBuffer) {
@@ -176,7 +176,7 @@ class MapBlockService {
                 if (blockInfo.footstepPos && blockInfo.footstepDirection) {
                     footsteps.push({
                         location: blockInfo.footstepPos,
-                        rotation: Direction.getAngle(blockInfo.footstepDirection)
+                        rotation: blockInfo.footstepDirection.getAngle()
                     });
                 }
             }
@@ -194,9 +194,9 @@ class MapBlockService {
         this.newBlockIndexBuffer = [];
         this.overlayUpdateHandler();
 
-        const rects: PolygonCoordinates[] = [];
-        const items: LocationCoordinate[] = [];
-        const footsteps: RotatableCoordinate[] = [];
+        const rects: MapCoordData[][] = [];
+        const items: MapCoordData[] = [];
+        const footsteps: MapCoordAngleData[] = [];
 
 
         const latTotalCount = Math.floor(latitudeDelta / this.blockSize);
@@ -221,7 +221,7 @@ class MapBlockService {
                     if (blockInfo.footstepPos && blockInfo.footstepDirection) {
                         footsteps.push({
                             location: blockInfo.footstepPos,
-                            rotation: Direction.getAngle(blockInfo.footstepDirection)
+                            rotation: blockInfo.footstepDirection.getAngle()
                         });
                     }
                 }
@@ -269,11 +269,11 @@ class MapBlockService {
             latAsInteger: latAsInteger,
             lngAsInteger: lngAsInteger,
             timestamp: Date.now(),
-            firstMoveDirection: [0, 0],
+            firstMoveDirection: BlockDirection.NONE,
             adjointDirection: [],
             itemPos: itemPos,
             footstepPos: null,
-            footstepDirection: [0, 0],
+            footstepDirection: BlockDirection.NONE,
             isLeftFoot: true
         }
 
@@ -283,8 +283,8 @@ class MapBlockService {
 
 
         if (lastBlockInfo && lastBlockInfo !== newBlockInfo) {
-            if (Direction.isNone(lastBlockInfo.firstMoveDirection)) {
-                lastBlockInfo.firstMoveDirection = Direction.getDirectionContinuous({
+            if (lastBlockInfo.firstMoveDirection.isNone()) {
+                lastBlockInfo.firstMoveDirection = BlockDirection.getDirection({
                     latitude: lastBlockInfo.latAsInteger,
                     longitude: lastBlockInfo.lngAsInteger,
                 }, {
@@ -311,4 +311,4 @@ class MapBlockService {
 }
 
 export const mapService = new MapBlockService(UNIT_COUNT);
-export { BlockInfoData, LocationCoordinate, RotatableCoordinate, PolygonCoordinates };
+export { BlockInfoData, MapCoordData, MapCoordAngleData };

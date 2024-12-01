@@ -128,7 +128,7 @@ export function getBlockPolygon(mapRegion: MapRegion,
 
 
 
-enum BlockUnitDirectionType {
+export enum BlockUnitDirectionType {
     NONE = 0,
     UP = 1,
     DOWN = 2,
@@ -253,10 +253,5 @@ export type MapCoordData = {
 
 export type MapCoordAngleData = {
     location: MapCoordData
-    rotation: number
-}
-
-export type RotableItemData = {
-    location: MapCoordData,
     rotation: number
 }
