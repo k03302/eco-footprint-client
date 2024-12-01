@@ -5,7 +5,7 @@ import { getFileSource, repo } from '@/api/main';
 import { DonationItem, DonationItemMeta, NO_DONATION } from '@/core/model';
 import { adService } from '@/service/ad';
 import { participateDonation } from '@/api/user';
-import DonationCard from './DonationCard';
+import DonationCard from './donation/DonationCard';
 
 export default function DonationUnit({ donationId, onSelected }:
     { donationId: string, onSelected: (info: DonationItem) => void }) {

@@ -9,9 +9,9 @@ import * as Progress from 'react-native-progress';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { HorizontalLine } from '@/components/HorizontalLine';
-import { ChallengeGallery } from '@/components/Gallery';
+import { ChallengeGallery } from '@/components/challenge/Gallery';
 import { getMyProfile } from '@/api/user';
-import ChallengeModal from '@/components/ChallengeModal';
+import ChallengeModal from '@/components/challenge/ChallengeModal';
 import { setApproveProofShot, uploadProofShoot } from '@/api/challenge';
 import { getDayDifference } from '@/utils/time';
 

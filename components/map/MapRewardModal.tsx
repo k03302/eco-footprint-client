@@ -3,10 +3,10 @@ import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
 import { getFileSource } from '@/api/main';
 import { DonationItem } from '@/core/model';
-import DonationCard from '@/components/DonationCard';
+import DonationCard from '@/components/donation/DonationCard';
 import { adService } from '@/service/ad';
 import { participateDonation } from '@/api/user';
-import GreenButton from './GreenButton';
+import GreenButton from '../GreenButton';
 import { useIsFocused } from '@react-navigation/native';
 
 export default function MapRewardModal({ modalVisible, setModalVisible, donationInfo, earnedHandler = () => { } }

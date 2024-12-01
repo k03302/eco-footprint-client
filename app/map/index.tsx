@@ -18,7 +18,7 @@ import * as Progress from 'react-native-progress';
 import { getMyProfile, getRewardPoint, participateDonation } from '@/api/user';
 import { PedometerResult } from 'expo-sensors/build/Pedometer';
 import PointDisplay from '@/components/PointDisplay';
-import MapRewardModal from '@/components/MapRewardModal';
+import MapRewardModal from '@/components/map/MapRewardModal';
 
 
 const enum CAM_MODE {
@@ -114,7 +114,7 @@ export default function App() {
 
 
 
-
+    console.log('rerender');
 
 
 

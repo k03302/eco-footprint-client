@@ -1,5 +1,5 @@
 import { Modal, Text, View, StyleSheet, ImageSourcePropType, Image, TouchableOpacity } from 'react-native';
-import GreenButton from './GreenButton';
+import GreenButton from '../GreenButton';
 
 
 export default function ChallengeModal({ modalVisible, setModalVisible, imgDate, imgSource, onPress = async () => { }, buttonTitle = '', showButton = true }:

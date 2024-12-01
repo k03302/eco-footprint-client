@@ -14,17 +14,25 @@ export default function DonationCard({ donationInfo }: { donationInfo: DonationI
         </View>
 
         <View style={styles.overlay}>
-            <Text>{donationInfo.name}</Text>
+            <Text style={styles.description}>{donationInfo.name}</Text>
             <Progress.Bar
                 progress={donationInfo.currentPoint / donationInfo.targetPoint}
                 width={150}
+                height={25}
                 color="#3b5998"
+                unfilledColor="lightgray"
                 style={styles.progressBar}
                 borderWidth={0}
+                borderRadius={3}
             />
-            <Text style={styles.progressText}>
-                {(100 * donationInfo.currentPoint / donationInfo.targetPoint).toFixed(0)}%
-            </Text>
+            <View style={styles.progressText}>
+                <Text>
+                    {donationInfo.currentPoint} / {donationInfo.targetPoint}
+                </Text>
+                <Text>
+                    {(100 * donationInfo.currentPoint / donationInfo.targetPoint).toFixed(0)}%
+                </Text>
+            </View>
         </View>
     </View>)
 }
@@ -37,13 +45,13 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative', // 겹친 요소를 위한 상대적 위치 설정        
+        position: 'relative',
     },
     imageWrapper: {
         width: '100%',
         height: '75%',
         borderRadius: 20,
-        overflow: 'hidden', // 라운딩된 모서리를 유지
+        overflow: 'hidden',
     },
     image: {
         width: '100%',
@@ -53,18 +61,28 @@ const styles = StyleSheet.create({
     overlay: {
         position: 'absolute',
         bottom: 0,
-        width: 220,
+        width: 0,
         height: 100,
+        padding: 10,
+        backgroundColor: 'white',
         borderRadius: 15,
         justifyContent: 'center',
         alignItems: 'center',
     },
+    description: {
+        flex: 2,
+        fontSize: 20,
+        justifyContent: 'center'
+    },
     progressBar: {
+        flex: 1,
         marginBottom: 5,
     },
     progressText: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        flex: 1,
+        fontSize: 15,
         color: '#333',
+        marginLeft: 20,
+        flexDirection: 'row'
     },
 });
