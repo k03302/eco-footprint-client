@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hasDatePassed } from '@/utils/time'
-import { BlockDirection, MapCoordData, MapCoordAngleData, getFullPolygon, getBlockPolygon } from '@/utils/geo';
+import { BlockDirection, MapCoordData, MapCoordAngleData, getFullPolygon, getBlockPolygon, getCornerTypesFromAdjointDirections, BlockCornerType } from '@/utils/geo';
 
 const MIDNIGHT_MAP_INITIALIZED_KEY = 'map_initialized';
 
@@ -169,12 +169,32 @@ class MapBlockService {
                 const blockIndex = this.getResidentBlockIndex(latitude, longitude, latCount, lngCount);
                 const blockInfo = this.blockInfoMap.get(blockIndex);
                 if (blockInfo) {
-                    rects.push(getFullPolygon({
+
+                    const cornerTypes = getCornerTypesFromAdjointDirections(blockInfo.adjointDirection);
+
+                    // rects.push(getFullPolygon({
+                    //     latitude: latCenterRound + this.blockSize * latCount,
+                    //     longitude: lngCenterRound + this.blockSize * lngCount,
+                    //     latitudeDelta: this.blockSize,
+                    //     longitudeDelta: this.blockSize
+                    // }));
+
+                    // console.log(blockInfo.adjointDirection, cornerTypes);
+
+                    rects.push(getBlockPolygon({
                         latitude: latCenterRound + this.blockSize * latCount,
                         longitude: lngCenterRound + this.blockSize * lngCount,
                         latitudeDelta: this.blockSize,
                         longitudeDelta: this.blockSize
-                    }));
+                    }, cornerTypes));
+
+                    // rects.push(getBlockPolygon({
+                    //     latitude: latCenterRound + this.blockSize * latCount,
+                    //     longitude: lngCenterRound + this.blockSize * lngCount,
+                    //     latitudeDelta: this.blockSize,
+                    //     longitudeDelta: this.blockSize
+                    // }, [BlockCornerType.VERTICAL_EXTRUDED, BlockCornerType.VERTICAL_EXTRUDED, BlockCornerType.VERTICAL_EXTRUDED, BlockCornerType.VERTICAL_EXTRUDED]));
+
                     if (blockInfo.itemPos) {
                         items.push(blockInfo.itemPos);
                     }
@@ -269,11 +289,12 @@ class MapBlockService {
         for (let latCount = -1; latCount <= 1; ++latCount) {
             for (let lngCount = -1; lngCount <= 1; ++lngCount) {
                 if (latCount === 0 && lngCount === 0) continue;
-                const blockIndex = this.getResidentBlockIndex(latitude, longitude, latCount, lngCount);
-                const blockInfo = this.blockInfoMap.get(blockIndex);
-                if (blockInfo) {
+                const otherBlockIndex = this.getResidentBlockIndex(latitude, longitude, latCount, lngCount);
+                const otherBlockInfo = this.blockInfoMap.get(otherBlockIndex);
+                if (otherBlockInfo) {
                     const adjointDirection = new BlockDirection(latCount, lngCount);
                     newBlockInfo.adjointDirection.push(adjointDirection);
+                    otherBlockInfo.adjointDirection.push(adjointDirection.opposite());
                 }
             }
         }

@@ -1,81 +1,86 @@
-const CORNER_SIZE_RATIO = 0.2;
+const CORNER_SIZE_RATIO = 0.3;
 
 
-enum BlockCornerType {
+export enum BlockCornerType {
     NONE = 0,
     ROUNDED = -1,
     VERTICAL_EXTRUDED = 1,
 }
 
 
-function linearCombination(coord1: MapCoordData, coord2: MapCoordData, coord1Factor: number, coord2Factor: number): MapCoordData {
-    return {
-        latitude: coord1.latitude * coord1Factor + coord2.latitude * coord2Factor,
-        longitude: coord1.longitude * coord1Factor + coord2.longitude * coord2Factor
-    }
-}
-
-
 
 function getRoundedCornerLine(
-    startLocation: MapCoordData,
-    endLocation: MapCoordData
+    cornerPoint: MapCoordData,
+    cornerLength: number,
+    cornerDirection: BlockDirection
 ): MapCoordData[] {
+    const { latitude: cornerLat, longitude: cornerLng } = cornerPoint;
+    const dLat = cornerDirection.lat * cornerLength;
+    const dLng = cornerDirection.lng * cornerLength;
 
-    return [
-        startLocation,
-        linearCombination(startLocation, endLocation, 0.8, 0.5),
-        linearCombination(startLocation, endLocation, 0.7, 0.7),
-        linearCombination(startLocation, endLocation, 0.8, 0.5),
-        endLocation
-    ];
+
+    if (cornerDirection === BlockDirection.DOWNLEFT || cornerDirection === BlockDirection.UPRIGHT) {
+        return [
+            { latitude: cornerLat - dLat * 1, longitude: cornerLng - dLng * 0 },
+            { latitude: cornerLat - dLat * 0.5, longitude: cornerLng - dLng * 0.2 },
+            { latitude: cornerLat - dLat * 0.3, longitude: cornerLng - dLng * 0.3 },
+            { latitude: cornerLat - dLat * 0.2, longitude: cornerLng - dLng * 0.5 },
+            { latitude: cornerLat - dLat * 0, longitude: cornerLng - dLng * 1 }
+        ];
+    } else {
+        return [
+            { latitude: cornerLat - dLat * 0, longitude: cornerLng - dLng * 1 },
+            { latitude: cornerLat - dLat * 0.2, longitude: cornerLng - dLng * 0.5 },
+            { latitude: cornerLat - dLat * 0.3, longitude: cornerLng - dLng * 0.3 },
+            { latitude: cornerLat - dLat * 0.5, longitude: cornerLng - dLng * 0.2 },
+            { latitude: cornerLat - dLat * 1, longitude: cornerLng - dLng * 0 }
+        ];
+    }
 }
 
 
 function getVerticalExtrudedCornerLine(
-    startLocation: MapCoordData,
-    endLocation: MapCoordData
+    cornerPoint: MapCoordData,
+    cornerLength: number,
+    cornerDirection: BlockDirection
 ): MapCoordData[] {
-    const verticalDistance = endLocation.latitude - startLocation.latitude;
-    const symmatricStartLocation = {
-        latitude: startLocation.latitude + 2 * verticalDistance,
-        longitude: startLocation.longitude
+    const { latitude: cornerLat, longitude: cornerLng } = cornerPoint;
+    const dLat = -cornerDirection.lat * cornerLength;
+    const dLng = cornerDirection.lng * cornerLength;
+
+    if (cornerDirection === BlockDirection.DOWNLEFT || cornerDirection === BlockDirection.UPRIGHT) {
+        return [
+            { latitude: cornerLat - dLat * 1, longitude: cornerLng - dLng * 0 },
+            { latitude: cornerLat - dLat * 0.5, longitude: cornerLng - dLng * 0.2 },
+            { latitude: cornerLat - dLat * 0.3, longitude: cornerLng - dLng * 0.3 },
+            { latitude: cornerLat - dLat * 0.2, longitude: cornerLng - dLng * 0.5 },
+            { latitude: cornerLat - dLat * 0, longitude: cornerLng - dLng * 1 }
+        ];
+    } else {
+        return [
+            { latitude: cornerLat - dLat * 0, longitude: cornerLng - dLng * 1 },
+            { latitude: cornerLat - dLat * 0.2, longitude: cornerLng - dLng * 0.5 },
+            { latitude: cornerLat - dLat * 0.3, longitude: cornerLng - dLng * 0.3 },
+            { latitude: cornerLat - dLat * 0.5, longitude: cornerLng - dLng * 0.2 },
+            { latitude: cornerLat - dLat * 1, longitude: cornerLng - dLng * 0 }
+        ];
     }
-    return [
-        startLocation,
-        ...getRoundedCornerLine(symmatricStartLocation, endLocation)
-    ];
+
 }
 
 function getCornerLine(
     cornerPoint: MapCoordData,
     cornerLength: number,
-    cornerDirection: BlockUnitDirectionType,
+    cornerDirection: BlockDirection,
     cornerType: BlockCornerType
 ): MapCoordData[] {
     switch (cornerType) {
         case BlockCornerType.NONE:
             return [cornerPoint];
         case BlockCornerType.ROUNDED:
+            return getRoundedCornerLine(cornerPoint, cornerLength, cornerDirection);
         case BlockCornerType.VERTICAL_EXTRUDED:
-            const outerDirection = BlockDirection.getUnitDirection(cornerDirection);
-            const latSign = Math.sign(outerDirection.lat);
-            const lngSign = Math.sign(outerDirection.lng);
-
-            const latCornerPoint = {
-                latitude: cornerPoint.latitude - latSign * cornerLength,
-                longitude: cornerPoint.longitude
-            }
-            const lngCornerPoint = {
-                latitude: cornerPoint.latitude,
-                longitude: cornerPoint.longitude - lngSign * cornerLength
-            }
-
-            if (cornerType === BlockCornerType.ROUNDED) {
-                return getRoundedCornerLine(latCornerPoint, lngCornerPoint);
-            } else {
-                return getVerticalExtrudedCornerLine(latCornerPoint, lngCornerPoint);
-            }
+            return getVerticalExtrudedCornerLine(cornerPoint, cornerLength, cornerDirection);
     }
 }
 
@@ -106,10 +111,10 @@ export function getBlockPolygon(mapRegion: MapRegion,
     const topLeftPoint: MapCoordData = { latitude: lat + dLat, longitude: lng };
 
     const result = [
-        ...getCornerLine(bottomLeftPoint, cornerSize, BlockUnitDirectionType.DOWNLEFT, cornerOptions[0]),
-        ...getCornerLine(bottomRightPoint, cornerSize, BlockUnitDirectionType.DOWNRIGHT, cornerOptions[1]),
-        ...getCornerLine(topRightPoint, cornerSize, BlockUnitDirectionType.UPRIGHT, cornerOptions[2]),
-        ...getCornerLine(topLeftPoint, cornerSize, BlockUnitDirectionType.UPLEFT, cornerOptions[3])
+        ...getCornerLine(bottomLeftPoint, cornerSize, BlockDirection.DOWNLEFT, cornerOptions[0]),
+        ...getCornerLine(bottomRightPoint, cornerSize, BlockDirection.DOWNRIGHT, cornerOptions[1]),
+        ...getCornerLine(topRightPoint, cornerSize, BlockDirection.UPRIGHT, cornerOptions[2]),
+        ...getCornerLine(topLeftPoint, cornerSize, BlockDirection.UPLEFT, cornerOptions[3])
     ];
 
     result.push(result[0]);
@@ -128,20 +133,16 @@ export function getBlockPolygon(mapRegion: MapRegion,
 
 
 
-export enum BlockUnitDirectionType {
-    NONE = 0,
-    UP = 1,
-    DOWN = 2,
-    LEFT = 3,
-    RIGHT = 4,
-    UPLEFT = 5,
-    UPRIGHT = 6,
-    DOWNLEFT = 7,
-    DOWNRIGHT = 8
-}
-
-
 export function getCornerTypesFromAdjointDirections(adjointDirections: BlockDirection[]): BlockCornerType[] {
+    let upBlockExists = false;
+    let downBlockExists = false;
+    let rightBlockExists = false;
+    let leftBlockExists = false;
+    let uprightBlockExists = false;
+    let upleftBlockExists = false;
+    let downrightBlockExists = false;
+    let downleftBlockExists = false;
+
     const cornerTypes = [
         BlockCornerType.ROUNDED, // 0: bottom left
         BlockCornerType.ROUNDED, // 1: bottom right
@@ -149,9 +150,13 @@ export function getCornerTypesFromAdjointDirections(adjointDirections: BlockDire
         BlockCornerType.ROUNDED // 3: top left
     ];
 
-    const setNone = (index: number) => {
-        if (cornerTypes[index] != BlockCornerType.VERTICAL_EXTRUDED) {
+    const setNone = (index: number, force = false) => {
+        if (force) {
             cornerTypes[index] = BlockCornerType.NONE;
+        } else {
+            if (cornerTypes[index] != BlockCornerType.VERTICAL_EXTRUDED) {
+                cornerTypes[index] = BlockCornerType.NONE;
+            }
         }
     }
 
@@ -160,33 +165,41 @@ export function getCornerTypesFromAdjointDirections(adjointDirections: BlockDire
     }
 
     for (const direction of adjointDirections) {
-        switch (direction) {
-            case BlockDirection.DOWN:
-                setNone(0); setNone(1);
-                break;
-            case BlockDirection.RIGHT:
-                setNone(1); setNone(2);
-                break;
-            case BlockDirection.UP:
-                setNone(2); setNone(3);
-                break;
-            case BlockDirection.LEFT:
-                setNone(3); setNone(0);
-                break;
-            case BlockDirection.DOWNLEFT:
-                setExtruded(0);
-                break;
-            case BlockDirection.DOWNRIGHT:
-                setExtruded(1);
-                break;
-            case BlockDirection.UPRIGHT:
-                setExtruded(2);
-                break;
-            case BlockDirection.UPLEFT:
-                setExtruded(3);
-                break;
-            default:
-                break;
+        const { lat, lng } = direction;
+        if (lat === 1) {
+            if (lng === 1) { // UPRIGHT
+                uprightBlockExists = true;
+                if (!upBlockExists) setExtruded(2);
+            } else if (lng === -1) { // UPLEFT
+                upleftBlockExists = true;
+                if (!upBlockExists) setExtruded(3);
+            } else { //UP
+                upBlockExists = true;
+                setNone(2, uprightBlockExists);
+                setNone(3, upleftBlockExists);
+            }
+        } else if (lat === -1) { // DONWRIGHT
+            if (lng === 1) {
+                downrightBlockExists = true;
+                if (!downBlockExists) setExtruded(1);
+            } else if (lng === -1) { // DOWNLEFT
+                downleftBlockExists = true;
+                if (!downBlockExists) setExtruded(0);
+            } else { // DOWN
+                downBlockExists = true;
+                setNone(0, downleftBlockExists);
+                setNone(1, downrightBlockExists);
+            }
+        } else {
+            if (lng === 1) { // RIGHT
+                rightBlockExists = true;
+                setNone(1, downrightBlockExists);
+                setNone(2, uprightBlockExists);
+            } else if (lng === -1) { // LEFT
+                leftBlockExists = true;
+                setNone(3, upleftBlockExists);
+                setNone(0, downleftBlockExists);
+            }
         }
     }
 
@@ -214,14 +227,6 @@ export class BlockDirection {
         this.lng = lng;
     }
 
-    getLatDirection() {
-        return new BlockDirection(this.lat, 0);
-    }
-
-    getLngDirection() {
-        return new BlockDirection(0, this.lng);
-    }
-
     opposite() {
         return new BlockDirection(-this.lat, -this.lng);
     }
@@ -235,29 +240,6 @@ export class BlockDirection {
         const angleDeg = (angleRad * (180 / Math.PI) + 360) % 360;
 
         return angleDeg;
-    }
-
-    static getUnitDirection(directionType: BlockUnitDirectionType): BlockDirection {
-        switch (directionType) {
-            case BlockUnitDirectionType.NONE:
-                return BlockDirection.NONE;
-            case BlockUnitDirectionType.UP:
-                return BlockDirection.UP;
-            case BlockUnitDirectionType.DOWN:
-                return BlockDirection.DOWN;
-            case BlockUnitDirectionType.LEFT:
-                return BlockDirection.LEFT;
-            case BlockUnitDirectionType.RIGHT:
-                return BlockDirection.RIGHT;
-            case BlockUnitDirectionType.UPRIGHT:
-                return BlockDirection.UPRIGHT;
-            case BlockUnitDirectionType.UPLEFT:
-                return BlockDirection.UPLEFT;
-            case BlockUnitDirectionType.DOWNRIGHT:
-                return BlockDirection.DOWNRIGHT;
-            case BlockUnitDirectionType.DOWNLEFT:
-                return BlockDirection.DOWNLEFT;
-        }
     }
 
     static getDirection(from: MapCoordData, to: MapCoordData): BlockDirection {
