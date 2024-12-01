@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hasDatePassed } from '@/utils/time'
-import { BlockDirection, MapCoordData, MapCoordAngleData } from '@/utils/geo';
+import { BlockDirection, MapCoordData, MapCoordAngleData, getFullPolygon, getBlockPolygon } from '@/utils/geo';
 
 const MIDNIGHT_MAP_INITIALIZED_KEY = 'map_initialized';
 
@@ -144,47 +144,6 @@ class MapBlockService {
         return items;
     }
 
-    getFullPolygon(latitude: number, longitude: number, latSize: number, lngSize: number) {
-        return [
-            { latitude: latitude, longitude: longitude },
-            { latitude: latitude, longitude: longitude + lngSize },
-            { latitude: latitude + latSize, longitude: longitude + lngSize },
-            { latitude: latitude + latSize, longitude: longitude },
-            { latitude: latitude, longitude: longitude },
-        ]
-    }
-
-
-
-    getUpdatedOverlays() {
-        const rects: MapCoordData[][] = [];
-        const items: MapCoordData[] = [];
-        const footsteps: MapCoordAngleData[] = [];
-
-        console.log(this.newBlockIndexBuffer);
-        for (const blockIndex of this.newBlockIndexBuffer) {
-            const blockInfo = this.blockInfoMap.get(blockIndex);
-            if (blockInfo) {
-                const rectLatitude = blockInfo.latAsInteger * this.blockSize;
-                const rectLongitude = blockInfo.lngAsInteger * this.blockSize;
-
-                rects.push(this.getFullPolygon(rectLatitude, rectLongitude, this.blockSize, this.blockSize));
-
-                if (blockInfo.itemPos) {
-                    items.push(blockInfo.itemPos);
-                }
-                if (blockInfo.footstepPos && blockInfo.footstepDirection) {
-                    footsteps.push({
-                        location: blockInfo.footstepPos,
-                        rotation: blockInfo.footstepDirection.getAngle()
-                    });
-                }
-            }
-        }
-
-        return { rects, items, footsteps };
-    }
-
     getOverlaysInRegion({ latitude, longitude, latitudeDelta, longitudeDelta }
         : { latitude: number, longitude: number, latitudeDelta: number, longitudeDelta: number }
     ) {
@@ -210,11 +169,12 @@ class MapBlockService {
                 const blockIndex = this.getResidentBlockIndex(latitude, longitude, latCount, lngCount);
                 const blockInfo = this.blockInfoMap.get(blockIndex);
                 if (blockInfo) {
-                    rects.push(this.getFullPolygon(
-                        latCenterRound + this.blockSize * latCount,
-                        lngCenterRound + this.blockSize * lngCount,
-                        this.blockSize, this.blockSize));
-
+                    rects.push(getFullPolygon({
+                        latitude: latCenterRound + this.blockSize * latCount,
+                        longitude: lngCenterRound + this.blockSize * lngCount,
+                        latitudeDelta: this.blockSize,
+                        longitudeDelta: this.blockSize
+                    }));
                     if (blockInfo.itemPos) {
                         items.push(blockInfo.itemPos);
                     }
@@ -270,7 +230,7 @@ class MapBlockService {
             lngAsInteger: lngAsInteger,
             timestamp: Date.now(),
             firstMoveDirection: BlockDirection.NONE,
-            adjointDirection: [],
+            adjointDirection: new Array<BlockDirection>(),
             itemPos: itemPos,
             footstepPos: null,
             footstepDirection: BlockDirection.NONE,
@@ -281,9 +241,10 @@ class MapBlockService {
 
 
 
-
+        // set footstep
         if (lastBlockInfo && lastBlockInfo !== newBlockInfo) {
             if (lastBlockInfo.firstMoveDirection.isNone()) {
+                // set first move direction
                 lastBlockInfo.firstMoveDirection = BlockDirection.getDirection({
                     latitude: lastBlockInfo.latAsInteger,
                     longitude: lastBlockInfo.lngAsInteger,
@@ -293,15 +254,30 @@ class MapBlockService {
                 });
 
 
+                // set footstep direction. footstep direction is first move direction
                 lastBlockInfo.footstepDirection = lastBlockInfo.firstMoveDirection;
-                if (lastBlockInfo.isLeftFoot) {
 
-                }
+                // set footstep position
                 const lastFootstepLat = lastBlockInfo.latAsInteger * this.blockSize + this.blockSize * (0.5 * Math.random() + 0.25);
                 const lastFootstepLng = lastBlockInfo.lngAsInteger * this.blockSize + this.blockSize * (0.5 * Math.random() + 0.25);
                 lastBlockInfo.footstepPos = { latitude: lastFootstepLat, longitude: lastFootstepLng };
             }
         }
+
+
+        // update adjoint blocks
+        for (let latCount = -1; latCount <= 1; ++latCount) {
+            for (let lngCount = -1; lngCount <= 1; ++lngCount) {
+                if (latCount === 0 && lngCount === 0) continue;
+                const blockIndex = this.getResidentBlockIndex(latitude, longitude, latCount, lngCount);
+                const blockInfo = this.blockInfoMap.get(blockIndex);
+                if (blockInfo) {
+                    const adjointDirection = new BlockDirection(latCount, lngCount);
+                    newBlockInfo.adjointDirection.push(adjointDirection);
+                }
+            }
+        }
+
 
         this.lastBlockInfo = newBlockInfo;
 

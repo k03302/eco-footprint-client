@@ -3,8 +3,8 @@ const CORNER_SIZE_RATIO = 0.2;
 
 enum BlockCornerType {
     NONE = 0,
-    ROUNDED = 1,
-    VERTICAL_EXTRUDED = 2,
+    ROUNDED = -1,
+    VERTICAL_EXTRUDED = 1,
 }
 
 
@@ -140,6 +140,59 @@ export enum BlockUnitDirectionType {
     DOWNRIGHT = 8
 }
 
+
+export function getCornerTypesFromAdjointDirections(adjointDirections: BlockDirection[]): BlockCornerType[] {
+    const cornerTypes = [
+        BlockCornerType.ROUNDED, // 0: bottom left
+        BlockCornerType.ROUNDED, // 1: bottom right
+        BlockCornerType.ROUNDED, // 2: top right
+        BlockCornerType.ROUNDED // 3: top left
+    ];
+
+    const setNone = (index: number) => {
+        if (cornerTypes[index] != BlockCornerType.VERTICAL_EXTRUDED) {
+            cornerTypes[index] = BlockCornerType.NONE;
+        }
+    }
+
+    const setExtruded = (index: number) => {
+        cornerTypes[index] = BlockCornerType.VERTICAL_EXTRUDED;
+    }
+
+    for (const direction of adjointDirections) {
+        switch (direction) {
+            case BlockDirection.DOWN:
+                setNone(0); setNone(1);
+                break;
+            case BlockDirection.RIGHT:
+                setNone(1); setNone(2);
+                break;
+            case BlockDirection.UP:
+                setNone(2); setNone(3);
+                break;
+            case BlockDirection.LEFT:
+                setNone(3); setNone(0);
+                break;
+            case BlockDirection.DOWNLEFT:
+                setExtruded(0);
+                break;
+            case BlockDirection.DOWNRIGHT:
+                setExtruded(1);
+                break;
+            case BlockDirection.UPRIGHT:
+                setExtruded(2);
+                break;
+            case BlockDirection.UPLEFT:
+                setExtruded(3);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    return cornerTypes;
+}
 
 
 export class BlockDirection {
