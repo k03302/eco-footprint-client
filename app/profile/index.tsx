@@ -4,13 +4,18 @@ import { router } from 'expo-router'
 import UserIcon from '@/components/UserIcon';
 import { logout } from '@/utils/login';
 import { useIsFocused } from '@react-navigation/native';
+import { UserItem } from '@/core/model';
+import { getMyProfile } from '@/api/user';
+import { getFileSource } from '@/api/main';
 
 
 export default function ProfileScreen() {
     const isFocused = useIsFocused();
-
+    const [userInfo, setUserInfo] = useState<UserItem | null>(null);
     useEffect(() => {
-
+        (async () => {
+            setUserInfo(await getMyProfile());
+        })()
     }, [isFocused])
     const logoutHandler = async () => {
 
@@ -21,7 +26,9 @@ export default function ProfileScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.row_profile}>
-                <UserIcon isMyIcon={true} showName={true}></UserIcon>
+                <UserIcon
+                    imgSource={userInfo && userInfo.thumbnailId ? { uri: userInfo.thumbnailId } : undefined}
+                    message={userInfo ? userInfo.username : ""} />
             </View>
 
             <Text style={{ fontSize: 20, marginLeft: 20 }}>관리</Text>
