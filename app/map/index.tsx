@@ -67,6 +67,7 @@ export default function App() {
     const [footstepList, setFootstepList] = useState<RotatableCoordinate[]>([]);
 
     const [mapLoaded, setMapLoaded] = useState<boolean>(false);
+    const [mapUpdated, setMapUpdated] = useState<boolean>(false);
     const [userLocation, setUserLocation] = useState<LocationCoordinate | null>(null);
     const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
 
@@ -114,35 +115,19 @@ export default function App() {
 
 
 
-    const updateMapOverlay = () => {
-        console.log(currentRegion);
-        if (!currentRegion) return;
-        console.log('ok');
-        const overlays = mapService.getOverlaysInRegion(currentRegion);
-        if (overlays) {
-            setPolygonList(overlays.rects);
-            setItemList(overlays.items);
-            setFootstepList(overlays.footsteps);
-        }
-    }
 
-    const updateUserAchievement = useCallback(() => {
-        const moveDistanceInMeter = mapService.getBlockCount() * mapService.getBlockSizeInMeter();
-        setCarbonDecrease(moveDistanceInMeter * CARBON_DECREASE_PER_METER);
-    }, []);
 
 
     // mapService가 업데이트했을 때의 콜벡함수
     const onMapserviceUpdate = useCallback(() => {
-        updateUserAchievement();
-        updateMapOverlay();
+        setMapUpdated(true);
     }, []);
 
 
     // 지도를 움직였을 때의 콜백함수
     const onRegionChangeComplete = useCallback((region: Region, details: Details) => {
         setCurrentRegion(region);
-        updateMapOverlay();
+        setMapUpdated(true);
     }, []);
 
 
@@ -157,6 +142,7 @@ export default function App() {
         const success = mapService.consumeItemAt(latitude, longitude);
 
         if (!success) return;
+        setMapUpdated(true);
         setTakenItemCount(takenItemCount + 1);
         setCurrentItemCount(mapService.getItemCount());
 
@@ -183,8 +169,6 @@ export default function App() {
     // foreground에서 newLocation을 받았을 때의 콜백함수
     const onNewLocationForeground = (newLocation: Location.LocationObject) => {
 
-
-        updateUserAchievement();
 
         if (hasDatePassed(lastLocationdate)) {
             initializeMapState();
@@ -257,25 +241,43 @@ export default function App() {
     }, [mapLoaded]);
 
     useEffect(() => {
+        if (!mapUpdated) return;
+
+        const moveDistanceInMeter = mapService.getBlockCount() * mapService.getBlockSizeInMeter();
+        setCarbonDecrease(moveDistanceInMeter * CARBON_DECREASE_PER_METER);
+
+        if (!currentRegion) return;
+
+        const overlays = mapService.getOverlaysInRegion(currentRegion);
+        if (overlays) {
+            setPolygonList(overlays.rects);
+            setItemList(overlays.items);
+            setFootstepList(overlays.footsteps);
+        }
+
+        setMapUpdated(false);
+    }, [mapUpdated])
+
+    useEffect(() => {
         const intervalId = setInterval(() => {
             const currentDate = new Date();
             const millisecDiff = currentDate.getTime() - lastLocationdate.getTime();
             setForgroundLocationActive(millisecDiff < FORGROUND_LOCATION_ACTIVE_TIME_MSEC);
         }, FORGROUND_LOCATION_PERIOD_MSEC);
 
+
+        mapService.registerUpdateHandler(onMapserviceUpdate);
+
+        if (!adService.isAdLoaded() && !adService.isAdOnLoading()) {
+            adService.loadAd();
+        }
+
         // Cleanup the interval on component unmount
         return () => clearInterval(intervalId);
     }, []);
 
-    useEffect(() => {
-        mapService.registerUpdateHandler(onMapserviceUpdate);
-    })
 
-    useEffect(() => {
-        if (!adService.isAdLoaded() && !adService.isAdOnLoading()) {
-            adService.loadAd();
-        }
-    }, []);
+
     useEffect(() => {
         (async () => {
             const locationStatus = await requestLocationPermissions();
@@ -321,6 +323,11 @@ export default function App() {
         })();
 
     }, []);
+
+
+
+
+
 
 
 
@@ -396,6 +403,15 @@ export default function App() {
             </Marker>)
         })
     }, [footstepList])
+
+
+
+
+
+
+
+
+
 
     return (
         <View style={styles.container}>
