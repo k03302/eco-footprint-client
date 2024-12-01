@@ -5,7 +5,7 @@ import { Modal, View, StyleSheet } from 'react-native';
 export default function SimpleModal({ modalVisible, setModalVisible, ContentComponent }:
     {
         modalVisible: boolean, setModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
-        ContentComponent: React.ComponentType
+        ContentComponent?: React.ComponentType
     }) {
     const closeModal = () => { setModalVisible(false) };
 
@@ -17,7 +17,8 @@ export default function SimpleModal({ modalVisible, setModalVisible, ContentComp
     >
         <View style={styles.centeredView}>
             <View style={styles.modalView}>
-                <ContentComponent></ContentComponent>
+                {
+                    ContentComponent ? <ContentComponent></ContentComponent> : <></>}
             </View>
         </View>
     </Modal>);
