@@ -7,6 +7,8 @@ import GoogleLoginButton from '@/components/GoogleLoginButton';
 import KakaoLoginButton from '@/components/KakaoLoginButton';
 import { getIdToken, login } from '@/api/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initialize } from '@/api/main';
+import KakaoLoginFakeButton from '@/components/KakaoLoginFakeButton';
 
 // Allows deep linking to function properly in Expo Go
 WebBrowser.maybeCompleteAuthSession();
@@ -32,12 +34,11 @@ export default function App() {
 
 
             <GoogleLoginButton />
-            <KakaoLoginButton />
-            <Button title="test" onPress={() => {
-                login({ idToken: "1234" });
-            }}></Button>
-            <Button title="pass" onPress={() => {
-                router.push('/map');
+            {/* <KakaoLoginButton/> */}
+            <KakaoLoginFakeButton />
+
+            <Button title="init" onPress={() => {
+                initialize();
             }}></Button>
 
         </View>
