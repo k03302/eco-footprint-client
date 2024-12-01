@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { repo } from '@/api/main';
 import axios from 'axios';
-import { ChallengeItem, NO_USER, UserItem } from '@/core/model';
+import { ChallengeItem, CouponItem, CouponItemMeta, NO_COUPON, NO_USER, UserItem } from '@/core/model';
 import { getUserId } from '@/api/auth';
 
 const MAX_DEFAULT_POINT = 3;
@@ -16,7 +16,8 @@ export async function getMyProfile(): Promise<UserItem> {
     try {
         const userId = getUserId();
         if (!userId) return NO_USER;
-        return await repo.users.getUserInfo(userId);
+        const result = await repo.users.getUserInfo(userId);
+        return result;
     } catch (error) {
         console.log(error);
         return NO_USER;
@@ -25,32 +26,32 @@ export async function getMyProfile(): Promise<UserItem> {
 
 
 
-export async function purchaseReward(rewardId: string): Promise<boolean> {
+export async function purchaseReward(rewardId: string): Promise<CouponItem> {
     try {
         const userInfo = await getMyProfile();
-        if (userInfo === NO_USER) return false;
+        if (userInfo === NO_USER) return NO_COUPON;
         const rewardInfo = await repo.rewards.getRewardInfo(rewardId);
-        if (userInfo.point < rewardInfo.price) return false;
+        if (userInfo.point < rewardInfo.price) return NO_COUPON;
 
         userInfo.point -= rewardInfo.price;
         const newCouponInfo = await repo.coupons.getNewCoupon(userInfo.id, rewardId);
         userInfo.couponList.push(newCouponInfo);
         await repo.users.updateUserInfo(userInfo);
 
-        return true;
+        return newCouponInfo;
     } catch (error) {
         console.log(error);
-        return false;
+        return NO_COUPON;
     }
 }
 
-export async function getRewardPoint(): Promise<boolean> {
+export async function getRewardPoint(rewardPoint = 1): Promise<boolean> {
     try {
         const userInfo = await getMyProfile();
         if (userInfo === NO_USER) return false;
 
-        const pointAmount = Math.floor(Math.random() * MAX_DEFAULT_POINT + MIN_DEFAULT_POINT);
-        userInfo.point += pointAmount;
+        //const pointAmount = Math.floor(Math.random() * MAX_DEFAULT_POINT + MIN_DEFAULT_POINT);
+        userInfo.point += rewardPoint;
         await repo.users.updateUserInfo(userInfo);
 
         return true;
@@ -60,14 +61,14 @@ export async function getRewardPoint(): Promise<boolean> {
     }
 }
 
-export async function participateDonation(donationId: string): Promise<boolean> {
+export async function participateDonation(donationId: string, donationPoint: number = 10): Promise<boolean> {
     try {
+        if (donationPoint < 0 || donationPoint > AD_REWARD_POINT) return false;
         const userInfo = await getMyProfile();
         if (userInfo === NO_USER) return false;
         const donationInfo = await repo.donations.getDonation(donationId);
 
-        const userPoint = AD_REWARD_POINT / 2;
-        const donationPoint = AD_REWARD_POINT - userPoint;
+        const userPoint = AD_REWARD_POINT - donationPoint;
 
         userInfo.point += userPoint;
         await repo.users.updateUserInfo(userInfo);

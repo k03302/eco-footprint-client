@@ -23,6 +23,7 @@ export async function login({ idToken: _idToken, useStoredToken = false }: { idT
     try {
         const userKey = USER_ACCOUNT_KEY_PREFIX + idToken?.slice(0, 10);
         const userId = await AsyncStorage.getItem(userKey);
+        console.log("userId", userId);
         if (userId) {
             setIdToken(idToken);
             userIdCache = userId;
@@ -61,8 +62,8 @@ export async function register({ username, thumbnailUri, idToken: _idToken, useS
 
 
             await repo.files.uploadFile({
-                id: '',
-                name: '',
+                id: newUserId + Date.now(),
+                name: 'profile',
                 fileUri: thumbnailUri
             })
 

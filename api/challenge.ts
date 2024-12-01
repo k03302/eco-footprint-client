@@ -3,6 +3,8 @@ import { repo } from '@/api/main';
 import axios from 'axios';
 import { ChallengeItem, NO_USER, UserItem } from '@/core/model';
 import { getMyProfile } from '@/api/user';
+import { hasDatePassed } from '@/utils/time';
+import { getUserId } from './auth';
 
 const MAX_DEFAULT_POINT = 3;
 const MIN_DEFAULT_POINT = 1;
@@ -43,10 +45,10 @@ export async function participateChallenge(challengeId: string): Promise<boolean
 
 }
 
-export async function createChallenge(name: string, type: string, description: string): Promise<boolean> {
+export async function createChallenge(name: string, description: string): Promise<ChallengeItem | null> {
     try {
         const userInfo = await getMyProfile();
-        if (userInfo === NO_USER) return false;
+        if (userInfo === NO_USER) return null;
 
         const currentDate = new Date();
         const futureDate = new Date();
@@ -55,7 +57,6 @@ export async function createChallenge(name: string, type: string, description: s
         const challengeInfo = await repo.challenges.createChallenge({
             id: userInfo.username + Date.now(),
             name: name,
-            type: type,
             totalParticipants: 4,
             currentParticipants: 1,
             createdBy: userInfo.id,
@@ -80,10 +81,10 @@ export async function createChallenge(name: string, type: string, description: s
 
         await repo.users.updateUserInfo(userInfo);
 
-        return true;
+        return challengeInfo;
     } catch (error) {
         console.log(error);
-        return false;
+        return null;
     }
 }
 
@@ -96,18 +97,37 @@ export async function uploadProofShoot(challengeId: string, imgUri: string): Pro
 
 
         const recordId = `${userInfo.id}${challengeId}${Date.now()}`
-        await repo.files.updateFile({
+        await repo.files.uploadFile({
             id: recordId,
             name: recordId,
             fileUri: imgUri
         });
 
-        challengeInfo.participantsRecord.push({
-            userId: userInfo.id,
-            recordId: recordId,
-            uploadDate: new Date(),
-            approved: false
-        })
+        const myUserId = await getUserId();
+
+        let replacedRecoord = false;
+        for (const recoord of challengeInfo.participantsRecord) {
+            if (myUserId === recoord.userId) {
+                const uploadDate = new Date(recoord.uploadDate);
+                if (!hasDatePassed(uploadDate)) {
+                    recoord.userId = userInfo.id;
+                    recoord.recordId = recordId;
+                    recoord.uploadDate = new Date();
+
+                    replacedRecoord = true;
+                    break;
+                }
+            }
+        }
+
+        if (!replacedRecoord) {
+            challengeInfo.participantsRecord.push({
+                userId: userInfo.id,
+                recordId: recordId,
+                uploadDate: new Date(),
+                approved: false
+            })
+        }
 
         await repo.challenges.updateChallenge(challengeInfo);
         return true;
@@ -117,15 +137,15 @@ export async function uploadProofShoot(challengeId: string, imgUri: string): Pro
     }
 }
 
-export async function approveProofShot(challengeId: string, recoordId: string): Promise<boolean> {
+export async function setApproveProofShot(challengeId: string, recoordId: string, isApproved: boolean): Promise<boolean> {
     try {
         const userInfo = await getMyProfile();
         if (userInfo === NO_USER) return false;
         const challengeInfo = await repo.challenges.getChallenge(challengeId);
         for (const recoord of challengeInfo.participantsRecord) {
             if (recoord.recordId === recoordId) {
-                if (recoord.approved) return false;
-                recoord.approved = true;
+                if (recoord.approved === isApproved) return false;
+                recoord.approved = isApproved;
                 break;
             }
         }
