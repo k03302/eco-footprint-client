@@ -96,7 +96,6 @@ export type CouponItem = {
 export type ChallengeItem = {
     id: string;
     name: string;
-    type: string;
     totalParticipants: number;
     currentParticipants: number;
     createdBy: string;
@@ -156,7 +155,6 @@ export const NO_COUPON: CouponItem = {
 export const NO_CHALLENGE: ChallengeItem = {
     id: "",
     name: "",
-    type: "",
     totalParticipants: 0,
     currentParticipants: 0,
     createdBy: "",
