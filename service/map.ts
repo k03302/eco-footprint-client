@@ -10,7 +10,7 @@ const UNIT_COUNT = 10;
 export const METER_PER_DEGREE = 100000;
 export const DEGREE_PER_METER = 0.00001;
 const MAX_BLOCK_BUFFER_SIZE = 100;
-
+const MAP_AREA_MARGIN_RATE = 0.1;
 
 
 type BlockInfoData = {
@@ -34,7 +34,6 @@ class MapBlockService {
     private itemLocations: LocationCoordinate[] = [];
     private averageItemCountPerBlock: number = 0.2;
 
-    private secondLastBlockInfo: BlockInfoData | null = null;
     private lastBlockInfo: BlockInfoData | null = null;
     private blockSize: number;
     private blockUnitCount: number;
@@ -66,7 +65,7 @@ class MapBlockService {
         return this.blockCount;
     }
 
-    registerOverlayUpdateHandler(handler: () => void) {
+    registerUpdateHandler(handler: () => void) {
         this.overlayUpdateHandler = handler;
     }
 
@@ -74,7 +73,6 @@ class MapBlockService {
         this.blockInfoMap = new Map<string, BlockInfoData>();
         this.itemLocations = [];
         this.lastBlockInfo = null;
-        this.secondLastBlockInfo = null;
         this.blockCount = 0;
 
         this.newBlockIndexBuffer = [];
@@ -146,6 +144,18 @@ class MapBlockService {
         return items;
     }
 
+    getFullPolygon(latitude: number, longitude: number, latSize: number, lngSize: number) {
+        return [
+            { latitude: latitude, longitude: longitude },
+            { latitude: latitude, longitude: longitude + lngSize },
+            { latitude: latitude + latSize, longitude: longitude + lngSize },
+            { latitude: latitude + latSize, longitude: longitude },
+            { latitude: latitude, longitude: longitude },
+        ]
+    }
+
+
+
     getUpdatedOverlays() {
         const rects: PolygonCoordinates[] = [];
         const items: LocationCoordinate[] = [];
@@ -155,16 +165,11 @@ class MapBlockService {
         for (const blockIndex of this.newBlockIndexBuffer) {
             const blockInfo = this.blockInfoMap.get(blockIndex);
             if (blockInfo) {
-                const latRound = blockInfo.latAsInteger * this.blockSize;
-                const lngRound = blockInfo.lngAsInteger * this.blockSize;
+                const rectLatitude = blockInfo.latAsInteger * this.blockSize;
+                const rectLongitude = blockInfo.lngAsInteger * this.blockSize;
 
-                rects.push([
-                    { latitude: latRound, longitude: lngRound },
-                    { latitude: latRound, longitude: lngRound + this.blockSize },
-                    { latitude: latRound + this.blockSize, longitude: lngRound + this.blockSize },
-                    { latitude: latRound + this.blockSize, longitude: lngRound },
-                    { latitude: latRound, longitude: lngRound },
-                ]);
+                rects.push(this.getFullPolygon(rectLatitude, rectLongitude, this.blockSize, this.blockSize));
+
                 if (blockInfo.itemPos) {
                     items.push(blockInfo.itemPos);
                 }
@@ -180,7 +185,9 @@ class MapBlockService {
         return { rects, items, footsteps };
     }
 
-    getOverlaysInRegion(latCenter: number, lngCenter: number, latDelta: number, lngDelta: number) {
+    getOverlaysInRegion({ latitude, longitude, latitudeDelta, longitudeDelta }
+        : { latitude: number, longitude: number, latitudeDelta: number, longitudeDelta: number }
+    ) {
         if (this.onCalculatingOverlay) return null;
         this.onCalculatingOverlay = true;
 
@@ -192,24 +199,22 @@ class MapBlockService {
         const footsteps: RotatableCoordinate[] = [];
 
 
-        const latTotalCount = Math.floor(latDelta / this.blockSize);
-        const lngTotalCount = Math.floor(lngDelta / this.blockSize);
-        const latCenterRound = Math.floor(latCenter * this.blockScaler) * this.blockSize;
-        const lngCenterRound = Math.floor(lngCenter * this.blockScaler) * this.blockSize;
+        const latTotalCount = Math.floor(latitudeDelta / this.blockSize);
+        const lngTotalCount = Math.floor(longitudeDelta / this.blockSize);
+        const latCenterRound = Math.floor(latitude * this.blockScaler) * this.blockSize;
+        const lngCenterRound = Math.floor(longitude * this.blockScaler) * this.blockSize;
 
 
         for (let latCount = -latTotalCount; latCount < latTotalCount; latCount++) {
             for (let lngCount = -lngTotalCount; lngCount < lngTotalCount; lngCount++) {
-                const blockIndex = this.getResidentBlockIndex(latCenter, lngCenter, latCount, lngCount);
+                const blockIndex = this.getResidentBlockIndex(latitude, longitude, latCount, lngCount);
                 const blockInfo = this.blockInfoMap.get(blockIndex);
                 if (blockInfo) {
-                    rects.push([
-                        { latitude: latCenterRound + this.blockSize * latCount, longitude: lngCenterRound + this.blockSize * lngCount },
-                        { latitude: latCenterRound + this.blockSize * latCount, longitude: lngCenterRound + this.blockSize * (lngCount + 1) },
-                        { latitude: latCenterRound + this.blockSize * (latCount + 1), longitude: lngCenterRound + this.blockSize * (lngCount + 1) },
-                        { latitude: latCenterRound + this.blockSize * (latCount + 1), longitude: lngCenterRound + this.blockSize * lngCount },
-                        { latitude: latCenterRound + this.blockSize * latCount, longitude: lngCenterRound + this.blockSize * lngCount },
-                    ]);
+                    rects.push(this.getFullPolygon(
+                        latCenterRound + this.blockSize * latCount,
+                        lngCenterRound + this.blockSize * lngCount,
+                        this.blockSize, this.blockSize));
+
                     if (blockInfo.itemPos) {
                         items.push(blockInfo.itemPos);
                     }
@@ -257,7 +262,6 @@ class MapBlockService {
 
 
         const lastBlockInfo = this.lastBlockInfo;
-        const secondLastBlockInfo = this.secondLastBlockInfo;
 
 
 
@@ -299,7 +303,6 @@ class MapBlockService {
             }
         }
 
-        this.secondLastBlockInfo = this.lastBlockInfo;
         this.lastBlockInfo = newBlockInfo;
 
         this.blockCount += 1;

@@ -66,13 +66,7 @@ export default function App() {
     const [itemList, setItemList] = useState<(LocationCoordinate)[]>([]);
     const [footstepList, setFootstepList] = useState<RotatableCoordinate[]>([]);
 
-    const [newPolygonList, setNewPolygonList] = useState<PolygonCoordinates[]>([]);
-    const [newItemList, setNewItemList] = useState<(LocationCoordinate)[]>([]);
-    const [newFootstepList, setNewFootstepList] = useState<RotatableCoordinate[]>([]);
-
-
-
-    const [initMapLocation, setInitMapLocation] = useState<LocationCoordinate | undefined>(undefined);
+    const [mapLoaded, setMapLoaded] = useState<boolean>(false);
     const [userLocation, setUserLocation] = useState<LocationCoordinate | null>(null);
     const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
 
@@ -115,31 +109,47 @@ export default function App() {
     }, [hasToUpdate]);
 
 
+
+
+
+
+
+    const updateMapOverlay = () => {
+        console.log(currentRegion);
+        if (!currentRegion) return;
+        console.log('ok');
+        const overlays = mapService.getOverlaysInRegion(currentRegion);
+        if (overlays) {
+            setPolygonList(overlays.rects);
+            setItemList(overlays.items);
+            setFootstepList(overlays.footsteps);
+        }
+    }
+
     const updateUserAchievement = useCallback(() => {
         const moveDistanceInMeter = mapService.getBlockCount() * mapService.getBlockSizeInMeter();
         setCarbonDecrease(moveDistanceInMeter * CARBON_DECREASE_PER_METER);
     }, []);
 
-    const viewAdHandler = useCallback(() => {
-        setShowAdModal(false);
-        adService.showAd();
+
+    // mapService가 업데이트했을 때의 콜벡함수
+    const onMapserviceUpdate = useCallback(() => {
+        updateUserAchievement();
+        updateMapOverlay();
     }, []);
+
+
+    // 지도를 움직였을 때의 콜백함수
+    const onRegionChangeComplete = useCallback((region: Region, details: Details) => {
+        setCurrentRegion(region);
+        updateMapOverlay();
+    }, []);
+
 
     const onMapPressed = useCallback((event: LongPressEvent) => {
         const coords = event.nativeEvent.coordinate;
         mapService.addPoint(coords.latitude, coords.longitude);
         setCurrentItemCount(mapService.getItemCount());
-    }, []);
-
-    const onOverlayUpdate = useCallback(() => {
-        console.log('overlay update');
-        updateUserAchievement();
-        const newOverlays = mapService.getUpdatedOverlays();
-        if (newOverlays) {
-            setNewPolygonList(newOverlays.rects);
-            setNewItemList(newOverlays.items);
-            setNewFootstepList(newOverlays.footsteps);
-        }
     }, []);
 
 
@@ -212,19 +222,39 @@ export default function App() {
     }
 
 
-    // 지도를 움직였을 때의 콜백함수
-    const onRegionChangeComplete = useCallback((region: Region, details: Details) => {
-        setCurrentRegion(region);
-
-        console.log('region changed');
-        const overlays = mapService.getOverlaysInRegion(region.latitude, region.longitude, region.latitudeDelta, region.longitudeDelta)
-        if (overlays) {
-            setPolygonList(overlays.rects);
-            setItemList(overlays.items);
-            setFootstepList(overlays.footsteps);
-        }
+    const initializeMapState = useCallback(() => {
+        setStepCount(0);
+        setCarbonDecrease(0);
+        setCurrentItemCount(0);
+        setPolygonList([]);
+        setItemList([]);
+        setFootstepList([]);
+        setTakenItemCount(0);
+        setCurrentItemCount(0);
+        setTotalStepCount(0);
+        setValidStepCount(0);
+        setLastLocationDate(new Date());
+        setLastPedometerDate(new Date());
+        mapService.initialize();
     }, []);
 
+
+    useEffect(() => {
+        if (currentRegion) {
+            mapRef.current?.animateToRegion(currentRegion, 0);
+        } else {
+            Location.getCurrentPositionAsync().then((currentLocation) => {
+                const region = {
+                    latitude: currentLocation.coords.latitude,
+                    longitude: currentLocation.coords.longitude,
+                    latitudeDelta: UNIT_ZOOM_DELTA,
+                    longitudeDelta: UNIT_ZOOM_DELTA,
+                };
+                setCurrentRegion(region);
+                mapRef.current?.animateToRegion(region, 0);
+            });
+        }
+    }, [mapLoaded]);
 
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -238,7 +268,7 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        mapService.registerOverlayUpdateHandler(onOverlayUpdate);
+        mapService.registerUpdateHandler(onMapserviceUpdate);
     })
 
     useEffect(() => {
@@ -277,13 +307,12 @@ export default function App() {
             });
 
             const currentLocation = await Location.getCurrentPositionAsync();
-            setInitMapLocation(currentLocation.coords);
-            !!mapRef.current?.animateToRegion({
+            setCurrentRegion({
                 latitude: currentLocation.coords.latitude,
                 longitude: currentLocation.coords.longitude,
-                latitudeDelta: UNIT_ZOOM_DELTA, // Zoom level
-                longitudeDelta: UNIT_ZOOM_DELTA, // Zoom level
-            }, 0);
+                latitudeDelta: UNIT_ZOOM_DELTA,
+                longitudeDelta: UNIT_ZOOM_DELTA,
+            });
 
             // if map hasn't initialized after the midnight, initialize
             if (await mapService.hasToInitialize()) {
@@ -317,41 +346,9 @@ export default function App() {
         ]);
     }, []);
 
-    const initializeMapState = useCallback(() => {
-        setStepCount(0);
-        setCarbonDecrease(0);
-        setCurrentItemCount(0);
-        setPolygonList([]);
-        setItemList([]);
-        setFootstepList([]);
-        setNewPolygonList([]);
-        setNewItemList([]);
-        setNewFootstepList([]);
-        setTakenItemCount(0);
-        setCurrentItemCount(0);
-        setTotalStepCount(0);
-        setValidStepCount(0);
-        setLastLocationDate(new Date());
-        setLastPedometerDate(new Date());
-        mapService.initialize();
-    }, []);
 
 
 
-
-
-
-
-    const handleMapLoad = useCallback(() => {
-        if (initMapLocation) {
-            !!mapRef.current?.animateToRegion({
-                latitude: initMapLocation.latitude,
-                longitude: initMapLocation.longitude,
-                latitudeDelta: UNIT_ZOOM_DELTA, // Zoom level
-                longitudeDelta: UNIT_ZOOM_DELTA, // Zoom level
-            }, 0);
-        }
-    }, [initMapLocation]);
 
 
     const mapPolygons = useMemo(() => {
@@ -400,53 +397,6 @@ export default function App() {
         })
     }, [footstepList])
 
-    const newMapPolygons = useMemo(() => {
-        return newPolygonList.map((polygonCoords, index) => <Polygon
-            coordinates={polygonCoords}
-            fillColor={POLYGON_FILL_COLOR}
-            strokeWidth={0}
-            zIndex={100}
-            key={`np${index}`}
-        />)
-    }, [newPolygonList]);
-
-    const newItemMarkers = useMemo(() => {
-        return newItemList.map((itemCoord, index) => {
-
-            return (<Marker
-                coordinate={itemCoord}
-                key={`ni${index}`}
-                onPress={() => {
-                    onItemPressed(itemCoord.latitude, itemCoord.longitude, index);
-                }}
-
-            >
-                <Image
-                    source={require('@/assets/images/sprout.png')}
-                    style={{ width: ITEM_ICON_SIZE, height: ITEM_ICON_SIZE }}
-                    resizeMode="contain"
-                />
-            </Marker>)
-        })
-    }, [newItemList]);
-
-    const newFootstepMarkers = useMemo(() => {
-        return newFootstepList.map((footstepPose, index) => {
-            return (<Marker
-                coordinate={footstepPose.location}
-                rotation={footstepPose.rotation}
-                key={`f${index}`}
-            >
-                <Image
-                    source={require('@/assets/images/catpaw.png')}
-                    style={{ width: FOOTSTEP_ICON_SIZE, height: FOOTSTEP_ICON_SIZE }}
-                    resizeMode="contain"
-                />
-            </Marker>)
-        })
-    }, [newFootstepList]);
-
-
     return (
         <View style={styles.container}>
 
@@ -459,12 +409,12 @@ export default function App() {
 
             <View style={styles.mapcontainer}>
                 {
-                    initMapLocation ?
+                    currentRegion ?
                         <MapView style={styles.map}
                             ref={mapRef}
                             rotateEnabled={false}
                             onRegionChangeComplete={onRegionChangeComplete}
-                            onMapLoaded={handleMapLoad}
+                            onMapLoaded={() => { setMapLoaded(true) }}
                             showsBuildings={false}
                             showsCompass={false}
                             showsMyLocationButton={true}
@@ -477,9 +427,6 @@ export default function App() {
                             {mapPolygons}
                             {itemMarkers}
                             {footstepMarkers}
-                            {newMapPolygons}
-                            {newItemMarkers}
-                            {newFootstepMarkers}
                         </MapView> : <ActivityIndicator size='large' color={'white'}></ActivityIndicator>
 
 
@@ -518,8 +465,6 @@ export default function App() {
 
                 </View>
                 <View style={styles.extracount}>
-                    {/* <Text style={{ opacity: 0.8, fontSize: 10 }}>걸음수  </Text>
-                    <Text style={{ fontSize: 18 }}>{validStepCount.toFixed(0)}</Text> */}
                     <Text style={{ opacity: 0.8, fontSize: 10 }}>남은 아이템 개수   </Text>
                     <Text style={{ fontSize: 18 }}>{currentItemCount}</Text>
                 </View>
@@ -554,55 +499,6 @@ export default function App() {
     );
 }
 
-
-
-
-
-// function CatPaw({coordinate, rotation, keyIndex}: {coordinate: LocationCoordinate, rotation: number, keyIndex: number }) {
-//     const footRadius = mapService.getBlockSizeInMeter() / 5;
-//     const footToeDistance = footRadius * 2;
-//     const toeRadius = footRadius / 2;
-
-//     const toeAngleDelta = 30;
-//     const degToRad = Math.PI / 180;
-
-//     const leftToeRadian = (rotation + toeAngleDelta) * degToRad;
-//     const centerToeRadian = rotation * degToRad;
-//     const rightToeRadian = (rotation - toeAngleDelta) * degToRad;
-
-//     const leftTeoLocation = {
-//         latitude: coordinate.latitude + footToeDistance * Math.cos(leftToeRadian) * DEGREE_PER_METER,
-//         longitude: coordinate.longitude - footToeDistance * Math.sin(leftToeRadian) * DEGREE_PER_METER
-//     };
-//     const centerTeoLocation = {
-//         latitude: coordinate.latitude + footToeDistance * Math.cos(centerToeRadian) * DEGREE_PER_METER,
-//         longitude: coordinate.longitude - footToeDistance * Math.sin(centerToeRadian) * DEGREE_PER_METER
-//     };
-//     const rightTeoLocation = {
-//         latitude: coordinate.latitude + footToeDistance * Math.cos(rightToeRadian) * DEGREE_PER_METER,
-//         longitude: coordinate.longitude - footToeDistance * Math.sin(rightToeRadian) * DEGREE_PER_METER
-//     };
-
-
-//     return (
-//         <>
-//             {/* foot */}
-//             <Circle center={coordinate} radius={footRadius} strokeWidth={0} fillColor={"#000000"} key={`foot${keyIndex}`} zIndex={1000}>
-//             </Circle>
-
-//             {/* toes */}
-//             <Circle center={leftTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`left${keyIndex}`} zIndex={1000}>
-
-//             </Circle>
-//             <Circle center={centerTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`center${keyIndex}`} zIndex={1000}>
-
-//             </Circle>
-//             <Circle center={rightTeoLocation} radius={toeRadius} strokeWidth={0} fillColor={"#000000"} key={`right${keyIndex}`} zIndex={1000}>
-
-//             </Circle>
-//         </>
-//     );
-// }
 
 
 const styles = StyleSheet.create({
