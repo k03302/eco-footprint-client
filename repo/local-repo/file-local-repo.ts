@@ -18,7 +18,7 @@ class FileLocalRepo implements FileRepo {
 
     // Upload a new file to AsyncStorage
     async uploadFile(file: FileInput): Promise<FileData> {
-        console.log('uploadFile');
+
         const key = this.generateKey(file.id);
 
         // Prepare the file data
@@ -31,15 +31,17 @@ class FileLocalRepo implements FileRepo {
             date: "",
             file: ""
         };
-        if (file.localLocation) {
+        if (!file.localLocation && file.fileUri) {
             await FileSystem.copyAsync({
                 from: file.fileUri,
                 to: filePath + file.id,
             });
-            console.log(FileSystem.documentDirectory);
         }
         const fileInfo = await FileSystem.getInfoAsync(filePath + file.id);
-        console.log("fileInfo", fileInfo);
+
+
+        console.log("from", file.fileUri);
+        console.log("to", filePath + file.id);
 
         // Save the file metadata in AsyncStorage
         await AsyncStorage.setItem(key, JSON.stringify(fileData));
@@ -66,10 +68,12 @@ class FileLocalRepo implements FileRepo {
             file: ""
         };
 
-        await FileSystem.copyAsync({
-            from: file.fileUri,
-            to: filePath + file.id,
-        });
+        if (!file.localLocation && file.fileUri) {
+            await FileSystem.copyAsync({
+                from: file.fileUri,
+                to: filePath + file.id,
+            });
+        }
 
 
         await AsyncStorage.setItem(key, JSON.stringify(updatedFileData));
@@ -101,13 +105,38 @@ export function getFileSource(fileId: string) {
 }
 
 const bundledImageMap: { [key: string]: any } = {
-    donation1: require("@/assets/datas/donation1.png"),
-    donation2: require("@/assets/datas/donation2.png"),
-    recoord1: require("@/assets/datas/recoord1.png"),
-    recoord2: require("@/assets/datas/recoord2.png"),
-    recoord3: require("@/assets/datas/recoord3.png"),
-    reward1: require("@/assets/datas/reward1.png"),
-    reward2: require("@/assets/datas/reward2.png"),
+    thumbnail1: require("@/assets/images/thumbnail1.png"),
+    thumbnail2: require("@/assets/images/thumbnail2.png"),
+    thumbnail3: require("@/assets/images/thumbnail3.png"),
+
+
+
+    donation1: require("@/assets/images/donation1.png"),
+    donation2: require("@/assets/images/donation2.png"),
+
+
+
+    recoord1: require("@/assets/images/recoord1.png"),
+    recoord2: require("@/assets/images/recoord2.png"),
+    recoord3: require("@/assets/images/recoord3.png"),
+    recoord4: require("@/assets/images/recoord4.png"),
+    recoord5: require("@/assets/images/recoord5.png"),
+    recoord6: require("@/assets/images/recoord6.png"),
+    recoord7: require("@/assets/images/recoord7.png"),
+    recoord8: require("@/assets/images/recoord8.png"),
+    recoord9: require("@/assets/images/recoord9.png"),
+    recoord10: require("@/assets/images/recoord10.png"),
+    recoord11: require("@/assets/images/recoord11.png"),
+
+
+
+    reward1: require("@/assets/images/reward1.png"),
+    reward2: require("@/assets/images/reward2.png"),
+    reward3: require("@/assets/images/reward3.png"),
+    reward4: require("@/assets/images/reward4.png"),
+    reward5: require("@/assets/images/reward5.png"),
+    reward6: require("@/assets/images/reward6.png"),
+    reward7: require("@/assets/images/reward7.png"),
 }
 
 export default FileLocalRepo;

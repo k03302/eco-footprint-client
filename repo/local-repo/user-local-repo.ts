@@ -15,7 +15,8 @@ class UserLocalRepo implements UserRepo {
         const key = this.generateKey(userItem.id);
         const existingUser = await AsyncStorage.getItem(key);
         if (existingUser) {
-            throw new Error(`User with ID ${userItem.id} already exists.`);
+            //throw new Error(`User with ID ${userItem.id} already exists.`);
+            return await this.updateUserInfo(userItem);
         }
 
         await AsyncStorage.setItem(key, JSON.stringify(userItem));

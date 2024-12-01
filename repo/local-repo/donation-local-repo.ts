@@ -15,8 +15,14 @@ class DonationLocalRepo implements DonationRepo {
         const keys = await AsyncStorage.getAllKeys();
         const donationKeys = keys.filter(key => key.startsWith(this.prefix));
 
-        const donationItems = await AsyncStorage.multiGet(donationKeys);
-        return donationItems.map(([_, value]) => JSON.parse(value as string) as DonationItemMeta);
+        const donationItems: DonationItemMeta[] = [];
+        for (let key of donationKeys) {
+            const rewardData = await AsyncStorage.getItem(key);
+            if (rewardData) {
+                donationItems.push(JSON.parse(rewardData));
+            }
+        }
+        return donationItems;
     }
 
     // Get a single donation by its ID
@@ -49,10 +55,12 @@ class DonationLocalRepo implements DonationRepo {
         const key = this.generateKey(donationItem.id);
         const existingDonation = await AsyncStorage.getItem(key);
         if (existingDonation) {
-            throw new Error(`Donation with ID ${donationItem.id} already exists.`);
+            return await this.updateDonation(donationItem);
+            //throw new Error(`Donation with ID ${donationItem.id} already exists.`);
         }
 
         await AsyncStorage.setItem(key, JSON.stringify(donationItem));
+
         return donationItem;
     }
 
