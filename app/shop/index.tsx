@@ -1,45 +1,61 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
-import { repo, util } from '@/api/main';
-import { CouponItem, RewardItemMeta } from '@/core/model';
+import { getFileSource, repo } from '@/api/main';
+import { CouponItem, NO_COUPON, NO_USER, RewardItemMeta, UserItem } from '@/core/model';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { getMyProfile, purchaseReward } from '@/api/user';
+import PointDisplay from '@/components/PointDisplay';
 
 export default function ShopScreen() {
+    const [userInfo, setUserInfo] = useState<UserItem>(NO_USER)
     const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
     const [couponModalVisible, setCouponModalVisible] = useState<boolean>(false);
     const [rewardList, setRewardList] = useState<RewardItemMeta[]>([]);
     const [selectedReward, setSelectedReward] = useState<RewardItemMeta | null>(null);
     const [selectedCoupon, setSelectedCoupon] = useState<CouponItem | null>(null);
+
     const isFocused = useIsFocused();
+    const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
+
+
+    const updatePageInfo = async () => {
+        const rewards = await repo.rewards.getAllRewards();
+        setRewardList(rewards);
+        const userInfo = await getMyProfile();
+        setUserInfo(userInfo);
+
+        console.log(rewards);
+    }
 
     useEffect(() => {
+        if (!isFocused) return;
+        updatePageInfo();
+    }, [isFocused]);
 
-    }, [isFocused])
     useEffect(() => {
-        (async () => {
-            const rewards = await repo.rewards.getAllRewards();
-            setRewardList(rewards);
-            console.log(rewards);
-        })()
-    }, []);
+        if (!hasToUpdate) return;
+        updatePageInfo().then(() => {
+            setHasToUpdate(false);
+        });
+    }, [hasToUpdate]);
 
-    // useEffect(() => {
-    //     console.log(selectedReward);
-    // }, [selectedReward]);
+
 
     const purchaseHandler = () => {
         (async () => {
-            // if (!selectedReward) return;
-            // const couponInfo = await purchaseReward(selectedReward.id);
-            // if (couponInfo) {
-            //     setSelectedCoupon(couponInfo);
-            //     setConfirmModalVisible(false);
-            //     setCouponModalVisible(true);
-            // } else {
-            //     setConfirmModalVisible(false);
-            //     alert("포인트가 부족합니다.");
-            // }
+            if (!selectedReward) return;
+            const couponInfo = await purchaseReward(selectedReward.id);
+            console.log(couponInfo);
+            if (couponInfo !== NO_COUPON) {
+                setSelectedCoupon(couponInfo);
+                setConfirmModalVisible(false);
+                setCouponModalVisible(true);
+                setHasToUpdate(true);
+            } else {
+                setConfirmModalVisible(false);
+                alert("포인트가 부족합니다.");
+            }
         })()
     }
     const cancelHandler = () => {
@@ -47,7 +63,7 @@ export default function ShopScreen() {
     }
 
 
-    if (!rewardList) {
+    if (!rewardList || !userInfo) {
         return <ActivityIndicator size="large"></ActivityIndicator>
     }
 
@@ -61,12 +77,21 @@ export default function ShopScreen() {
                 </View>
             </TouchableOpacity>
 
+            <View style={{ position: 'absolute', right: 10, top: 10 }}>
+                <PointDisplay pointAmount={userInfo.point} displaySizeLevel={2}></PointDisplay>
+            </View>
+
             <View style={{ flex: 9 }}>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={{ flexDirection: 'row' }}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                    <View style={{
+                        flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap',
+                    }}>
                         {
-                            rewardList.length > 0 ? rewardList.map((rewardItem, index) => <RewardItemCard
-                                setModalVisible={setConfirmModalVisible} reward={rewardItem} setSelectedReward={setSelectedReward} key={index}
+                            rewardList.length > 0 ? rewardList.map((rewardInfo, index) => <RewardItemCard
+                                setModalVisible={setConfirmModalVisible}
+                                rewardInfo={rewardInfo}
+                                setSelectedReward={setSelectedReward}
+                                key={index}
                             >
 
                             </RewardItemCard>) : <></>
@@ -84,9 +109,12 @@ export default function ShopScreen() {
                     <View style={styles.modalView}>
                         {
                             selectedReward ? <>
-                                <Image
-                                    // source={util.getFileSource(selectedReward.thumbnailId)}
-                                    style={[styles.image_coupon, { resizeMode: 'contain' }]} />
+                                {
+                                    selectedReward.thumbnailId ? <Image
+                                        source={getFileSource(selectedReward.thumbnailId)}
+                                        style={[styles.image_product, { resizeMode: 'contain' }]} />
+                                        : <View style={styles.image_product} />
+                                }
                                 <Text style={styles.text_brand_modal}>{selectedReward.brandName}</Text>
                                 <Text style={styles.text_product_modal}>{selectedReward.itemName}</Text>
                                 <View style={styles.price_container_modal}>
@@ -138,10 +166,10 @@ export default function ShopScreen() {
     );
 }
 
-const RewardItemCard = ({ setModalVisible, reward, setSelectedReward }:
+const RewardItemCard = ({ setModalVisible, rewardInfo, setSelectedReward }:
     {
         setModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
-        reward: RewardItemMeta,
+        rewardInfo: RewardItemMeta,
         setSelectedReward: React.Dispatch<React.SetStateAction<RewardItemMeta | null>>
     }
 ) => {
@@ -151,7 +179,7 @@ const RewardItemCard = ({ setModalVisible, reward, setSelectedReward }:
     }, []);
 
     const onPressModalOpen = () => {
-        setSelectedReward(reward);
+        setSelectedReward(rewardInfo);
         setModalVisible(true);
     }
 
@@ -161,15 +189,18 @@ const RewardItemCard = ({ setModalVisible, reward, setSelectedReward }:
         <View style={styles.couponrowcontainer}>
             <TouchableOpacity onPress={onPressModalOpen}>
                 <View style={styles.box}>
-                    <Image
-                        // source={util.getFileSource(reward.thumbnailId)}
-                        style={[styles.image_product, { resizeMode: 'contain' }]} />
-                    <Text style={styles.text_brand}>{reward.brandName}</Text>
-                    <Text style={styles.text_product}>{reward.itemName}</Text>
+                    {
+                        rewardInfo.thumbnailId ? <Image
+                            source={getFileSource(rewardInfo.thumbnailId)}
+                            style={[styles.image_product, { resizeMode: 'contain' }]} />
+                            : <View style={styles.image_product} />
+                    }
+                    <Text style={styles.text_brand}>{rewardInfo.brandName}</Text>
+                    <Text style={styles.text_product}>{rewardInfo.itemName}</Text>
                     <View style={styles.price_container}>
                         <Image source={require("@/assets/images/point.png")}
                             style={[styles.image_point, { resizeMode: 'contain' }]} />
-                        <Text style={styles.text_price}>{reward.price}</Text>
+                        <Text style={styles.text_price}>{rewardInfo.price}</Text>
                     </View>
                 </View>
             </TouchableOpacity>

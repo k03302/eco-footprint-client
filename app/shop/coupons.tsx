@@ -1,27 +1,29 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, Touchable, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
-import { repo, util } from '@/api/main';
-import { CouponItemMeta, RewardItem } from '@/core/model';
+import { getFileSource, repo } from '@/api/main';
+import { CouponItemMeta, NO_USER, RewardItem } from '@/core/model';
 import { useIsFocused } from '@react-navigation/native';
+import PointDisplay from '@/components/PointDisplay';
+import { getMyProfile } from '@/api/user';
 
 export default function CouponScreen() {
     const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
     const [couponList, setCouponList] = useState<CouponItemMeta[]>([]);
+    const [userPoint, setUserPoint] = useState<number>(0);
     const [selectedCoupon, setSelectedCoupon] = useState<CouponItemMeta | null>(null);
     const [selectedReward, setSelectedReward] = useState<RewardItem | null>(null);
     const isFocused = useIsFocused();
 
     useEffect(() => {
-
-    }, [isFocused])
-    useEffect(() => {
         (async () => {
-            // const userInfo = await getMyProfile();
-            // if (!userInfo) return;
-            // setCouponList(userInfo.couponList);
+            const userInfo = await getMyProfile();
+            if (userInfo === NO_USER) return;
+            setCouponList(userInfo.couponList);
+            setUserPoint(userInfo.point);
         })()
-    }, []);
+    }, [isFocused])
+
 
     useEffect(() => { console.log(selectedReward) }, [selectedReward])
 
@@ -35,8 +37,10 @@ export default function CouponScreen() {
     return (
         <View style={styles.container}>
             <View style={{ flex: 9 }}>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={{ flexDirection: 'row' }}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                    <View style={{
+                        flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap',
+                    }}>
                         {
                             couponList.length > 0 ? couponList.map((rewardItem, index) => <CouponItemCard
                                 setModalVisible={setConfirmModalVisible} couponInfo={rewardItem} setSelectedCoupon={setSelectedCoupon} key={index}
@@ -61,7 +65,7 @@ export default function CouponScreen() {
                             {
                                 selectedReward ? <>
                                     <Image
-                                        // source={util.getFileSource(selectedReward.thumbnailId)}
+                                        source={getFileSource(selectedReward.thumbnailId)}
                                         style={[styles.image_coupon, { resizeMode: 'contain' }]} />
                                     <Text style={styles.text_brand_modal}>{selectedReward.brandName}</Text>
                                     <Text style={styles.text_product_modal}>{selectedReward.itemName}</Text>
@@ -91,9 +95,9 @@ const CouponItemCard = ({ setModalVisible, couponInfo, setSelectedCoupon, setSel
 
     useEffect(() => {
         (async () => {
-            // const info = await repo.coupons.getCoupon(couponInfo.id);
-            // const reward = await repo.rewards.getRewardInfo(info.couponId);
-            // setRewardInfo(reward);
+            const info = await repo.coupons.getCoupon(couponInfo.id);
+            const reward = await repo.rewards.getRewardInfo(info.couponId);
+            setRewardInfo(reward);
         })()
     }, []);
 
@@ -113,7 +117,7 @@ const CouponItemCard = ({ setModalVisible, couponInfo, setSelectedCoupon, setSel
             <TouchableOpacity onPress={onPressModalOpen}>
                 <View style={styles.box}>
                     <Image
-                        // source={util.getFileSource(rewardInfo.thumbnailId)}
+                        source={getFileSource(rewardInfo.thumbnailId)}
                         style={[styles.image_product, { resizeMode: 'contain' }]} />
                     <Text style={styles.text_brand}>{rewardInfo.brandName}</Text>
                     <Text style={styles.text_product}>{rewardInfo.itemName}</Text>
