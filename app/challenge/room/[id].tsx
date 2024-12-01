@@ -3,187 +3,93 @@ import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { ChallengeItem, ChallengeRecoordItem, UserItemMeta } from '@/core/model';
-import { repo, util } from '@/api/main';
+import { getFileSource, repo } from '@/api/main';
 import * as ImagePicker from 'expo-image-picker';
 import * as Progress from 'react-native-progress';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
+import { HorizontalLine } from '@/components/HorizontalLine';
+import { ChallengeGallery } from '@/components/Gallery';
+import { getMyProfile } from '@/api/user';
+import ChallengeModal from '@/components/ChallengeModal';
+import { setApproveProofShot, uploadProofShoot } from '@/api/challenge';
+import { getDayDifference } from '@/utils/time';
 
+const OBJECTIVE_POINT = 100;
+const TOTAL_CHALLENGE_DAY = 30;
 
-const DrawLine = () => {
-    return (
-        <View style={{ alignItems: 'center' }}>
-            <Image source={require("@/assets/images/line.png")}
-                style={{ width: 325, height: 1, marginTop: 15, borderRadius: 10 }} />
-        </View>
-    );
-};
-
-const ChallengeImage = ({ imgSource, approved }: { imgSource: ImageSourcePropType, approved: boolean }) => {
-    return <View style={styles.imageWrapper}>
-        <Image
-            source={imgSource} // Replace with your image URI
-            style={styles.image}
-        />
-        <MaterialIcons
-            name="star"
-            size={24}
-            color={approved ? "gold" : "gray"}
-            style={styles.icon}
-        />
-    </View>
-}
-
-const ChallengeImageTouchable = ({ onPress, imgSource, approved }: { onPress: () => void, imgSource: ImageSourcePropType, approved: boolean }) => {
-    return <TouchableOpacity onPress={onPress}>
-        <ChallengeImage imgSource={imgSource} approved={approved}></ChallengeImage>
-    </TouchableOpacity>
-}
-
-const MyChallengeGallery = ({ userInfo, challengeItem }: {
-    userInfo: UserItemMeta, challengeItem: ChallengeItem
-}) => {
-    const challengeRecoords = challengeItem.participantsRecord;
-    const myRecoords = challengeRecoords.filter((recoord) => {
-        return recoord.userId === userInfo.id
-    }).sort((a, b) => {
-        return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
-    })
-    const first4 = myRecoords.slice(0, 4);
-
-    return (
-        <View>
-            <Image source={require("@/assets/images/user.png")}
-                style={{ width: 38, height: 38, marginTop: 10, marginBottom: 5, marginLeft: 5 }} />
-            <View style={{ flexDirection: 'row' }}>
-                <ScrollView horizontal={true} showsVerticalScrollIndicator={false}>
-                    <Text style={{ marginLeft: 10 }}> </Text>
-                    {
-                        // first4.map((recoord, index) => {
-                        //     return <ChallengeImage imgSource={util.getFileSource(recoord.recordId)}
-                        //         approved={recoord.approved} key={index}></ChallengeImage>
-                        // })
-                    }
-                </ScrollView>
-            </View>
-        </View>
-    );
-};
-
-
-
-const MemberChallengeGallery = ({ userInfo, challengeItem, setChallengeItem }: {
-    userInfo: UserItemMeta, challengeItem: ChallengeItem,
-    setChallengeItem: React.Dispatch<React.SetStateAction<ChallengeItem | null>>
-}) => {
-    const [isModalVisible, setisModalVisible] = useState<boolean>(false);
-    const [selectedRecoord, setSelectedRecoord] = useState<ChallengeRecoordItem | null>(null);
-
-    const approveHandler = () => {
-        setisModalVisible(false);
-        for (const recoord of challengeItem.participantsRecord) {
-            if (recoord.uploadDate === selectedRecoord?.uploadDate) {
-                recoord.approved = true;
-                setChallengeItem(challengeItem);
-                return;
-            }
-        }
-
-    }
-
-    const challengeRecoords = challengeItem.participantsRecord;
-    const myRecoords = challengeRecoords.filter((recoord) => {
-        return recoord.userId === userInfo.id
-    }).sort((a, b) => {
-        return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
-    })
-    const first4 = myRecoords.slice(0, 4);
-
-    return (
-        <View>
-            <Image source={require("@/assets/images/user.png")}
-                style={{ width: 38, height: 38, marginTop: 10, marginBottom: 5, marginLeft: 5 }} />
-            <View style={{ flexDirection: 'row' }}>
-                <Text style={{ marginLeft: 10 }}> </Text>
-                {
-                    // first4.map((recoord, index) => {
-                    //     if (recoord.approved) {
-                    //         return <ChallengeImage imgSource={util.getFileSource(recoord.recordId)}
-                    //             approved={true}></ChallengeImage>
-                    //     }
-                    //     return <ChallengeImageTouchable imgSource={util.getFileSource(recoord.recordId)}
-                    //         onPress={() => {
-                    //             setisModalVisible(true);
-                    //             setSelectedRecoord(recoord);
-                    //         }} approved={false} key={index}>
-
-                    //     </ChallengeImageTouchable>
-                    // })
-                }
-            </View>
-            <Modal
-                animationType="slide"
-                visible={isModalVisible}
-                transparent={true}>
-                <View style={styles.centeredView}>
-                    <View style={styles.modalView}>
-                        {/* {selectedRecoord ? <>
-                            <Image source={util.getFileSource(selectedRecoord?.recordId)}
-                                style={[styles.image_modal, { resizeMode: 'contain' }]} />
-                            <View style={{ alignItems: 'center' }}>
-                                <TouchableOpacity onPress={approveHandler}>
-                                    <Image source={require("@/assets/images/agreechallengebutton.png")}
-                                        style={{ width: 265, height: 41, marginTop: 50, marginLeft: 3 }} />
-                                </TouchableOpacity>
-                            </View>
-                        </> : <></>} */}
-                    </View>
-                </View>
-            </Modal>
-        </View>
-    )
-}
 
 export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
-    const [challengeItem, setChallengeItem] = useState<ChallengeItem | null>(null);
+    const [totalPoint, setTotalPoint] = useState<number>(0);
+
+
+    const [showMyImageModal, setShowMyImageModal] = useState<boolean>(false);
+    const [showMemImageModal, setShowMemImageModal] = useState<boolean>(false);
+    const [showButton, setShowButton] = useState<boolean>(false);
+    const [imgDate, setImgDate] = useState<Date | undefined>(undefined);
+    const [memButtonTitle, setMemButtonTitle] = useState<string>('');
+    const [selectedMemRecoord, setSelectedMemRecoord] = useState<ChallengeRecoordItem | null>(null);
+    const [modalImage, setModalImage] = useState<ImageSourcePropType | undefined>(undefined);
+
+
+
+
+    const [challengeInfo, setChallengeInfo] = useState<ChallengeItem | null>(null);
     const [myProfileInfo, setMyProfileInfo] = useState<UserItemMeta | null>(null);
+
     const isFocused = useIsFocused();
+    const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
+
+
+    const updatePageInfo = async () => {
+        // redirect to register page if user didn't registered to challenge
+        const userInfo = await getMyProfile();
+        setMyProfileInfo(userInfo);
+        let participated = false;
+        if (userInfo) {
+            for (const myChallengeInfo of userInfo.challengeList) {
+                if (myChallengeInfo.id === challengeId) {
+                    participated = true;
+                }
+            }
+        }
+        if (!participated) {
+            router.replace({ pathname: '/challenge/register/[id]', params: { id: challengeId } });
+            return;
+        }
+
+        const challengeInfo = await repo.challenges.getChallenge(challengeId);
+        setChallengeInfo(challengeInfo);
+
+        let approvedCount = 0;
+        challengeInfo.participantsRecord.forEach((recoord) => {
+            if (recoord.approved) {
+                approvedCount += 1;
+            }
+        })
+        setTotalPoint(challengeInfo.participantsRecord.length + approvedCount);
+    }
 
     useEffect(() => {
-
-    }, [isFocused])
+        if (!isFocused) return;
+        updatePageInfo();
+    }, [isFocused]);
 
     useEffect(() => {
-        (async () => {
+        if (!hasToUpdate) return;
+        updatePageInfo().then(() => {
+            setHasToUpdate(false);
+        });
+    }, [hasToUpdate]);
 
-            // // redirect to register page if user didn't registered to challenge
-            // const userInfo = await getMyProfile();
-            // setMyProfileInfo(userInfo);
-            // let participated = false;
-            // if (userInfo) {
-            //     for (const myChallengeInfo of userInfo.chellengeList) {
-            //         if (myChallengeInfo.id === challengeId) {
-            //             participated = true;
-            //         }
-            //     }
-            // }
-            // if (!participated) {
-            //     router.replace({ pathname: '/challenge/register/[id]', params: { id: challengeId } });
-            //     return;
-            // }
-
-            // const challengeInfo = await repo.challenges.getChallenge(challengeId);
-            // setChallengeItem(challengeInfo);
-        })();
-    }, []);
 
 
     const takePhotoAndUpload = async () => {
         // Request permissions
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('인증을 위해 카메라 권한이 필요합니다.');
+            alert('인증을 위해 카메라 권한이 필요합니다.');
             return;
         }
 
@@ -195,63 +101,174 @@ export default function ChallengeScreen() {
         });
 
         if (!result.canceled) {
-            // await uploadProofShoot(challengeId, result.assets[0].uri);
+            await uploadProofShoot(challengeId, result.assets[0].uri);
         }
+
+        setHasToUpdate(true);
+        setShowMyImageModal(false);
     };
 
-    if (!challengeItem || !myProfileInfo) {
-        return <ActivityIndicator size="large"></ActivityIndicator>
+    const toggleApproveState = async (recoord: ChallengeRecoordItem) => {
+        const newApprovedState = !recoord.approved;
+        await setApproveProofShot(challengeId, recoord.recordId, newApprovedState);
+        setHasToUpdate(true);
+        setShowButton(false);
+        setShowMyImageModal(false);
     }
+
+
+    const onMyTodayImagePress = (recoord?: ChallengeRecoordItem) => {
+        if (recoord) {
+            setModalImage(getFileSource(recoord.recordId));
+            setImgDate(new Date(recoord.uploadDate));
+        } else {
+            setModalImage(undefined);
+            setImgDate(undefined);
+        }
+        setShowMyImageModal(true);
+        setShowButton(true);
+    }
+
+    const onMemTodayImagePress = (recoord?: ChallengeRecoordItem) => {
+        if (recoord) {
+            setModalImage(getFileSource(recoord.recordId));
+            setImgDate(new Date(recoord.uploadDate));
+            setShowButton(true);
+            setMemButtonTitle(recoord.approved ? '승인 해제하기' : '인증사진 승인하기');
+            setSelectedMemRecoord(recoord);
+        } else {
+            setModalImage(undefined);
+            setImgDate(undefined);
+            setShowButton(false);
+            setSelectedMemRecoord(null);
+        }
+        setShowMemImageModal(true);
+    }
+
+    const onMyDatedImagePress = (recoord?: ChallengeRecoordItem) => {
+        if (recoord) {
+            setModalImage(getFileSource(recoord.recordId));
+            setImgDate(new Date(recoord.uploadDate));
+        } else {
+            setModalImage(undefined);
+            setImgDate(undefined);
+        }
+
+        setShowButton(false);
+        setShowMyImageModal(true);
+    }
+
+    const onMemDatedImagePress = (recoord?: ChallengeRecoordItem) => {
+        if (recoord) {
+            setModalImage(getFileSource(recoord.recordId));
+            setImgDate(new Date(recoord.uploadDate));
+        } else {
+            setModalImage(undefined);
+            setImgDate(undefined);
+        }
+        setShowButton(false);
+        setShowMemImageModal(true);
+    }
+
+
+
+    if (!challengeInfo || !myProfileInfo) {
+        return <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+            <ActivityIndicator size="large"></ActivityIndicator>
+        </View>
+    }
+
     return (
         <View style={styles.container}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 <View style={styles.container_title}>
-                    <DrawLine />
-                    <Text style={{ fontSize: 22, fontWeight: 'bold', margin: 20 }}>{challengeItem.type}</Text>
-                    <Text style={{ fontSize: 15 }}>{challengeItem.description}</Text>
-                    <DrawLine />
+                    <HorizontalLine />
+                    <Text style={{ fontSize: 22, fontWeight: 'bold', margin: 20 }}>{challengeInfo.name}</Text>
+                    <Text style={{ fontSize: 15, margin: 20 }}>{challengeInfo.description}</Text>
+                    <HorizontalLine />
                 </View>
                 <View style={styles.container_progress}>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>현재 챌린지 진행률</Text>
+                    <Text style={{ fontSize: 22, fontWeight: 'bold', margin: 20 }}>현재 챌린지 진행률</Text>
                     <View style={{ alignItems: 'center' }}>
                         <Progress.Bar
-                            progress={0}
-                            width={150}
-                            color="#3b5998"
+                            progress={totalPoint / OBJECTIVE_POINT}
+                            width={300}
+                            height={30}
+                            borderRadius={8}
+                            color="#849C6A"
                             style={styles.progressBar}
+                            borderWidth={0}
+
+                            unfilledColor='lightgray'
                         />
                     </View>
-                    <Text> {0} / {0} </Text>
-                    <DrawLine />
+                    <Text> {totalPoint} / {OBJECTIVE_POINT} </Text>
+                    <HorizontalLine />
                 </View>
-                <View style={styles.container_myrecord}>
+                <View style={styles.container_progress}>
+                    <Text style={{ fontSize: 22, fontWeight: 'bold', margin: 20 }}>챌린지 마감기한</Text>
+                    <View style={{ alignItems: 'center' }}>
+                        <Progress.Bar
+                            progress={getDayDifference(new Date(), new Date(challengeInfo.dateStart)) / TOTAL_CHALLENGE_DAY}
+                            width={300}
+                            height={30}
+                            borderRadius={8}
+                            color="#849C6A"
+                            style={styles.progressBar}
+                            borderWidth={0}
+
+                            unfilledColor='lightgray'
+                        />
+                    </View>
+                    <Text>챌린지 시작: {(new Date(challengeInfo.dateStart)).toLocaleString('ko-kr')}</Text>
+                    <Text>챌린지 마감: {(new Date(challengeInfo.dateEnd)).toLocaleString('ko-kr')}</Text>
+                    <HorizontalLine />
+                </View>
+                <View style={styles.recordcontainer}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>나의 챌린지 기록</Text>
-                    <MyChallengeGallery userInfo={myProfileInfo} challengeItem={challengeItem} />
+                    <ChallengeGallery yes={true} userInfo={myProfileInfo} challengeInfo={challengeInfo}
+                        onTodayImagePress={onMyTodayImagePress} onDatedImagePress={onMyDatedImagePress} />
                     <View style={{ alignItems: 'center' }}>
                         <TouchableOpacity onPress={takePhotoAndUpload}>
                             <Image source={require("@/assets/images/writechallengebutton.png")}
                                 style={{ width: 265, height: 41, marginTop: 20, marginLeft: 3 }} />
                         </TouchableOpacity>
                     </View>
-                    <DrawLine />
+                    <HorizontalLine />
                 </View>
-                <View style={styles.container_memberrecord}>
-                    <View style={{ alignItems: 'center' }}>
-                        <Text style={{ fontSize: 13 }}>멤버의 기록을 확인하세요!</Text>
-                    </View>
+                <View style={styles.recordcontainer}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>멤버의 기록을 확인하세요!</Text>
                     {
-                        challengeItem.participants.map((participant, index) => {
-                            console.log(participant);
+                        challengeInfo.participants.map((participant, index) => {
                             if (participant.id === myProfileInfo.id) {
-                                return <View key={index}></View>
+                                return <View key={participant.id + index}></View>
                             }
-                            return <MemberChallengeGallery userInfo={participant}
-                                challengeItem={challengeItem}
-                                setChallengeItem={setChallengeItem}></MemberChallengeGallery>
+                            return <ChallengeGallery
+                                yes={false}
+                                userInfo={participant}
+                                challengeInfo={challengeInfo}
+                                onTodayImagePress={onMemTodayImagePress}
+                                onDatedImagePress={onMemDatedImagePress}
+                                key={participant.id + index}
+                            ></ChallengeGallery>
                         })
                     }
                 </View>
             </ScrollView>
+            <ChallengeModal
+                modalVisible={showMyImageModal}
+                setModalVisible={setShowMyImageModal} imgSource={modalImage}
+                buttonTitle="새로운 사진 인증하기" onPress={takePhotoAndUpload} showButton={showButton}
+                imgDate={imgDate} />
+            <ChallengeModal
+                modalVisible={showMemImageModal}
+                setModalVisible={setShowMemImageModal} imgSource={modalImage}
+                buttonTitle={memButtonTitle} onPress={async () => {
+                    selectedMemRecoord && toggleApproveState(selectedMemRecoord);
+                }} showButton={showButton}
+                imgDate={imgDate} />
+
+
         </View>
     )
 }
@@ -268,32 +285,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
     },
-    image: {
-        width: 72, height: 75, marginLeft: 3,
-        borderRadius: 8, // Optional, for rounded corners
-    },
-    icon: {
-        position: 'absolute',
-        top: 8, // Distance from the top of the image
-        right: 8, // Distance from the right of the image
-    },
     container_progress: {
         margin: 10,
         alignItems: 'center'
     },
-    container_myrecord: {
-        margin: 10
-    },
-    container_memberrecord: {
-        margin: 10
+    recordcontainer: {
+        margin: 20
     },
     container_button: {
         flex: 1,
         margin: 10,
         alignItems: 'center'
-    },
-    imageWrapper: {
-        position: 'relative', // Allows absolute positioning within this container
     },
     text_1: {
         fontSize: 15,
@@ -377,3 +379,7 @@ const styles = StyleSheet.create({
 function useCallback(arg0: () => void, arg1: never[]) {
     throw new Error('Function not implemented.');
 }
+function setAllChallList(arg0: import("@/core/model").ChallengeItemMeta[]) {
+    throw new Error('Function not implemented.');
+}
+

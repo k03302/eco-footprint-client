@@ -1,43 +1,48 @@
 import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { ChallengeItemMeta } from '@/core/model';
+import { ChallengeItemMeta, UserItem } from '@/core/model';
 import { repo } from '@/api/main';
 import { useIsFocused } from '@react-navigation/native';
+import { getMyProfile } from '@/api/user';
 
 export default function ChallengeScreen() {
-    const [myChallengeList, setMyChallengeList] = useState<ChallengeItemMeta[]>([]);
-    const [challengeList, setChallengeList] = useState<ChallengeItemMeta[]>([]);
-
+    const [participatedChallList, setParticipatedChallList] = useState<ChallengeItemMeta[]>([]);
+    const [allChallList, setAllChallList] = useState<ChallengeItemMeta[]>([]);
+    const [myUserInfo, setMyUserInfo] = useState<UserItem | null>(null);
     const isFocused = useIsFocused();
+    const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
+
+
+    const updatePageInfo = async () => {
+        const userInfo = await getMyProfile();
+        setMyUserInfo(userInfo);
+        setParticipatedChallList(userInfo.challengeList);
+        setAllChallList(await repo.challenges.getAllChallenges());
+    }
 
     useEffect(() => {
-
-    }, [isFocused])
+        if (!isFocused) return;
+        updatePageInfo();
+    }, [isFocused]);
 
     useEffect(() => {
-        (async () => {
-            // const userInfo = await getMyProfile();
-            // const challenges = await repo.challenges.getAllChallenges();
-            // if (userInfo) {
-            //     setMyChallengeList(userInfo.chellengeList);
-            // }
-            // if (challenges) {
-            //     setChallengeList(challenges);
-            // }
-        })()
-    }, [])
+        if (!hasToUpdate) return;
+        updatePageInfo().then(() => {
+            setHasToUpdate(false);
+        });
+    }, [hasToUpdate]);
 
     return (
-        <View style={styles.container1}>
+        <View style={styles.container}>
             <ScrollView>
                 {
-                    myChallengeList.length > 0 ? (
-                        <View style={styles.container3}>
+                    participatedChallList.length > 0 ? (
+                        <View style={styles.challengecontainer}>
                             <Text style={{ fontSize: 15, marginTop: 10, marginLeft: 10 }}>현재 나의 참여 챌린지</Text>
                             {
-                                myChallengeList.map((challengeInfo, index) => <ChallengeCard
-                                    challengeInfo={challengeInfo} key={index} isRegistered={true}>
+                                participatedChallList.map((challengeInfo, index) => <ChallengeCard
+                                    challengeInfo={challengeInfo} key={index} isParticipated={true}>
 
                                 </ChallengeCard>)
                             }
@@ -46,17 +51,17 @@ export default function ChallengeScreen() {
 
                 }
 
-                <View style={styles.container3}>
+                <View style={styles.challengecontainer}>
                     <Text style={{ fontSize: 15, marginTop: 10, marginLeft: 10 }}>참여할 수 있는 챌린지</Text>
                     {
-                        challengeList.length > 0 ? challengeList.map((challengeInfo, index) => {
-                            for (const myChallengeInfo of myChallengeList) {
+                        allChallList.length > 0 ? allChallList.map((challengeInfo, index) => {
+                            for (const myChallengeInfo of participatedChallList) {
                                 if (myChallengeInfo.id === challengeInfo.id) {
                                     return <View key={index}></View>
                                 }
                             }
                             return <ChallengeCard
-                                challengeInfo={challengeInfo} key={index} isRegistered={false}></ChallengeCard>
+                                challengeInfo={challengeInfo} key={index} isParticipated={false}></ChallengeCard>
                         }
 
                         ) : <></>
@@ -73,30 +78,27 @@ export default function ChallengeScreen() {
     )
 }
 
-const ChallengeCard = ({ challengeInfo, isRegistered }: { challengeInfo: ChallengeItemMeta, isRegistered: boolean }) => {
-    // const progressRate = Math.floor(100 * challengeInfo.currentProgress / challengeInfo.targetProgress);
-    console.log(challengeInfo);
+const ChallengeCard = ({ challengeInfo, isParticipated: isRegistered }: { challengeInfo: ChallengeItemMeta, isParticipated: boolean }) => {
     return (
         <View style={{ width: "95%" }} >
-            {/* <TouchableOpacity onPress={() => { router.push(`/challenge/${isRegistered ? "room" : "register"}/${challengeInfo.id}`) }}>
+            <TouchableOpacity onPress={() => { router.push(`/challenge/${isRegistered ? "room" : "register"}/${challengeInfo.id}`) }}>
 
                 <View style={styles.goalContainer}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5, marginLeft: 8, marginRight: 8 }}>
                         <Image source={require("@/assets/images/goal.png")}
                             style={{ width: 32, height: 18, margin: 5 }} />
                         <Text style={{ fontSize: 15, marginRight: 5 }}>{challengeInfo.name}</Text>
-                        <Text style={{ color: "gray", fontSize: 12 }}>| {challengeInfo.type}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', marginTop: 3, marginLeft: 20, }}>
                         <Text style={{ fontSize: 13 }}>함께하는 인원 </Text>
                         <Text style={{ fontSize: 13 }}>{challengeInfo.currentParticipants}/{challengeInfo.totalParticipants}</Text>
                         <Text>   </Text>
-                        <Text style={{ fontSize: 13 }}>달성률</Text>
-                        <Text style={{ fontSize: 13, color: '#3E81A9' }}> {100 * challengeInfo.currentProgress / challengeInfo.targetProgress}% </Text>
+                        <Text style={{ fontSize: 13 }}>마감일</Text>
+                        <Text style={{ fontSize: 13, color: '#3E81A9' }}> {(new Date(challengeInfo.dateEnd)).toLocaleString('ko-kr')} </Text>
                         <Text>   </Text>
                     </View>
                 </View>
-            </TouchableOpacity> */}
+            </TouchableOpacity>
         </View>
     );
 };
@@ -104,17 +106,12 @@ const ChallengeCard = ({ challengeInfo, isRegistered }: { challengeInfo: Challen
 
 const styles = StyleSheet.create({
 
-    container1: {
+    container: {
         width: '100%',
         height: '100%',
         backgroundColor: "white"
     },
-    container2: {
-        flex: 3,
-        backgroundColor: 'white',
-        flexWrap: 'wrap',
-    },
-    container3: {
+    challengecontainer: {
         flex: 5,
         flexDirection: 'column'
     },
@@ -147,5 +144,5 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         height: 65,
         width: '100%',
-    },
+    }
 });

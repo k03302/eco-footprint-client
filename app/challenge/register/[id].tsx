@@ -2,40 +2,47 @@ import { TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, ActivityIn
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ChallengeItem } from '@/core/model';
-import { repo } from '@/api/main';
+import { getFileSource, repo } from '@/api/main';
 import UserIcon from '@/components/UserIcon';
 import { useIsFocused } from '@react-navigation/native';
-
-const DrawLine = () => {
-    return (
-        <View style={{ alignItems: 'center' }}>
-            <Image source={require("@/assets/images/line.png")}
-                style={{ width: 325, height: 1, marginTop: 15, borderRadius: 10 }} />
-        </View>
-    );
-};
+import { participateChallenge } from '@/api/challenge';
+import { HorizontalLine } from '@/components/HorizontalLine';
 
 export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
+
     const [challengeInfo, setChallengeInfo] = useState<ChallengeItem | null>(null);
     const isFocused = useIsFocused();
-
-    useEffect(() => {
-
-    }, [isFocused])
+    const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
 
-    const participateChallengeHandler = async () => {
-        //await participateChallenge(challengeId);
-        router.replace({ pathname: '/challenge/room/[id]', params: { id: challengeId } })
+    const updatePageInfo = async () => {
+        setChallengeInfo(await repo.challenges.getChallenge(challengeId));
     }
 
     useEffect(() => {
-        (async () => {
-            // const challengeInfo = await repo.challenges.getChallenge(challengeId);
-            // setChallengeInfo(challengeInfo);
-        })();
-    }, []);
+        if (!isFocused) return;
+        updatePageInfo();
+    }, [isFocused]);
+
+    useEffect(() => {
+        if (!hasToUpdate) return;
+        updatePageInfo().then(() => {
+            setHasToUpdate(false);
+        });
+    }, [hasToUpdate]);
+
+
+    const participateChallengeHandler = async () => {
+        const success = await participateChallenge(challengeId);
+        if (success) {
+            router.push({ pathname: '/challenge/room/[id]', params: { id: challengeId } })
+        } else {
+            alert('잘못된 요청입니다.');
+            router.push('/challenge');
+        }
+    }
+
 
     if (!challengeInfo) {
         return <ActivityIndicator size="large"></ActivityIndicator>
@@ -46,24 +53,23 @@ export default function ChallengeScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.container_title}>
                     <Text style={{ fontSize: 22, fontWeight: 'bold' }}>{challengeInfo.name}</Text>
-                    <DrawLine />
-                </View>
-                <View style={styles.container_part}>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>챌린지 종류</Text>
-                    <Text style={{ fontSize: 17, marginTop: 10, marginLeft: 10 }}>{challengeInfo.type}</Text>
-                    <DrawLine />
+                    <HorizontalLine />
                 </View>
                 <View style={styles.container_member}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>멤버 ({challengeInfo.currentParticipants}/{challengeInfo.totalParticipants})</Text>
-                    <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flexDirection: 'column' }}>
                         <Text style={{ marginLeft: 10 }}> </Text>
                         {
                             challengeInfo.participants.map((participant, index) => <UserIcon
-                                userId={participant.id}>
+                                key={index}
+                                imgSource={getFileSource(participant.thumbnailId)}
+                                iconSize={1}
+                                message={participant.username}
+                            >
                             </UserIcon>)
                         }
                     </View>
-                    <DrawLine />
+                    <HorizontalLine />
                 </View>
                 <View style={styles.container_info}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 10, marginLeft: 10 }}>챌린지 설명</Text>
@@ -71,6 +77,12 @@ export default function ChallengeScreen() {
                         {challengeInfo.description}
                     </Text>
                 </View>
+                {/* <View style={styles.container_info}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 10, marginLeft: 10 }}>챌린지 인증사진</Text>
+                    <Text style={{ fontSize: 17, margin: 12, opacity: 0.8 }}>
+
+                    </Text>
+                </View> */}
             </ScrollView>
             <View style={styles.container_button}>
                 <TouchableOpacity onPress={participateChallengeHandler}>
@@ -88,6 +100,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'white',
+        alignItems: 'center'
     },
     container_title: {
         flexDirection: 'column',
@@ -104,7 +117,8 @@ const styles = StyleSheet.create({
         margin: 10
     },
     container_button: {
-        flex: 1,
+        position: 'absolute',
+        bottom: 10,
         margin: 10,
         alignItems: 'center'
     },
