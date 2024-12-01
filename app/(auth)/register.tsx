@@ -12,6 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { register } from '@/api/auth';
+import AsyncGreenButton from '@/components/AsyncGreenButton';
 
 export default function UserProfile() {
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -48,48 +49,49 @@ export default function UserProfile() {
             alert('썸네일을 선택해주세요');
             return;
         }
-
         await register({ username: username, thumbnailUri: imageUri, useStoredToken: true })
-
-        // repo.users.updateUserInfo();
-
-        // if (await loginPlatform.register(username, imageUri)) {
-        //     router.replace('/map');
-        //     return;
-        // } else {
-        //     alert("가입 실패. 다시 입력해주세요.");
-        //     setImageUri(null);
-        //     setUsername("");
-        // }
     };
 
     return (
         <View style={styles.container}>
+
             {/* Picture Selector */}
-            <View style={styles.imageContainer}>
-                <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
-                    {imageUri ? (
-                        <Image source={{ uri: imageUri }} style={styles.image} />
-                    ) : (
-                        <Ionicons name="person-circle-outline" size={120} color="#ccc" />
-                    )}
+            <View style={styles.row}>
+                <View style={styles.imageContainer}>
+                    <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
+                        {imageUri ? (
+                            <Image source={{ uri: imageUri }} style={styles.image} />
+                        ) : (
+                            <Ionicons name="person-circle-outline" size={120} color="#8F95B2" />
+                        )}
+                    </TouchableOpacity>
                     {/* Camera Icon */}
                     <View style={styles.cameraIcon}>
-                        <Ionicons name="camera" size={20} color="#fff" />
+                        <Ionicons name="camera" size={32} color="#8F95B2" />
                     </View>
-                </TouchableOpacity>
+                </View>
+
+                <Text
+                    style={styles.textProfile}>
+                    프로필 이미지를 {"\n"}선택해주세요
+                </Text>
             </View>
 
+
+
             {/* Username Input */}
+            <Text style={styles.textName}>
+                이름
+            </Text>
             <TextInput
                 style={styles.input}
-                placeholder="Enter your username"
+                placeholder="사용하실 이름을 입력해주세요"
                 value={username}
                 onChangeText={setUsername}
             />
 
             {/* Submit Button */}
-            <Button title="Submit" onPress={handleSubmit} />
+            <AsyncGreenButton title="시작하기" onPressAsync={handleSubmit} />
         </View>
     );
 }
@@ -97,13 +99,21 @@ export default function UserProfile() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: 'column',
         padding: 20,
-        backgroundColor: '#f8f8f8',
+        backgroundColor: 'white',
+    },
+    row: {
+        margin: 20,
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        justifyContent: 'center'
+    },
+    column: {
+        alignSelf: 'flex-start',
+        flexDirection: 'column'
     },
     imageContainer: {
-        marginTop: 50,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -112,7 +122,7 @@ const styles = StyleSheet.create({
         width: 150,
         height: 150,
         borderRadius: 75,
-        backgroundColor: '#e0e0e0',
+        backgroundColor: '#c4c4c4',
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
@@ -127,8 +137,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 5,
         right: 5,
-        backgroundColor: '#007AFF',
-        borderRadius: 15,
+        backgroundColor: 'white',
+        borderRadius: 20,
         padding: 5,
         justifyContent: 'center',
         alignItems: 'center',
@@ -144,4 +154,14 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         backgroundColor: '#fff',
     },
+    textProfile: {
+        marginTop: 50,
+        marginLeft: 20,
+        fontSize: 20,
+    },
+    textName: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        margin: 10
+    }
 });
