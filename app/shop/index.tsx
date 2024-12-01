@@ -5,7 +5,7 @@ import { getFileSource, repo } from '@/api/main';
 import { CouponItem, NO_COUPON, NO_USER, RewardItemMeta, UserItem } from '@/core/model';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { getMyProfile, purchaseReward } from '@/api/user';
-import PointDisplay from '@/components/PointDisplay';
+import { PointDisplay } from '@/components/PointDisplay';
 
 export default function ShopScreen() {
     const [userInfo, setUserInfo] = useState<UserItem>(NO_USER)

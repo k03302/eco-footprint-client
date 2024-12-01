@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { getFileSource, repo } from '@/api/main';
 import { CouponItemMeta, NO_USER, RewardItem } from '@/core/model';
 import { useIsFocused } from '@react-navigation/native';
-import PointDisplay from '@/components/PointDisplay';
+import { PointDisplay } from '@/components/PointDisplay';
 import { getMyProfile } from '@/api/user';
 
 export default function CouponScreen() {

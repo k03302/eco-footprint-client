@@ -1,7 +1,7 @@
 import { Button, View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 import { useEffect, useState } from 'react'
 import { router } from 'expo-router'
-import UserIcon from '@/components/UserIcon';
+import { UserIcon } from '@/components/UserIcon';
 import { logout } from '@/utils/login';
 import { useIsFocused } from '@react-navigation/native';
 import { UserItem } from '@/core/model';
