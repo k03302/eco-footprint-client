@@ -178,13 +178,18 @@ export function getCornerTypesFromAdjointDirections(adjointDirections: BlockDire
                 setNone(2, uprightBlockExists);
                 setNone(3, upleftBlockExists);
             }
-        } else if (lat === -1) { // DONWRIGHT
-            if (lng === 1) {
+        } else if (lat === -1) {
+            if (lng === 1) {// DONWRIGHT
                 downrightBlockExists = true;
-                if (!downBlockExists) setExtruded(1);
+                if (!downBlockExists) {
+                    setExtruded(1);
+                    console.log('DOWNRIGHT', downBlockExists);
+                }
             } else if (lng === -1) { // DOWNLEFT
                 downleftBlockExists = true;
-                if (!downBlockExists) setExtruded(0);
+                if (!downBlockExists) {
+                    setExtruded(0);
+                }
             } else { // DOWN
                 downBlockExists = true;
                 setNone(0, downleftBlockExists);
@@ -193,12 +198,12 @@ export function getCornerTypesFromAdjointDirections(adjointDirections: BlockDire
         } else {
             if (lng === 1) { // RIGHT
                 rightBlockExists = true;
-                setNone(1, downrightBlockExists);
-                setNone(2, uprightBlockExists);
+                setNone(1);
+                setNone(2);
             } else if (lng === -1) { // LEFT
                 leftBlockExists = true;
-                setNone(3, upleftBlockExists);
-                setNone(0, downleftBlockExists);
+                setNone(3);
+                setNone(0);
             }
         }
     }
