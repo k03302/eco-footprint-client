@@ -54,7 +54,7 @@ export default function ShopScreen() {
                 setHasToUpdate(true);
             } else {
                 setConfirmModalVisible(false);
-                alert("포인트가 부족합니다.");
+                Alert.alert("포인트가 부족합니다.");
             }
         })()
     }

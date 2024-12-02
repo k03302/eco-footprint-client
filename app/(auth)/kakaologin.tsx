@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router'
 import axios from 'axios';
@@ -34,7 +34,7 @@ const KaKaoLogin = () => {
             const { id_token } = res.data;
             login({ idToken: id_token });
         } catch (error) {
-            alert('로그인에 실패했습니다.');
+            Alert.alert('로그인에 실패했습니다.');
             router.replace('/');
         }
     }

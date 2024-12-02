@@ -2,6 +2,7 @@ import { NO_USER } from '@/core/model';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { repo } from '@/api/main';
+import { Alert } from 'react-native';
 
 const ID_TOKEN_KEY = 'id_token';
 const USER_ACCOUNT_KEY_PREFIX = 'user_account_';
@@ -16,7 +17,7 @@ export async function login({ idToken: _idToken, useStoredToken = false }: { idT
     // useStoredToken 값에 따라 저장된 값을 가져오거나 idToken값을 사용
     const idToken = useStoredToken ? await getIdToken() : (_idToken || "");
     if (!idToken) {
-        alert("로그인에 실패했습니다.");
+        Alert.alert("로그인에 실패했습니다.");
         router.replace('/');
     }
 
@@ -44,7 +45,7 @@ export async function register({ username, thumbnailUri, idToken: _idToken, useS
     const idToken = (useStoredToken ? await getIdToken() : _idToken) || "";
 
     if (!idToken) {
-        alert("프로필 등록에 실패했습니다.");
+        Alert.alert("프로필 등록에 실패했습니다.");
         router.replace('/');
     }
 

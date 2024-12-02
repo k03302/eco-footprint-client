@@ -2,6 +2,7 @@ import { NO_USER } from '@/core/model';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { router } from 'expo-router';
+import { Alert } from 'react-native';
 
 const ID_TOKEN_KEY = 'id_token';
 
@@ -41,18 +42,18 @@ export async function login({ idToken, useStoredToken = false }: { idToken?: str
             AsyncStorage.setItem(ID_TOKEN_KEY, token);
             router.replace('/map');
         } else {
-            alert("로그인에 실패했습니다.");
+            Alert.alert("로그인에 실패했습니다.");
             router.replace('/');
         }
     });
 }
 
-export async function register({ username, thumbnailUri, idToken, useStoredToken=false }
+export async function register({ username, thumbnailUri, idToken, useStoredToken = false }
     : { username: string, thumbnailUri: string, idToken?: string, useStoredToken?: boolean }) {
     if (!useStoredToken && !idToken) return;
     const token = (useStoredToken ? await getIdToken() : idToken) || "";
-    
-    
+
+
 
     // 서버에 register 요청. data는 더미 데이터 제공
     await axios.post(url, {
@@ -77,7 +78,7 @@ export async function register({ username, thumbnailUri, idToken, useStoredToken
             AsyncStorage.setItem(ID_TOKEN_KEY, token);
             router.replace('/map');
         } else {
-            alert("로그인에 실패했습니다.");
+            Alert.alert("로그인에 실패했습니다.");
             router.replace('/');
         }
     });

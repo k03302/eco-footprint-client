@@ -7,12 +7,13 @@ import {
     Image,
     StyleSheet,
     TouchableOpacity,
+    Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { register } from '@/api/auth';
-import AsyncGreenButton from '@/components/AsyncGreenButton';
+import { AsyncGreenButton } from '@/components/AsyncGreenButton';
 
 export default function UserProfile() {
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function UserProfile() {
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            alert('Permission to access gallery is required!');
+            Alert.alert('Permission to access gallery is required!');
             return;
         }
 
@@ -41,12 +42,12 @@ export default function UserProfile() {
     // Function to handle form submission
     const handleSubmit = async () => {
         if (username.trim() === '') {
-            alert('닉네임을 입력해주세요.');
+            Alert.alert('닉네임을 입력해주세요.');
             return;
         }
 
         if (imageUri === null) {
-            alert('썸네일을 선택해주세요');
+            Alert.alert('썸네일을 선택해주세요');
             return;
         }
         await register({ username: username, thumbnailUri: imageUri, useStoredToken: true })

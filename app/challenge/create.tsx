@@ -60,7 +60,7 @@ export default function ChallengeScreen() {
 
     const handleSubmit = async () => {
         if (challengeType === '') {
-            alert('챌린지 유형을 선택해주세요');
+            Alert.alert('챌린지 유형을 선택해주세요');
             return;
         }
 
@@ -69,7 +69,7 @@ export default function ChallengeScreen() {
         if (challengeItem) {
             router.replace({ pathname: '/challenge/room/[id]', params: { id: challengeItem.id } });
         } else {
-            alert('챌린지 생성에 실패했어요.');
+            Alert.alert('챌린지 생성에 실패했어요.');
             router.replace('/challenge');
         }
     };

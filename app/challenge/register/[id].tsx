@@ -1,4 +1,4 @@
-import { TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ChallengeItem } from '@/core/model';
@@ -38,7 +38,7 @@ export default function ChallengeScreen() {
         if (success) {
             router.push({ pathname: '/challenge/room/[id]', params: { id: challengeId } })
         } else {
-            alert('잘못된 요청입니다.');
+            Alert.alert('잘못된 요청입니다.');
             router.push('/challenge');
         }
     }

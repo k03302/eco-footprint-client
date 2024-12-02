@@ -89,7 +89,7 @@ export default function ChallengeScreen() {
         // Request permissions
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            alert('인증을 위해 카메라 권한이 필요합니다.');
+            Alert.alert('인증을 위해 카메라 권한이 필요합니다.');
             return;
         }
 
