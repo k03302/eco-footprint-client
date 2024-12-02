@@ -19,6 +19,7 @@ import { getMyProfile, getRewardPoint, participateDonation } from '@/api/user';
 import { PedometerResult } from 'expo-sensors/build/Pedometer';
 import { PointDisplay } from '@/components/PointDisplay';
 import { MapRewardModal } from '@/components/map/MapRewardModal';
+import { MaterialIcons } from '@expo/vector-icons';
 
 
 const enum CAM_MODE {
@@ -84,6 +85,7 @@ export default function App() {
     const [userInfo, setUserInfo] = useState<UserItem | null>(null);
     const [donationList, setDonationList] = useState<DonationItemMeta[]>([]);
     const [selectedDonation, setSelectedDonation] = useState<DonationItem | null>(null);
+    const [trackItem, setTrackItem] = useState<boolean>(false);
 
 
     const mapRef = useRef<MapView | null>(null);
@@ -449,10 +451,13 @@ export default function App() {
                 <View style={styles.pointdisplay}>
                     <PointDisplay pointAmount={userInfo ? userInfo.point : 0} displaySizeLevel={2}></PointDisplay>
                 </View>
+
                 {/* track item button */}
                 <View style={styles.trackitemdisplay}>
-                    <TouchableOpacity onPress={() => { }}>
-
+                    <TouchableOpacity onPress={() => { setTrackItem(!trackItem); }}>
+                        <Image source={require('@/assets/images/sprout.png')}
+                            style={[styles.trackitembutton, { backgroundColor: trackItem ? 'lightgray' : 'white' }]}
+                        />
                     </TouchableOpacity>
                 </View>
 
@@ -553,7 +558,14 @@ const styles = StyleSheet.create({
         bottom: 10,
         right: 10,
         zIndex: 100,
+        justifyContent: 'center',
+        alignContent: 'center'
     },
+    trackitembutton: {
+        width: 40, height: 40, borderRadius: 20,
+        borderWidth: 1.5, borderColor: 'gray'
+    },
+
     profilebutton: {
         margin: 10,
         flexDirection: 'row',
