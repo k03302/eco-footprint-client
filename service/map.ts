@@ -33,26 +33,28 @@ class MapBlockService {
 
     private lastBlockInfo: BlockInfoData | null = null;
     private blockSize: number;
-    private blockUnitCount: number;
+    private multiplier: number;
     private blockScaler: number;
     private blockCount: number = 0;
 
     private itemCount: number = 0;
     private itemLocations: MapCoordData[] = [];
     private averageItemCountPerBlock: number = 0.2;
-
+    private currentItemIndex: number = 0;
 
     private overlayUpdateHandler = () => { };
 
     private lastInitStampCache: number | null = null;
 
     /*
-    blockUnitCount should be integer multiple of 2 and 5
+        Block size is multiple of unit size.
+        Multiplier should be integer in form of 2^n * 5^m.
+        This is for hashing of the block.
     */
-    constructor(blockUnitCount: number) {
-        this.blockUnitCount = blockUnitCount;
-        this.blockSize = blockUnitCount * UNIT_SIZE;
-        this.blockScaler = Math.floor(UNIT_SCALER / blockUnitCount);
+    constructor(multiplier: number) {
+        this.multiplier = multiplier;
+        this.blockSize = multiplier * UNIT_SIZE;
+        this.blockScaler = Math.floor(UNIT_SCALER / multiplier);
     }
 
     getItemCount() {
@@ -169,12 +171,17 @@ class MapBlockService {
     }
 
 
-    getItemOrder() {
-
-    }
-
-    getNextItemPos() {
-
+    getNextItemPos(): MapCoordData | null {
+        while (this.currentItemIndex < this.itemLocations.length) {
+            const itemPos = this.itemLocations[this.currentItemIndex];
+            const blockIndex = this.getBlockIndex(itemPos.latitude, itemPos.longitude);
+            const blockInfo = this.blockInfoMap.get(blockIndex);
+            if (blockInfo && blockInfo.itemPos) {
+                return itemPos;
+            }
+            this.currentItemIndex += 1;
+        }
+        return null;
     }
 
 
@@ -200,11 +207,8 @@ class MapBlockService {
             }
             this.itemCount += 1;
             this.itemLocations.push(itemPos);
-
         }
 
-
-        const lastBlockInfo = this.lastBlockInfo;
 
 
 
@@ -223,6 +227,7 @@ class MapBlockService {
         this.blockInfoMap.set(blockIndex, newBlockInfo);
 
 
+        const lastBlockInfo = this.lastBlockInfo;
 
         // set footstep
         if (lastBlockInfo && lastBlockInfo !== newBlockInfo) {
