@@ -27,12 +27,9 @@ type BlockInfoData = {
 
 
 
+
 class MapBlockService {
     private blockInfoMap = new Map<string, BlockInfoData>();
-    private newBlockIndexBuffer: string[] = [];
-
-    private itemLocations: MapCoordData[] = [];
-    private averageItemCountPerBlock: number = 0.2;
 
     private lastBlockInfo: BlockInfoData | null = null;
     private blockSize: number;
@@ -41,12 +38,17 @@ class MapBlockService {
     private blockCount: number = 0;
 
     private itemCount: number = 0;
+    private itemLocations: MapCoordData[] = [];
+    private averageItemCountPerBlock: number = 0.2;
+
 
     private overlayUpdateHandler = () => { };
 
-    private onCalculatingOverlay: boolean = false;
     private lastInitStampCache: number | null = null;
 
+    /*
+    blockUnitCount should be integer multiple of 2 and 5
+    */
     constructor(blockUnitCount: number) {
         this.blockUnitCount = blockUnitCount;
         this.blockSize = blockUnitCount * UNIT_SIZE;
@@ -74,8 +76,6 @@ class MapBlockService {
         this.itemLocations = [];
         this.lastBlockInfo = null;
         this.blockCount = 0;
-
-        this.newBlockIndexBuffer = [];
 
         const timestamp = Date.now();
         this.lastInitStampCache = timestamp
@@ -121,36 +121,10 @@ class MapBlockService {
         return this.getBlockIndex(latitude + this.blockSize * latCount, longitude + this.blockSize * lngCount);
     }
 
-    getItemsInRegion(latCenter: number, lngCenter: number, latDelta: number, lngDelta: number) {
-        const items: MapCoordData[] = [];
-        const latTotalCount = Math.floor(latDelta / this.blockSize);
-        const lngTotalCount = Math.floor(lngDelta / this.blockSize);
-        const latCenterRound = Math.floor(latCenter * this.blockScaler) * this.blockSize;
-        const lngCenterRound = Math.floor(lngCenter * this.blockScaler) * this.blockSize;
-
-
-        for (let latCount = -latTotalCount; latCount < latTotalCount; latCount++) {
-            for (let lngCount = -lngTotalCount; lngCount < lngTotalCount; lngCount++) {
-                const blockIndex = this.getResidentBlockIndex(latCenter, lngCenter, latCount, lngCount);
-                const blockInfo = this.blockInfoMap.get(blockIndex);
-                if (blockInfo) {
-                    if (blockInfo.itemPos) {
-                        items.push(blockInfo.itemPos);
-                    }
-                }
-            }
-        }
-
-        return items;
-    }
 
     getOverlaysInRegion({ latitude, longitude, latitudeDelta, longitudeDelta }
         : { latitude: number, longitude: number, latitudeDelta: number, longitudeDelta: number }
     ) {
-        if (this.onCalculatingOverlay) return null;
-        this.onCalculatingOverlay = true;
-
-        this.newBlockIndexBuffer = [];
         this.overlayUpdateHandler();
 
         const rects: MapCoordData[][] = [];
@@ -172,28 +146,12 @@ class MapBlockService {
 
                     const cornerTypes = getCornerTypesFromAdjointDirections(blockInfo.adjointDirection);
 
-                    // rects.push(getFullPolygon({
-                    //     latitude: latCenterRound + this.blockSize * latCount,
-                    //     longitude: lngCenterRound + this.blockSize * lngCount,
-                    //     latitudeDelta: this.blockSize,
-                    //     longitudeDelta: this.blockSize
-                    // }));
-
-                    // console.log(blockInfo.adjointDirection, cornerTypes);
-
                     rects.push(getBlockPolygon({
                         latitude: latCenterRound + this.blockSize * latCount,
                         longitude: lngCenterRound + this.blockSize * lngCount,
                         latitudeDelta: this.blockSize,
                         longitudeDelta: this.blockSize
                     }, cornerTypes));
-
-                    // rects.push(getBlockPolygon({
-                    //     latitude: latCenterRound + this.blockSize * latCount,
-                    //     longitude: lngCenterRound + this.blockSize * lngCount,
-                    //     latitudeDelta: this.blockSize,
-                    //     longitudeDelta: this.blockSize
-                    // }, [BlockCornerType.VERTICAL_EXTRUDED, BlockCornerType.VERTICAL_EXTRUDED, BlockCornerType.VERTICAL_EXTRUDED, BlockCornerType.VERTICAL_EXTRUDED]));
 
                     if (blockInfo.itemPos) {
                         items.push(blockInfo.itemPos);
@@ -207,8 +165,16 @@ class MapBlockService {
                 }
             }
         }
-        this.onCalculatingOverlay = false;
         return { rects, items, footsteps };
+    }
+
+
+    getItemOrder() {
+
+    }
+
+    getNextItemPos() {
+
     }
 
 
@@ -217,11 +183,6 @@ class MapBlockService {
         const blockInfo = this.blockInfoMap.get(blockIndex);
 
         if (blockInfo) return;
-
-
-        if (this.newBlockIndexBuffer.length < MAX_BLOCK_BUFFER_SIZE) {
-            this.newBlockIndexBuffer.push(blockIndex);
-        }
 
 
         // get left bottom coord of the block
@@ -238,6 +199,8 @@ class MapBlockService {
                 longitude: lngAsInteger * this.blockSize + this.blockSize * Math.random()
             }
             this.itemCount += 1;
+            this.itemLocations.push(itemPos);
+
         }
 
 
