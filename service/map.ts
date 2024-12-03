@@ -17,7 +17,7 @@ type BlockInfoData = {
     latAsInteger: number;
     lngAsInteger: number;
     timestamp: number;
-    firstMoveDirection: BlockDirection;
+    moveDirection: BlockDirection;
     adjointDirection: BlockDirection[];
     itemPos: MapCoordData | null;
     footstepPos: MapCoordData | null;
@@ -27,11 +27,16 @@ type BlockInfoData = {
 
 
 
-
 class MapBlockService {
+    private addPointPromise: Promise<void> = Promise.resolve();
+    private getOverlayPromise: Promise<void> = Promise.resolve();
+
+
+
     private blockInfoMap = new Map<string, BlockInfoData>();
 
-    private lastBlockInfo: BlockInfoData | null = null;
+    private lastBlockIndex: string | null = null;
+    private secondLastBlockIndex: string | null = null;
     private blockSize: number;
     private multiplier: number;
     private blockScaler: number;
@@ -39,7 +44,7 @@ class MapBlockService {
 
     private itemCount: number = 0;
     private itemLocations: MapCoordData[] = [];
-    private averageItemCountPerBlock: number = 0.2;
+    private averageItemCountPerBlock: number = 1// 0.2;
     private currentItemIndex: number = 0;
 
     private overlayUpdateHandler = () => { };
@@ -48,8 +53,8 @@ class MapBlockService {
 
     /*
         Block size is multiple of unit size.
-        Multiplier should be integer in form of 2^n * 5^m.
-        This is for hashing of the block.
+        Multiplier should be integer in the form of 2^n * 5^m
+        This condition is for the hashing of the blocks.
     */
     constructor(multiplier: number) {
         this.multiplier = multiplier;
@@ -76,8 +81,12 @@ class MapBlockService {
     async initialize() {
         this.blockInfoMap = new Map<string, BlockInfoData>();
         this.itemLocations = [];
-        this.lastBlockInfo = null;
+        this.currentItemIndex = 0;
+
+        this.lastBlockIndex = null;
+        this.secondLastBlockIndex = null;
         this.blockCount = 0;
+
 
         const timestamp = Date.now();
         this.lastInitStampCache = timestamp
@@ -124,7 +133,7 @@ class MapBlockService {
     }
 
 
-    getOverlaysInRegion({ latitude, longitude, latitudeDelta, longitudeDelta }
+    async getOverlaysInRegion({ latitude, longitude, latitudeDelta, longitudeDelta }
         : { latitude: number, longitude: number, latitudeDelta: number, longitudeDelta: number }
     ) {
         this.overlayUpdateHandler();
@@ -184,12 +193,27 @@ class MapBlockService {
         return null;
     }
 
-
     addPoint(latitude: number, longitude: number) {
+        this.addPointPromise.then(() => {
+            return this.addPointAsync(latitude, longitude);
+        });
+    }
+
+    async addPointAsync(latitude: number, longitude: number): Promise<void> {
         const blockIndex = this.getBlockIndex(latitude, longitude);
         const blockInfo = this.blockInfoMap.get(blockIndex);
 
-        if (blockInfo) return;
+        if (blockInfo) {
+            return;
+        }
+
+
+        const lastBlockIndex = this.lastBlockIndex;
+        const lastBlockInfo = lastBlockIndex ? this.blockInfoMap.get(lastBlockIndex) : null;
+        const secondLastBlockIndex = this.secondLastBlockIndex;
+        const secondLastBlockInfo = secondLastBlockIndex ? this.blockInfoMap.get(secondLastBlockIndex) : null;
+
+
 
 
         // get left bottom coord of the block
@@ -209,31 +233,29 @@ class MapBlockService {
             this.itemLocations.push(itemPos);
         }
 
-
+        const isLeftFoot = lastBlockInfo ? !lastBlockInfo.isLeftFoot : true;
 
 
         const newBlockInfo = {
             latAsInteger: latAsInteger,
             lngAsInteger: lngAsInteger,
             timestamp: Date.now(),
-            firstMoveDirection: BlockDirection.NONE,
+            moveDirection: BlockDirection.NONE,
             adjointDirection: new Array<BlockDirection>(),
             itemPos: itemPos,
             footstepPos: null,
             footstepDirection: BlockDirection.NONE,
-            isLeftFoot: true
+            isLeftFoot: isLeftFoot
         }
 
         this.blockInfoMap.set(blockIndex, newBlockInfo);
 
 
-        const lastBlockInfo = this.lastBlockInfo;
-
         // set footstep
-        if (lastBlockInfo && lastBlockInfo !== newBlockInfo) {
-            if (lastBlockInfo.firstMoveDirection.isNone()) {
+        if (blockIndex !== lastBlockIndex && lastBlockInfo) {
+            if (lastBlockInfo.moveDirection.isNone()) {
                 // set first move direction
-                lastBlockInfo.firstMoveDirection = BlockDirection.getDirection({
+                lastBlockInfo.moveDirection = BlockDirection.getDirection({
                     latitude: lastBlockInfo.latAsInteger,
                     longitude: lastBlockInfo.lngAsInteger,
                 }, {
@@ -242,13 +264,28 @@ class MapBlockService {
                 });
 
 
-                // set footstep direction. footstep direction is first move direction
-                lastBlockInfo.footstepDirection = lastBlockInfo.firstMoveDirection;
+                // set footstep direction
+                if (secondLastBlockInfo) {
+                    lastBlockInfo.footstepDirection = lastBlockInfo.moveDirection.lerp(secondLastBlockInfo.moveDirection, 0.5);
+
+                } else {
+                    lastBlockInfo.footstepDirection = lastBlockInfo.moveDirection;
+                }
+
+                const { lat: lastFootDirLat, lng: lastFootDirLng } = lastBlockInfo.footstepDirection;
+                const blockCenterLat = lastBlockInfo.latAsInteger * this.blockSize + this.blockSize * 0.5;
+                const blockCenterLng = lastBlockInfo.lngAsInteger * this.blockSize + this.blockSize * 0.5;
 
                 // set footstep position
-                const lastFootstepLat = lastBlockInfo.latAsInteger * this.blockSize + this.blockSize * (0.5 * Math.random() + 0.25);
-                const lastFootstepLng = lastBlockInfo.lngAsInteger * this.blockSize + this.blockSize * (0.5 * Math.random() + 0.25);
-                lastBlockInfo.footstepPos = { latitude: lastFootstepLat, longitude: lastFootstepLng };
+                if (lastBlockInfo.isLeftFoot) {
+                    const dLat = (Math.random() - 0.5 + lastFootDirLng) * 0.125 * this.blockSize;
+                    const dLng = (Math.random() - 0.5 - lastFootDirLat) * 0.125 * this.blockSize;
+                    lastBlockInfo.footstepPos = { latitude: blockCenterLat + dLat, longitude: blockCenterLng + dLng };
+                } else {
+                    const dLat = (Math.random() - 0.5 - lastFootDirLng) * 0.125 * this.blockSize;
+                    const dLng = (Math.random() - 0.5 + lastFootDirLat) * 0.125 * this.blockSize;
+                    lastBlockInfo.footstepPos = { latitude: blockCenterLat + dLat, longitude: blockCenterLng + dLng };
+                }
             }
         }
 
@@ -268,10 +305,16 @@ class MapBlockService {
         }
 
 
-        this.lastBlockInfo = newBlockInfo;
+        if (blockIndex !== this.lastBlockIndex) {
+            this.secondLastBlockIndex = this.lastBlockIndex;
+            this.lastBlockIndex = blockIndex;
+        }
 
         this.blockCount += 1;
         this.overlayUpdateHandler();
+
+
+        return;
     }
 }
 

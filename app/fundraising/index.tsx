@@ -65,7 +65,7 @@ export default function DonationScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.pointdisplay}>
-                <PointDisplay pointAmount={userPoint} displaySizeLevel={2}></PointDisplay>
+                <PointDisplay pointAmount={userPoint} displaySizeLevel={2} pointAnimationOption={2}></PointDisplay>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }} >
                 <View style={styles.donationcontainer}>

@@ -24,8 +24,6 @@ export default function ShopScreen() {
         setRewardList(rewards);
         const userInfo = await getMyProfile();
         setUserInfo(userInfo);
-
-        console.log(rewards);
     }
 
     useEffect(() => {
@@ -46,7 +44,6 @@ export default function ShopScreen() {
         (async () => {
             if (!selectedReward) return;
             const couponInfo = await purchaseReward(selectedReward.id);
-            console.log(couponInfo);
             if (couponInfo !== NO_COUPON) {
                 setSelectedCoupon(couponInfo);
                 setConfirmModalVisible(false);
@@ -78,7 +75,7 @@ export default function ShopScreen() {
             </TouchableOpacity>
 
             <View style={{ position: 'absolute', right: 10, top: 10 }}>
-                <PointDisplay pointAmount={userInfo.point} displaySizeLevel={2}></PointDisplay>
+                <PointDisplay pointAmount={userInfo.point} displaySizeLevel={2} pointAnimationOption={0}></PointDisplay>
             </View>
 
             <View style={{ flex: 9 }}>

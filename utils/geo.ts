@@ -183,7 +183,6 @@ export function getCornerTypesFromAdjointDirections(adjointDirections: BlockDire
                 downrightBlockExists = true;
                 if (!downBlockExists) {
                     setExtruded(1);
-                    console.log('DOWNRIGHT', downBlockExists);
                 }
             } else if (lng === -1) { // DOWNLEFT
                 downleftBlockExists = true;
@@ -245,6 +244,16 @@ export class BlockDirection {
         const angleDeg = (angleRad * (180 / Math.PI) + 360) % 360;
 
         return angleDeg;
+    }
+
+    lerp(target: BlockDirection, alpha: number): BlockDirection {
+        const a = alpha;
+        const b = 1 - alpha;
+        return new BlockDirection(a * this.lat + b * target.lat, a * this.lng + b * target.lng)
+    }
+
+    equalTo(target: BlockDirection): boolean {
+        return (target.lat === this.lat && target.lng === this.lng);
     }
 
     static getDirection(from: MapCoordData, to: MapCoordData): BlockDirection {
