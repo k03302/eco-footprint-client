@@ -33,7 +33,7 @@ const ITEM_ICON_SIZE = 50;
 const FOOTSTEP_ICON_SIZE = 20;
 const POLYGON_FILL_COLOR = "rgba(0, 255, 0, 0.3)";
 const CARBON_DECREASE_PER_METER = 0.2;
-const AD_ITEM_PERIOD = 2;
+const AD_ITEM_PERIOD = 5;
 
 
 
@@ -94,16 +94,6 @@ export default function App() {
 
 
 
-
-    const onMapPressed = useCallback(() => {
-        console.log('ok');
-        setPlayCircleAnimation(true);
-        //if (!trackItemMode || !currentItemPos) return;
-        //setTargetItemPos(currentItemPos);
-
-
-    }, [trackItemMode, currentItemPos]);
-
     const onMapLoaded = useCallback(() => {
         setMapLoaded(true)
     }, [])
@@ -129,7 +119,7 @@ export default function App() {
 
 
     const onItemPressed = (coords: MapCoordData) => {
-        if (trackItemMode) return;
+        setPlayCircleAnimation(true);
         setTargetItemPos(coords);
     }
 
@@ -184,6 +174,7 @@ export default function App() {
     const setTargetRegionToNextItem = useCallback(() => {
         const itemPos = mapService.getNextItemPos();
         if (!itemPos) {
+            setTrackItemMode(false);
             return;
         }
         setCurrentItemPos(itemPos);
@@ -193,6 +184,11 @@ export default function App() {
             latitudeDelta: UNIT_ZOOM_DELTA,
             longitudeDelta: UNIT_ZOOM_DELTA,
         })
+
+        setTimeout(() => {
+            setTargetItemPos(itemPos);
+        }, 1000);
+
         setPlayCircleAnimation(true);
     }, [])
 
@@ -204,7 +200,7 @@ export default function App() {
         if (!trackItemMode) {
             setTargetRegionToUser();
         } else {
-            //setTargetRegionToNextItem();
+            setTargetRegionToNextItem();
         }
     }, [trackItemMode]);
 
@@ -239,12 +235,10 @@ export default function App() {
         } else {
             getRewardPoint().then(() => {
                 setHasToUpdate(true);
+                if (trackItemMode) {
+                    setTargetRegionToNextItem();
+                }
             });
-        }
-
-
-        if (trackItemMode) {
-            setTargetRegionToNextItem();
         }
     }, [targetItemPos]);
 
@@ -419,7 +413,6 @@ export default function App() {
 
                     onRegionChangeComplete={onRegionChangeComplete}
                     onMapLoaded={onMapLoaded}
-                    onPress={onMapPressed}
 
                     onLongPress={onMapLongPressed}
 
@@ -470,9 +463,9 @@ export default function App() {
 
             <View style={styles.moveinfocontainer}>
                 <View style={styles.movecount}>
-                    <Text style={{ fontSize: 20 }}>탄소  </Text>
-                    <Text style={{ fontSize: 40 }}>{carbonDecrease > 1000 ? (carbonDecrease / 1000).toFixed(0) + 'kg' : carbonDecrease.toFixed(0) + 'g'}</Text>
-                    <Text style={{ fontSize: 20 }}>  을 줄였어요!</Text>
+                    <Text style={{ fontSize: 20 }}>탄소</Text>
+                    <Text style={{ fontSize: 40, marginHorizontal: 10 }}>{carbonDecrease > 1000 ? (carbonDecrease / 1000).toFixed(2) + 'kg' : carbonDecrease.toFixed(0) + 'g'}</Text>
+                    <Text style={{ fontSize: 20 }}>을 줄였어요!</Text>
 
                 </View>
                 <View style={styles.extracount}>
@@ -483,7 +476,12 @@ export default function App() {
 
             {
                 selectedDonation ? <MapRewardModal modalVisible={showAdModal} setModalVisible={setShowAdModal}
-                    donationInfo={selectedDonation} earnedHandler={() => { setHasToUpdate(true) }}
+                    donationInfo={selectedDonation} onEarnReward={() => {
+                        setHasToUpdate(true);
+                        setTargetRegionToNextItem();
+                    }} onCancel={() => {
+                        setTargetRegionToNextItem();
+                    }}
                 ></MapRewardModal> : <></>
             }
 
