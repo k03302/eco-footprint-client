@@ -5,6 +5,7 @@ import { ChallengeItem, ChallengeItemMeta, UserItem } from '@/core/model';
 import { repo } from '@/api/main';
 import { useIsFocused } from '@react-navigation/native';
 import { getMyProfile } from '@/api/user';
+import { getDayDifference } from '@/utils/time';
 
 export default function ChallengeScreen() {
     const [participatedChallList, setParticipatedChallList] = useState<ChallengeItemMeta[]>([]);
@@ -128,8 +129,7 @@ const ChallengeCard = ({ challengeMetaInfo, isParticipated: isRegistered }: { ch
                         <Text style={{ fontSize: 13 }}>함께하는 인원 </Text>
                         <Text style={{ fontSize: 13 }}>{challengeMetaInfo.currentParticipants}/{challengeMetaInfo.totalParticipants}</Text>
                         <Text>   </Text>
-                        <Text style={{ fontSize: 13 }}>마감일</Text>
-                        <Text style={{ fontSize: 13, color: '#3E81A9' }}> {(new Date(challengeMetaInfo.dateEnd)).toLocaleString('ko-kr')} </Text>
+                        <Text style={{ fontSize: 13, color: '#3E81A9' }}>마감 {getDayDifference(new Date(challengeMetaInfo.dateEnd), new Date())}일 전 </Text>
                         <Text>   </Text>
                     </View>
                 </View>
