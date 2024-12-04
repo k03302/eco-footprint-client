@@ -90,14 +90,14 @@ const user3meta: UserItemMeta = {
 
 const donation1meta: DonationItemMeta = {
     id: 'donation1',
-    name: '북극곰 돕기',
+    name: '🐾 북극곰을 도와주세요!',
     currentPoint: 300,
     targetPoint: 10000,
     thumbnailId: 'donation1'///////
 }
 const donation2meta: DonationItemMeta = {
     id: 'donation2',
-    name: '친환경 실천',
+    name: '🌱 환경을 위해 나무를 심어요!',
     currentPoint: 2000,
     targetPoint: 10000,
     thumbnailId: 'donation2'///////
@@ -215,13 +215,15 @@ const user3: UserItem = {
 
 const donation1: DonationItem = {
     ...donation1meta,
-    description: '',
+    description: `기후 변화로 북극곰들이 서식지를 잃고 있어요! 🧊✨
+👉 “지금이 아니면 늦어요!”`,
     participants: [],
     state: ItemState.ACTIVE
 }
 const donation2: DonationItem = {
     ...donation2meta,
-    description: '',
+    description: `🌟 나무는 이산화탄소를 흡수해 지구를 더 푸르게 만듭니다.
+나무 한 그루를 더 심는 데 함께해주세요! 🌳🌎`,
     participants: [],
     state: ItemState.ACTIVE
 }
