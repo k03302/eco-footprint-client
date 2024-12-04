@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     container: {
         position: 'relative',
         width: '100%',
-        backgroundColor: 'green'
+        backgroundColor: 'white'
     },
     donationcontainer: {
         justifyContent: 'center',
