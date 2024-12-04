@@ -45,11 +45,12 @@ const styles = StyleSheet.create({
     frame: {
         width: 300,
         height: 400,
-        padding: 30,
+        paddingHorizontal: 30,
+        paddingBottom: 30,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative'
+        position: 'relative',
     },
     progressBarContainer: {
         flexDirection: 'row'
@@ -67,13 +68,14 @@ const styles = StyleSheet.create({
     },
     overlay: {
         position: 'absolute',
-        bottom: 0,
+        bottom: -10,
         height: "30%",
         padding: 10,
         backgroundColor: 'white',
         borderRadius: 15,
         justifyContent: 'center',
         alignItems: 'center',
+        margin: 20,
     },
     description: {
         fontSize: 20,
