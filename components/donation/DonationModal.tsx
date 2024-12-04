@@ -62,19 +62,18 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
 
 
                 {
-                    !adWatchFinished ? <View style={{ flexDirection: 'row', }}>
-                        <TouchableOpacity onPress={closeAdHandler}>
-                            <Image source={require("@/assets/images/rejectbutton.png")}
-                                style={[styles.image_button,]} />
-                        </TouchableOpacity>
-                        <Text>   </Text>
-                        <TouchableOpacity onPress={viewAdHandler}>
-                            <Image source={require("@/assets/images/pluspointbutton.png")}
-                                style={[styles.image_button]} />
-                        </TouchableOpacity>
-                    </View> : <View style={{ flexDirection: 'row', }}>
-                        <GreenButton title="리워드 받기" onPress={closeAdHandler} />
-                    </View>
+                    !adWatchFinished ?
+                        <View style={{ flexDirection: 'column', }}>
+                            <Text style={{ paddingVertical: 20, fontSize: 20 }}>
+                                {donationInfo.description}
+                            </Text>
+                            <GreenButton title="거절하기" onPress={closeAdHandler} />
+                            <GreenButton title="10 리워드 받기" onPress={viewAdHandler} />
+                        </View>
+                        :
+                        <View style={{ flexDirection: 'row', }}>
+                            <GreenButton title="리워드 받기" onPress={closeAdHandler} />
+                        </View>
                 }
             </View>
         </TouchableOpacity>
@@ -86,64 +85,17 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-    },
-    adviewcontainer: {
-        width: '100%'
-
-    },
-    frame: {
-        width: 300,
-        height: 400,
-        overflow: 'hidden',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative', // 겹친 요소를 위한 상대적 위치 설정        
-    },
-    imageWrapper: {
-        width: '100%',
-        height: '75%',
-        borderRadius: 20,
-        overflow: 'hidden', // 라운딩된 모서리를 유지
-    },
-    image: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
-    },
-    overlay: {
-        position: 'absolute',
-        bottom: 0,
-        width: 220,
-        height: 100,
-        backgroundColor: '#ffffff',
-        borderRadius: 15,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    progressBar: {
-        marginBottom: 5,
-    },
-    progressText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-    },
     centeredView: {
         flex: 1,
         alignContent: "center",
         textAlignVertical: 'center',
         backgroundColor: "rgba(0, 0, 0, 0.3)#",
+        justifyContent: 'center'
     },
     modalView: {
-        marginTop: 130,
-        backgroundColor: 'white',
+        backgroundColor: 'ghostwhite',
         borderRadius: 20,
-        padding: 35,
+        padding: 20,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: {
@@ -154,12 +106,4 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
     },
-    image_donation: {
-        width: 400,
-        height: 500
-    },
-    image_button: {
-        width: 114,
-        height: 38
-    }
 });

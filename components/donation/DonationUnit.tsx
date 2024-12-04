@@ -7,18 +7,18 @@ import { adService } from '@/service/ad';
 import { participateDonation } from '@/api/user';
 import { DonationCard } from '@/components/donation/DonationCard';
 
-export function DonationUnit({ donationId, onSelected }:
-    { donationId: string, onSelected: (info: DonationItem) => void }) {
+export function DonationUnit({ donationMetaInfo, onSelected }:
+    { donationMetaInfo: DonationItemMeta, onSelected: (info: DonationItem) => void }) {
 
     const [donationInfo, setDonationInfo] = useState<DonationItem | null>(null);
 
 
     useEffect(() => {
         (async () => {
-            const result = await repo.donations.getDonation(donationId);
+            const result = await repo.donations.getDonation(donationMetaInfo.id);
             setDonationInfo(result);
         })()
-    }, [donationId]);
+    }, [donationMetaInfo]);
 
     if (!donationInfo) {
         return <View style={styles.container}>

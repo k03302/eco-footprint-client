@@ -51,6 +51,7 @@ export default function DonationScreen() {
     }
 
     const earnedHandler = () => {
+        console.log('earned');
         setHasToUpdate(true);
     }
 
@@ -75,7 +76,7 @@ export default function DonationScreen() {
                                 return <View key={index}></View>
                             }
                             return <DonationUnit
-                                donationId={fundraisingInfo.id}
+                                donationMetaInfo={fundraisingInfo}
                                 key={index}
                                 onSelected={onDonationSelected}
                             ></DonationUnit>
@@ -95,13 +96,13 @@ export default function DonationScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        position: 'relative'
+        position: 'relative',
+        width: '100%',
+        backgroundColor: 'green'
     },
     donationcontainer: {
-        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
     },
     pointdisplay: {
         position: 'absolute',
