@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, TouchableOpacity, Image, StyleSheet, View, Pressable } from 'react-native';
+import { Button, TouchableOpacity, Image, StyleSheet, View, Pressable, LogBox } from 'react-native';
 import { router } from 'expo-router'
 
 import * as WebBrowser from 'expo-web-browser';
@@ -9,6 +9,9 @@ import { getIdToken, login } from '@/api/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initialize } from '@/api/main';
 import { KakaoLoginFakeButton } from '@/components/auth/KakaoLoginFakeButton';
+
+LogBox.ignoreLogs(['Asyncstorage: ...']); // Ignore log notification by message
+LogBox.ignoreAllLogs(); //Ignore all log notifications
 
 // Allows deep linking to function properly in Expo Go
 WebBrowser.maybeCompleteAuthSession();
