@@ -99,3 +99,61 @@ export async function getFinalChallengeRewardPoint(challengeId: string): Promise
         return false;
     }
 }
+
+
+
+
+export async function getChallengeReward(challengeId: string): Promise<boolean> {
+    try {
+        const userInfo = await getMyProfile();
+        if (userInfo === NO_USER) return false;
+
+        let participated = false;
+        for (const chall of userInfo.challengeList) {
+            if (chall.id === challengeId) {
+                participated = true;
+                break;
+            }
+        }
+        if (!participated) return false;
+
+
+
+        const challengeInfo = await repo.challenges.getChallenge(challengeId);
+        const currentTimestamp = Date.now();
+        const endTimestamp = new Date(challengeInfo.dateEnd).getTime();
+        if (currentTimestamp < endTimestamp) return false;
+
+
+        let totalScore = 0;
+        let myPoint = 0;
+
+        for (const coord of challengeInfo.participantsRecord) {
+            if (coord.userId === userInfo.id) {
+                myPoint += 1;
+                if (coord.approved) {
+                    myPoint += 1;
+                }
+            }
+
+            totalScore += 1;
+            if (coord.approved) {
+                totalScore += 1;
+            }
+        }
+
+        if (totalScore < 100) {
+            getRewardPoint(myPoint);
+        } else {
+            const contributionRate = myPoint / totalScore;
+            const challengeReward = challengeInfo.currentParticipants * 100;
+            getRewardPoint(myPoint + contributionRate * challengeReward);
+        }
+
+        return true;
+
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
