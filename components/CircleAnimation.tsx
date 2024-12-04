@@ -9,32 +9,32 @@ const CircleAnimation = ({ playAnimation, setPlayAnimation }: { playAnimation: b
     const borderWidth = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        if (!playAnimation) return;
-        scale.setValue(0);
-        opacity.setValue(1);
-        borderWidth.setValue(1);
+        // console.log("play animation", playAnimation);
+        // if (!playAnimation) return;
+        // scale.setValue(0);
+        // opacity.setValue(1);
+        // borderWidth.setValue(1);
 
-        // Start the animation
-        Animated.parallel([
-            Animated.timing(scale, {
-                toValue: 5,
-                duration: DURATION,
-                easing: Easing.out(Easing.quad),
-                useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
-                toValue: 0,
-                duration: DURATION,
-                useNativeDriver: true,
-            }),
-            Animated.timing(borderWidth, {
-                toValue: 0,
-                duration: DURATION,
-                useNativeDriver: true,
-            }),
-        ]).start();
+        // Animated.parallel([
+        //     Animated.timing(scale, {
+        //         toValue: 5,
+        //         duration: DURATION,
+        //         easing: Easing.out(Easing.quad),
+        //         useNativeDriver: true,
+        //     }),
+        //     Animated.timing(opacity, {
+        //         toValue: 0,
+        //         duration: DURATION,
+        //         useNativeDriver: true,
+        //     }),
+        //     Animated.timing(borderWidth, {
+        //         toValue: 0,
+        //         duration: DURATION,
+        //         useNativeDriver: true,
+        //     }),
+        // ]).start();
 
-        setPlayAnimation(false);
+        // setPlayAnimation(false);
     }, [playAnimation])
 
 
