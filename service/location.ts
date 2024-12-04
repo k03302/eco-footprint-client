@@ -66,19 +66,19 @@ class LocationService {
 
 
 
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+// TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
 
 
-    if (foregroundActive) return;
-    const { locations } = data as { locations: Location.LocationObject[] };
-    backgroundCallback(locations[0].coords);
+//     if (foregroundActive) return;
+//     const { locations } = data as { locations: Location.LocationObject[] };
+//     backgroundCallback(locations[0].coords);
 
-    // const coords = newLocation.coords;
-    // const isWalking = walkMonitorService.update(coords, 0);
-    // if (isWalking) {
-    //     mapService.addPoint(coords.latitude, coords.longitude);
-    // }
-});
+//     // const coords = newLocation.coords;
+//     // const isWalking = walkMonitorService.update(coords, 0);
+//     // if (isWalking) {
+//     //     mapService.addPoint(coords.latitude, coords.longitude);
+//     // }
+// });
 
 
 
