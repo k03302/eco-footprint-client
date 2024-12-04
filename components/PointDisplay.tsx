@@ -60,15 +60,17 @@ export function PointDisplay({ pointAmount = 0, displaySizeLevel, pointAnimation
     }, [pointAmount]);
 
 
-    return (<View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10, zIndex: 1000 }}>
+    return (<View style={{
+        flexDirection: 'row', alignItems: 'center', marginRight: 10, zIndex: 1000, backgroundColor: 'white',
+        borderRadius: iconSize / 2, justifyContent: 'center'
+    }}>
         <Image source={require("@/assets/images/point.png")}
-            style={{ width: iconSize, height: iconSize }} />
+            style={{ width: iconSize, height: iconSize, marginLeft: 10 }} />
         <Text style={{ fontSize: fontSize, margin: 8, fontWeight: 'bold' }}> {currentPoint} </Text>
         <Animated.Text style={{
             position: "absolute",
             fontSize: fontSize,
             margin: 8,
-            color: pointDiff >= 0 ? 'green' : 'red',
             opacity: opacity,
             justifyContent: "center",
             right: 10,
