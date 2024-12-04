@@ -1,7 +1,7 @@
 import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { ChallengeItemMeta, UserItem } from '@/core/model';
+import { ChallengeItem, ChallengeItemMeta, UserItem } from '@/core/model';
 import { repo } from '@/api/main';
 import { useIsFocused } from '@react-navigation/native';
 import { getMyProfile } from '@/api/user';
@@ -42,7 +42,7 @@ export default function ChallengeScreen() {
                             <Text style={{ fontSize: 15, marginTop: 10, marginLeft: 10 }}>현재 나의 참여 챌린지</Text>
                             {
                                 participatedChallList.map((challengeInfo, index) => <ChallengeCard
-                                    challengeInfo={challengeInfo} key={index} isParticipated={true}>
+                                    challengeMetaInfo={challengeInfo} key={index} isParticipated={true}>
 
                                 </ChallengeCard>)
                             }
@@ -61,7 +61,7 @@ export default function ChallengeScreen() {
                                 }
                             }
                             return <ChallengeCard
-                                challengeInfo={challengeInfo} key={index} isParticipated={false}></ChallengeCard>
+                                challengeMetaInfo={challengeInfo} key={index} isParticipated={false}></ChallengeCard>
                         }
 
                         ) : <></>
@@ -78,23 +78,58 @@ export default function ChallengeScreen() {
     )
 }
 
-const ChallengeCard = ({ challengeInfo, isParticipated: isRegistered }: { challengeInfo: ChallengeItemMeta, isParticipated: boolean }) => {
+const ChallengeCard = ({ challengeMetaInfo, isParticipated: isRegistered }: { challengeMetaInfo: ChallengeItemMeta, isParticipated: boolean }) => {
+    const [challengeInfo, setChallengeInfo] = useState<ChallengeItem>();
+    const [datePassed, setDatePassed] = useState<boolean>(false);
+
+    useEffect(() => {
+        (async () => {
+            const result = await repo.challenges.getChallenge(challengeMetaInfo.id);
+            setChallengeInfo(result);
+
+            const currentTimestamp = Date.now();
+            const endTimestamp = new Date(result.dateEnd).getTime();
+            setDatePassed(currentTimestamp > endTimestamp);
+        })()
+    }, [])
+
+    if (!challengeInfo) return <></>
+
     return (
         <View style={{ width: "95%" }} >
-            <TouchableOpacity onPress={() => { router.push(`/challenge/${isRegistered ? "room" : "register"}/${challengeInfo.id}`) }}>
+            <TouchableOpacity onPress={() => {
+                if (isRegistered) {
+                    if (datePassed) {
+                        //router.push()
+                    } else {
+                        router.push(`/challenge/room/${challengeMetaInfo.id}`)
+                    }
+                } else {
+                    if (!datePassed) {
+                        router.push(`/challenge/register/${challengeMetaInfo.id}`)
+                    }
+                }
+
+            }}>
 
                 <View style={styles.goalContainer}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5, marginLeft: 8, marginRight: 8 }}>
-                        <Image source={require("@/assets/images/goal.png")}
-                            style={{ width: 32, height: 18, margin: 5 }} />
-                        <Text style={{ fontSize: 15, marginRight: 5 }}>{challengeInfo.name}</Text>
+                        <View style={{
+                            backgroundColor: datePassed ? 'red' : 'green', width: 35, height: 20, borderRadius: 7, marginRight: 3,
+                            justifyContent: 'center'
+                        }}>
+                            <Text style={{ fontSize: 10, alignSelf: 'center', color: 'white', fontWeight: 'bold' }}>
+                                {datePassed ? '종료' : '진행중'}
+                            </Text>
+                        </View>
+                        <Text style={{ fontSize: 15, marginRight: 5 }}>{challengeMetaInfo.name}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', marginTop: 3, marginLeft: 20, }}>
                         <Text style={{ fontSize: 13 }}>함께하는 인원 </Text>
-                        <Text style={{ fontSize: 13 }}>{challengeInfo.currentParticipants}/{challengeInfo.totalParticipants}</Text>
+                        <Text style={{ fontSize: 13 }}>{challengeMetaInfo.currentParticipants}/{challengeMetaInfo.totalParticipants}</Text>
                         <Text>   </Text>
                         <Text style={{ fontSize: 13 }}>마감일</Text>
-                        <Text style={{ fontSize: 13, color: '#3E81A9' }}> {(new Date(challengeInfo.dateEnd)).toLocaleString('ko-kr')} </Text>
+                        <Text style={{ fontSize: 13, color: '#3E81A9' }}> {(new Date(challengeMetaInfo.dateEnd)).toLocaleString('ko-kr')} </Text>
                         <Text>   </Text>
                     </View>
                 </View>
