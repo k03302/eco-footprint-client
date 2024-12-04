@@ -16,7 +16,6 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, ea
     }
 ) {
     const [adWatchFinished, setAdWatchFinished] = useState<boolean>(false);
-    const [donationPoint, setDonationPoint] = useState<number>(0);
     const isFocused = useIsFocused();
 
 
@@ -24,15 +23,33 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, ea
     const viewAdHandler = () => {
         adService.showAd();
     }
-    const closeAdHandler = () => {
+
+
+
+    const closeAdHandler = (donationPoint = 0) => {
         if (adWatchFinished) {
             participateDonation(donationInfo.id, donationPoint).then(() => {
                 earnedHandler();
+            }).then(() => {
+                if (donationPoint > 0) {
+                    donationInfo.currentPoint += donationPoint;
+                    setTimeout(() => {
+                        console.log('ok');
+                        setModalVisible(false);
+                        setAdWatchFinished(false);
+                    }, 2000);
+                } else {
+                    setModalVisible(false);
+                    setAdWatchFinished(false);
+                }
+
             })
+        } else {
+            setModalVisible(false);
+            setAdWatchFinished(false);
         }
 
-        setModalVisible(false);
-        setAdWatchFinished(false);
+
     }
     const updatePageInfo = async () => {
         if (!adService.isAdLoaded() && !adService.isAdOnLoading()) {
@@ -56,7 +73,7 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, ea
         visible={modalVisible}
         transparent={true}
         onRequestClose={() => { setModalVisible(false); }}>
-        <TouchableOpacity style={styles.centeredView} onPress={() => { closeAdHandler }}>
+        <TouchableOpacity style={styles.centeredView} onPress={() => { closeAdHandler() }}>
             <View style={styles.modalView}>
 
                 <DonationCard donationInfo={donationInfo}></DonationCard>
@@ -65,19 +82,20 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, ea
                 {
                     !adWatchFinished ?
                         <View style={{ flexDirection: 'column' }}>
-                            <GreenButton title="광고 안보기" onPress={closeAdHandler}></GreenButton>
-                            <GreenButton title="20 리워드 받기" onPress={() => {
-                                setDonationPoint(0);
-                                viewAdHandler();
-                            }}></GreenButton>
-                            <GreenButton title="15 리워드 받고, 5 리워드 기부하기" onPress={() => {
-                                setDonationPoint(5);
+                            <Text style={{ paddingVertical: 20, fontSize: 20 }}>
+                                {donationInfo.description}
+                            </Text>
+                            <GreenButton title="광고 안보기" onPress={() => { closeAdHandler(0) }}></GreenButton>
+                            <GreenButton title="20 리워드 받고 도와주기" onPress={() => {
                                 viewAdHandler();
                             }}></GreenButton>
                         </View>
                         :
-                        <View style={{ flexDirection: 'row', }}>
-                            <GreenButton title={(20 - donationPoint) + " 리워드 받기"} onPress={closeAdHandler} />
+                        <View style={{ flexDirection: 'column', }}>
+                            <GreenButton title="1리워드 기부" onPress={() => { closeAdHandler(1) }} />
+                            <GreenButton title="5리워드 기부" onPress={() => { closeAdHandler(5) }} />
+                            <GreenButton title="20리워드 모두 받기" onPress={() => { closeAdHandler(0) }} />
+
                         </View>
                 }
             </View>
@@ -142,9 +160,9 @@ const styles = StyleSheet.create({
         alignContent: "center",
         textAlignVertical: 'center',
         backgroundColor: "rgba(0, 0, 0, 0.3)#",
+        justifyContent: 'center'
     },
     modalView: {
-        marginTop: 80,
         backgroundColor: 'white',
         borderRadius: 20,
         padding: 35,
