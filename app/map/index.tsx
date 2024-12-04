@@ -470,8 +470,9 @@ export default function App() {
 
             <View style={styles.moveinfocontainer}>
                 <View style={styles.movecount}>
-                    <Text style={{ fontSize: 20 }}>탄소저감량  </Text>
-                    <Text style={{ fontSize: 40 }}>{carbonDecrease.toFixed(1)}g</Text>
+                    <Text style={{ fontSize: 20 }}>탄소  </Text>
+                    <Text style={{ fontSize: 40 }}>{carbonDecrease > 1000 ? (carbonDecrease / 1000).toFixed(0) + 'kg' : carbonDecrease.toFixed(0) + 'g'}</Text>
+                    <Text style={{ fontSize: 20 }}>  을 줄였어요!</Text>
 
                 </View>
                 <View style={styles.extracount}>
