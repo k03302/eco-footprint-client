@@ -6,7 +6,7 @@ import { DonationItem } from '@/core/model';
 import { DonationCard } from '@/components/donation/DonationCard';
 import { adService } from '@/service/ad';
 import { participateDonation } from '@/api/user';
-import { GreenButton } from '@/components/GreenButton';
+import { ThemeButton } from '@/components/ThemeButton';
 import { useIsFocused } from '@react-navigation/native';
 
 export function DonationModal({ modalVisible, setModalVisible, donationInfo, earnedHandler = () => { } }
@@ -67,12 +67,13 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
                             <Text style={{ paddingVertical: 20, fontSize: 20 }}>
                                 {donationInfo.description}
                             </Text>
-                            <GreenButton title="거절하기" onPress={closeAdHandler} />
-                            <GreenButton title="10 리워드 받기" onPress={viewAdHandler} />
+
+                            <ThemeButton title="10 리워드 받고 도와주기" onPress={viewAdHandler} />
+                            <ThemeButton title="거절하기" onPress={closeAdHandler} variant='secondary' />
                         </View>
                         :
                         <View style={{ flexDirection: 'row', }}>
-                            <GreenButton title="리워드 받기" onPress={closeAdHandler} />
+                            <ThemeButton title="리워드 받기" onPress={closeAdHandler} />
                         </View>
                 }
             </View>

@@ -8,30 +8,19 @@ import {
     ActivityIndicator,
 } from 'react-native';
 
-interface AsyncButtonProps extends PressableProps {
+interface ButtonProps extends PressableProps {
     title: string;
-    onPressAsync: () => Promise<void>;
     style?: ViewStyle;
     variant?: 'primary' | 'secondary';
 }
 
-export const AsyncGreenButton: React.FC<AsyncButtonProps> = ({
+export const ThemeButton: React.FC<ButtonProps> = ({
     title,
-    onPressAsync,
     style,
     variant = 'primary',
     ...props
 }) => {
     const [loading, setLoading] = useState(false);
-
-    const handlePress = async () => {
-        setLoading(true);
-        try {
-            await onPressAsync();
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <Pressable
@@ -41,7 +30,7 @@ export const AsyncGreenButton: React.FC<AsyncButtonProps> = ({
                 pressed && styles.pressed,
                 style,
             ]}
-            onPress={handlePress}
+            onPress={props.onPress}
             disabled={loading}
             {...props}
         >
@@ -53,6 +42,7 @@ export const AsyncGreenButton: React.FC<AsyncButtonProps> = ({
         </Pressable>
     );
 };
+
 
 const styles = StyleSheet.create({
     button: {
@@ -66,7 +56,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#849C6A',
     },
     secondary: {
-        backgroundColor: '#849C6A',
+        backgroundColor: 'lightgray',
     },
     pressed: {
         opacity: 0.75,

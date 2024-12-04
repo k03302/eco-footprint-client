@@ -14,6 +14,7 @@ import { getMyProfile } from '@/api/user';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
 import { setApproveProofShot, uploadProofShoot } from '@/api/challenge';
 import { getDayDifference } from '@/utils/time';
+import { ThemeButton } from '@/components/ThemeButton';
 
 const OBJECTIVE_POINT = 100;
 const TOTAL_CHALLENGE_DAY = 30;
@@ -184,7 +185,7 @@ export default function ChallengeScreen() {
                 <View style={styles.container_title}>
                     <HorizontalLine />
                     <Text style={{ fontSize: 22, fontWeight: 'bold', margin: 20 }}>{challengeInfo.name}</Text>
-                    <Text style={{ fontSize: 15, margin: 20 }}>{challengeInfo.description}</Text>
+                    <Text style={{ fontSize: 18, margin: 20 }}>{challengeInfo.description}</Text>
                     <HorizontalLine />
                 </View>
                 <View style={styles.container_progress}>
@@ -220,8 +221,7 @@ export default function ChallengeScreen() {
                             unfilledColor='lightgray'
                         />
                     </View>
-                    <Text>챌린지 시작: {(new Date(challengeInfo.dateStart)).toLocaleString('ko-kr')}</Text>
-                    <Text>챌린지 마감: {(new Date(challengeInfo.dateEnd)).toLocaleString('ko-kr')}</Text>
+                    <Text>챌린지 마감 {getDayDifference(new Date(), new Date(challengeInfo.dateStart))}일 전</Text>
                     <HorizontalLine />
                 </View>
                 <View style={styles.recordcontainer}>
@@ -229,10 +229,7 @@ export default function ChallengeScreen() {
                     <ChallengeGallery yes={true} userInfo={myProfileInfo} challengeInfo={challengeInfo}
                         onTodayImagePress={onMyTodayImagePress} onDatedImagePress={onMyDatedImagePress} />
                     <View style={{ alignItems: 'center' }}>
-                        <TouchableOpacity onPress={takePhotoAndUpload}>
-                            <Image source={require("@/assets/images/writechallengebutton.png")}
-                                style={{ width: 265, height: 41, marginTop: 20, marginLeft: 3 }} />
-                        </TouchableOpacity>
+                        <ThemeButton title="오늘 챌린지 기록하기" onPress={takePhotoAndUpload}></ThemeButton>
                     </View>
                     <HorizontalLine />
                 </View>

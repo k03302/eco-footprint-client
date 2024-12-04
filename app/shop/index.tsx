@@ -6,6 +6,7 @@ import { CouponItem, NO_COUPON, NO_USER, RewardItemMeta, UserItem } from '@/core
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { getMyProfile, purchaseReward } from '@/api/user';
 import { PointDisplay } from '@/components/PointDisplay';
+import { ThemeButton } from '@/components/ThemeButton';
 
 export default function ShopScreen() {
     const [userInfo, setUserInfo] = useState<UserItem>(NO_USER)
@@ -122,15 +123,8 @@ export default function ShopScreen() {
                                 </View>
                                 <Text style={{ fontSize: 17, marginTop: 20 }}>위 상품을 정말 구매하시겠습니까?</Text>
                                 <View style={{ flexDirection: 'row' }}>
-                                    <TouchableOpacity onPress={purchaseHandler}>
-                                        <Image source={require("@/assets/images/purchase.png")}
-                                            style={[styles.image_button, { resizeMode: 'contain' }]} />
-                                    </TouchableOpacity>
-                                    <Text>    </Text>
-                                    <TouchableOpacity onPress={cancelHandler}>
-                                        <Image source={require("@/assets/images/cancel.png")}
-                                            style={[styles.image_button, { resizeMode: 'contain' }]} />
-                                    </TouchableOpacity>
+                                    <ThemeButton onPress={purchaseHandler} title="구매" style={{ marginRight: 10 }} />
+                                    <ThemeButton onPress={cancelHandler} title="취소" />
                                 </View>
                             </> : <></>
                         }

@@ -7,6 +7,7 @@ import { UserIcon } from '@/components/UserIcon';
 import { useIsFocused } from '@react-navigation/native';
 import { participateChallenge } from '@/api/challenge';
 import { HorizontalLine } from '@/components/HorizontalLine';
+import { ThemeButton } from '@/components/ThemeButton';
 
 export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
@@ -85,10 +86,7 @@ export default function ChallengeScreen() {
                 </View> */}
             </ScrollView>
             <View style={styles.container_button}>
-                <TouchableOpacity onPress={participateChallengeHandler}>
-                    <Image source={require("@/assets/images/joinchallengebutton.png")}
-                        style={{ width: 265, height: 41, marginTop: 10, marginLeft: 3 }} />
-                </TouchableOpacity>
+                <ThemeButton title="챌린지 참가하기" onPress={participateChallengeHandler}></ThemeButton>
             </View>
         </View>
     )

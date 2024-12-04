@@ -14,7 +14,7 @@ import { getChallengeReward, getMyProfile } from '@/api/user';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
 import { setApproveProofShot, uploadProofShoot } from '@/api/challenge';
 import { getDayDifference } from '@/utils/time';
-import { GreenButton } from '@/components/GreenButton';
+import { ThemeButton } from '@/components/ThemeButton';
 
 const OBJECTIVE_POINT = 100;
 const TOTAL_CHALLENGE_DAY = 30;
@@ -128,9 +128,9 @@ export default function ChallengeRewardScreen() {
                     </Text>
                 </View>
 
-                <GreenButton title="리워드 받기" onPress={() => {
+                <ThemeButton title="리워드 받기" onPress={() => {
                     getChallengeReward(challengeInfo.id);
-                }}></GreenButton>
+                }}></ThemeButton>
             </ScrollView>
 
 

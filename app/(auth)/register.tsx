@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { register } from '@/api/auth';
-import { AsyncGreenButton } from '@/components/AsyncGreenButton';
+import { AsyncThemeButton } from '@/components/AsyncThemeButton';
 
 export default function UserProfile() {
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export default function UserProfile() {
             />
 
             {/* Submit Button */}
-            <AsyncGreenButton title="시작하기" onPressAsync={handleSubmit} />
+            <AsyncThemeButton title="시작하기" onPressAsync={handleSubmit} />
         </View>
     );
 }

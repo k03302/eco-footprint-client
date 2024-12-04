@@ -6,13 +6,13 @@ import { DonationItem } from '@/core/model';
 import { DonationCard } from '@/components/donation/DonationCard';
 import { adService } from '@/service/ad';
 import { participateDonation } from '@/api/user';
-import { GreenButton } from '../GreenButton';
+import { ThemeButton } from '@/components/ThemeButton';
 import { useIsFocused } from '@react-navigation/native';
 
-export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, earnedHandler = () => { } }
+export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, onEarnReward = () => { }, onCancel = () => { } }
     : {
         modalVisible: boolean, setModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
-        donationInfo: DonationItem, earnedHandler?: () => void
+        donationInfo: DonationItem, onEarnReward?: () => void, onCancel?: () => void
     }
 ) {
     const [adWatchFinished, setAdWatchFinished] = useState<boolean>(false);
@@ -29,7 +29,7 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, ea
     const closeAdHandler = (donationPoint = 0) => {
         if (adWatchFinished) {
             participateDonation(donationInfo.id, donationPoint).then(() => {
-                earnedHandler();
+                onEarnReward();
             }).then(() => {
                 if (donationPoint > 0) {
                     donationInfo.currentPoint += donationPoint;
@@ -45,6 +45,7 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, ea
 
             })
         } else {
+            onCancel();
             setModalVisible(false);
             setAdWatchFinished(false);
         }
@@ -85,16 +86,24 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, ea
                             <Text style={{ paddingVertical: 20, fontSize: 20 }}>
                                 {donationInfo.description}
                             </Text>
-                            <GreenButton title="광고 안보기" onPress={() => { closeAdHandler(0) }}></GreenButton>
-                            <GreenButton title="20 리워드 받고 도와주기" onPress={() => {
+
+                            <ThemeButton title="20 리워드 받고 도와주기" onPress={() => {
                                 viewAdHandler();
-                            }}></GreenButton>
+                            }}></ThemeButton>
+                            <ThemeButton title="거절하기" onPress={() => { closeAdHandler(0) }} variant='secondary' ></ThemeButton>
                         </View>
                         :
-                        <View style={{ flexDirection: 'column', }}>
-                            <GreenButton title="1리워드 기부" onPress={() => { closeAdHandler(1) }} />
-                            <GreenButton title="5리워드 기부" onPress={() => { closeAdHandler(5) }} />
-                            <GreenButton title="20리워드 모두 받기" onPress={() => { closeAdHandler(0) }} />
+                        <View style={{ flexDirection: 'column', marginTop: 10 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center' }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 30 }}>20
+                                    <Image source={require("@/assets/images/point.png")}
+                                        style={{ width: 20, height: 20 }} />
+                                    획득!
+                                </Text>
+                            </View>
+                            <ThemeButton title="1리워드 기부하기" onPress={() => { closeAdHandler(1) }} />
+                            <ThemeButton title="5리워드 기부하기" onPress={() => { closeAdHandler(5) }} />
+                            <ThemeButton title="기부 건너뛰기" onPress={() => { closeAdHandler(0) }} variant='secondary' />
 
                         </View>
                 }

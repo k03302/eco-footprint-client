@@ -1,5 +1,5 @@
 import { Modal, Text, View, StyleSheet, ImageSourcePropType, Image, TouchableOpacity } from 'react-native';
-import { GreenButton } from '../GreenButton';
+import { ThemeButton } from '@/components/ThemeButton';
 
 
 export function ChallengeModal({ modalVisible, setModalVisible, imgDate, imgSource, onPress = async () => { }, buttonTitle = '', showButton = true }:
@@ -28,7 +28,7 @@ export function ChallengeModal({ modalVisible, setModalVisible, imgDate, imgSour
                 }
             </View>
             {
-                showButton ? <GreenButton title={buttonTitle} onPress={onPress}></GreenButton> : <></>
+                showButton ? <ThemeButton title={buttonTitle} onPress={onPress}></ThemeButton> : <></>
             }
         </TouchableOpacity>
     </Modal>);
