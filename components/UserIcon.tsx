@@ -1,5 +1,4 @@
 import { TouchableOpacity, Image, StyleSheet, Text, ImageSourcePropType } from "react-native";
-import { repo, util } from '@/api/back';
 import React, { useEffect, useState } from 'react';
 
 

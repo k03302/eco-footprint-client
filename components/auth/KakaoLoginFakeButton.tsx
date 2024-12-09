@@ -1,10 +1,10 @@
 import { Button, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { router } from 'expo-router'
-import { login } from '@/localApi/auth';
+import { login } from '@/utils/login';
 
 export function KakaoLoginFakeButton() {
     return (
-        <TouchableOpacity onPress={() => { login({ idToken: "1234" }); }}>
+        <TouchableOpacity onPress={() => { login({ idToken: "12345" }); }}>
             <Image source={require("@/assets/images/kakao_login.png")}
                 style={styles.image_login_kakao} />
         </TouchableOpacity>

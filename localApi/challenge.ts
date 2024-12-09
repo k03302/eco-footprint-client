@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { repo } from '@/localApi/main';
-import axios from 'axios';
 import { ChallengeItem, NO_USER, UserItem } from '@/core/model';
 import { getMyProfile } from '@/localApi/user';
 import { hasDatePassed } from '@/utils/time';
