@@ -1,4 +1,4 @@
-import { getFileSource } from "@/api/main"
+import { getFileSource } from "@/localApi/main"
 import { ChallengeItem, ChallengeRecoordItem, UserItemMeta } from "@/core/model"
 import { MaterialIcons } from "@expo/vector-icons"
 import { ImageSourcePropType, View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from "react-native"

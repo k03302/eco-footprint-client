@@ -1,7 +1,7 @@
 import { NO_USER } from '@/core/model';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { repo } from '@/api/main';
+import { repo } from '@/localApi/main';
 import { Alert } from 'react-native';
 
 const ID_TOKEN_KEY = 'id_token';

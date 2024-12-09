@@ -5,9 +5,9 @@ import { router } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { KakaoLoginButton } from '@/components/auth/KakaoLoginButton';
-import { getIdToken, login } from '@/api/auth';
+import { getIdToken, login } from '@/localApi/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initialize } from '@/api/main';
+import { initialize } from '@/localApi/main';
 import { KakaoLoginFakeButton } from '@/components/auth/KakaoLoginFakeButton';
 
 LogBox.ignoreLogs(['Asyncstorage: ...']); // Ignore log notification by message

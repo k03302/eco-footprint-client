@@ -1,10 +1,10 @@
 import { Modal, Text, TouchableOpacity, Image, View, StyleSheet, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { getFileSource, repo } from '@/api/main';
+import { getFileSource, repo } from '@/localApi/main';
 import { DonationItem, DonationItemMeta, NO_DONATION } from '@/core/model';
 import { adService } from '@/service/ad';
-import { participateDonation } from '@/api/user';
+import { participateDonation } from '@/localApi/user';
 import { DonationCard } from '@/components/donation/DonationCard';
 
 export function DonationUnit({ donationMetaInfo, onSelected }:

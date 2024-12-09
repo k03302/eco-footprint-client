@@ -2,10 +2,10 @@ import { TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, ActivityIn
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ChallengeItem } from '@/core/model';
-import { getFileSource, repo } from '@/api/main';
+import { getFileSource, repo } from '@/localApi/main';
 import { UserIcon } from '@/components/UserIcon';
 import { useIsFocused } from '@react-navigation/native';
-import { participateChallenge } from '@/api/challenge';
+import { participateChallenge } from '@/localApi/challenge';
 import { HorizontalLine } from '@/components/HorizontalLine';
 import { ThemeButton } from '@/components/ThemeButton';
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, Image, TextInput, Text, View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
-import { createChallenge } from '@/api/challenge';
+import { createChallenge } from '@/localApi/challenge';
 
 
 const challengeTypeInfo: Record<string, { name: string, description: string }> = {

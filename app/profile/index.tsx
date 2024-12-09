@@ -5,8 +5,8 @@ import { UserIcon } from '@/components/UserIcon';
 import { logout } from '@/utils/login';
 import { useIsFocused } from '@react-navigation/native';
 import { UserItem } from '@/core/model';
-import { getMyProfile } from '@/api/user';
-import { getFileSource } from '@/api/main';
+import { getMyProfile } from '@/localApi/user';
+import { getFileSource } from '@/localApi/main';
 
 
 export default function ProfileScreen() {

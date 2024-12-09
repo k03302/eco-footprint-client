@@ -1,6 +1,6 @@
 import { Button, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { router } from 'expo-router'
-import { login } from '@/api/auth';
+import { login } from '@/localApi/auth';
 
 export function KakaoLoginFakeButton() {
     return (

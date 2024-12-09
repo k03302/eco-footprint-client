@@ -2,7 +2,7 @@ import { DonationItem } from "@/core/model";
 import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { getFileSource } from '@/api/main';
+import { getFileSource } from '@/localApi/main';
 
 export function DonationCard({ donationInfo }: { donationInfo: DonationItem }) {
     return (

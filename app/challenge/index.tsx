@@ -2,9 +2,9 @@ import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView } from 'rea
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ChallengeItem, ChallengeItemMeta, UserItem } from '@/core/model';
-import { repo } from '@/api/main';
+import { repo } from '@/localApi/main';
 import { useIsFocused } from '@react-navigation/native';
-import { getMyProfile } from '@/api/user';
+import { getMyProfile } from '@/localApi/user';
 import { getDayDifference } from '@/utils/time';
 
 export default function ChallengeScreen() {

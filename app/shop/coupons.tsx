@@ -1,11 +1,11 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, Touchable, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
-import { getFileSource, repo } from '@/api/main';
+import { getFileSource, repo } from '@/localApi/main';
 import { CouponItemMeta, NO_USER, RewardItem } from '@/core/model';
 import { useIsFocused } from '@react-navigation/native';
 import { PointDisplay } from '@/components/PointDisplay';
-import { getMyProfile } from '@/api/user';
+import { getMyProfile } from '@/localApi/user';
 
 export default function CouponScreen() {
     const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);

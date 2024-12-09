@@ -13,9 +13,9 @@ import { useIsFocused } from '@react-navigation/native';
 
 import { UserIcon } from '@/components/UserIcon';
 import { DonationItem, DonationItemMeta, UserItem } from '@/core/model';
-import { getFileSource, repo } from '@/api/main';
+import { getFileSource, repo } from '@/localApi/main';
 import * as Progress from 'react-native-progress';
-import { getMyProfile, getRewardPoint } from '@/api/user';
+import { getMyProfile, getRewardPoint } from '@/localApi/user';
 import { PedometerResult } from 'expo-sensors/build/Pedometer';
 import { PointDisplay } from '@/components/PointDisplay';
 import { MapRewardModal } from '@/components/map/MapRewardModal';

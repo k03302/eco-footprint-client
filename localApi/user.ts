@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { repo } from '@/api/main';
+import { repo } from '@/localApi/main';
 import axios from 'axios';
 import { ChallengeItem, CouponItem, CouponItemMeta, NO_COUPON, NO_USER, UserItem } from '@/core/model';
-import { getUserId } from '@/api/auth';
+import { getUserId } from '@/localApi/auth';
 
 const MAX_DEFAULT_POINT = 3;
 const MIN_DEFAULT_POINT = 1;

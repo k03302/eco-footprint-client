@@ -1,12 +1,12 @@
 import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { repo } from '@/api/main';
+import { repo } from '@/localApi/main';
 import { DonationItem, DonationItemMeta, NO_DONATION, NO_USER, UserItem } from '@/core/model';
 import { adService } from '@/service/ad';
 import { useIsFocused } from '@react-navigation/native';
 import { DonationUnit } from '@/components/donation/DonationUnit';
-import { getMyProfile, participateDonation } from '@/api/user';
+import { getMyProfile, participateDonation } from '@/localApi/user';
 import { PointDisplay } from '@/components/PointDisplay';
 import { DonationModal } from '@/components/donation/DonationModal';
 

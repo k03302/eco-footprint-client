@@ -12,7 +12,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { register } from '@/api/auth';
+import { register } from '@/localApi/auth';
 import { AsyncThemeButton } from '@/components/AsyncThemeButton';
 
 export default function UserProfile() {

@@ -1,10 +1,10 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
-import { getFileSource, repo } from '@/api/main';
+import { getFileSource, repo } from '@/localApi/main';
 import { CouponItem, NO_COUPON, NO_USER, RewardItemMeta, UserItem } from '@/core/model';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import { getMyProfile, purchaseReward } from '@/api/user';
+import { getMyProfile, purchaseReward } from '@/localApi/user';
 import { PointDisplay } from '@/components/PointDisplay';
 import { ThemeButton } from '@/components/ThemeButton';
 
