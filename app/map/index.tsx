@@ -21,6 +21,7 @@ import { PointDisplay } from '@/components/PointDisplay';
 import { MapRewardModal } from '@/components/map/MapRewardModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import CircleAnimation from '@/components/CircleAnimation';
+import { getProfile } from '@/api/user';
 
 
 const FORGROUND_LOCATION_PERIOD_SEC = 1;
@@ -90,7 +91,11 @@ export default function App() {
         });
     }, [hasToUpdate]);
 
-
+    useEffect(() => {
+        (async () => {
+            console.log("profile", await getProfile({ myProfile: true }));
+        })()
+    }, [])
 
 
 
@@ -196,7 +201,6 @@ export default function App() {
 
 
     useEffect(() => {
-        console.log('trackItemMode', trackItemMode);
         if (!trackItemMode) {
             setTargetRegionToUser();
         } else {
@@ -212,11 +216,9 @@ export default function App() {
     }, [targetRegion]);
 
     useEffect(() => {
-        console.log("targetItemPos", targetItemPos);
         if (!targetItemPos) return;
 
         const success = mapService.consumeItemAt(targetItemPos.latitude, targetItemPos.longitude);
-        console.log('success', success);
         if (!success) return;
         setMapUpdated(true);
         setTakenItemCount(takenItemCount + 1);
