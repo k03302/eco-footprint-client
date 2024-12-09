@@ -28,19 +28,19 @@ export type ChallengeRecoordItem = {
 }
 
 export enum ItemState {
-    UNDEFINED,
-    PENDING,
-    ACTIVE,
-    INACTIVE,
-    FINISHED,
-    FAILED
+    UNDEFINED = -1,
+    PENDING = 0,
+    ACTIVE = 1,
+    INACTIVE = 2,
+    FINISHED = 3,
+    FAILED = 4
 }
 
 export type DonationItemMeta = {
     id: string;
     name: string;
     currentPoint: number;
-    targetPoint: number;
+    totalPoint: number;
     thumbnailId: string;
 }
 
@@ -58,9 +58,9 @@ export type FileData = {
     owner: string;
     name: string;
     size: number;
-    date: string;
     contentType: string;
     file: string;
+    isPrivate: boolean;
 }
 
 export type FileInput = {
@@ -112,9 +112,8 @@ export type DonationItem = {
     id: string;
     name: string;
     currentPoint: number;
-    targetPoint: number;
+    totalPoint: number;
     description: string;
-    participants: string[];
     thumbnailId: string;
     state: ItemState;
 }
@@ -181,9 +180,8 @@ export const NO_DONATION: DonationItem = {
     id: "",
     name: "",
     currentPoint: 0,
-    targetPoint: 0,
+    totalPoint: 0,
     description: "",
-    participants: [],
     thumbnailId: "",
     state: 0
 }
@@ -194,6 +192,6 @@ export const NO_FILE: FileData = {
     size: 0,
     contentType: "",
     owner: "",
-    date: "",
-    file: ""
+    file: "",
+    isPrivate: false
 }

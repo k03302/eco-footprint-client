@@ -28,8 +28,8 @@ class FileLocalRepo implements FileRepo {
             size: 0,
             contentType: file.fileUri.split('.').pop() || "",
             owner: "",
-            date: "",
-            file: ""
+            file: "",
+            isPrivate: false
         };
         if (!file.localLocation && file.fileUri) {
             await FileSystem.copyAsync({
@@ -64,8 +64,8 @@ class FileLocalRepo implements FileRepo {
             size: 0,
             contentType: file.fileUri.split('.').pop() || "",
             owner: "",
-            date: "",
-            file: ""
+            file: "",
+            isPrivate: false
         };
 
         if (!file.localLocation && file.fileUri) {

@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { repo } from '@/localApi/main';
-import axios from 'axios';
 import { ChallengeItem, CouponItem, CouponItemMeta, NO_COUPON, NO_USER, UserItem } from '@/core/model';
 import { getUserId } from '@/localApi/auth';
 
