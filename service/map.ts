@@ -7,6 +7,7 @@ const MIDNIGHT_MAP_INITIALIZED_KEY = 'map_initialized';
 const UNIT_SIZE = 0.0001;
 const UNIT_SCALER = 10000;
 const UNIT_COUNT = 10;
+const ITEM_GENERATE_PROBABILITY = 0.2;
 export const METER_PER_DEGREE = 100000;
 export const DEGREE_PER_METER = 0.00001;
 const MAX_BLOCK_BUFFER_SIZE = 100;
@@ -44,7 +45,6 @@ class MapBlockService {
 
     private itemCount: number = 0;
     private itemLocations: MapCoordData[] = [];
-    private averageItemCountPerBlock: number = 1// 0.2;
     private currentItemIndex: number = 0;
 
     private overlayUpdateHandler = () => { };
@@ -224,7 +224,7 @@ class MapBlockService {
         // generate item
         let itemPos = null;
         const r = Math.random();
-        if (this.averageItemCountPerBlock > r) {
+        if (ITEM_GENERATE_PROBABILITY > r) {
             itemPos = {
                 latitude: latAsInteger * this.blockSize + this.blockSize * Math.random(),
                 longitude: lngAsInteger * this.blockSize + this.blockSize * Math.random()
