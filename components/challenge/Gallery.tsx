@@ -1,5 +1,4 @@
-import { getFileSource } from "@/localApi/main"
-import { ChallengeItem, ChallengeRecoordItem, UserItemMeta } from "@/core/model"
+import { ChallengeItem, ChallengeRecordItem, UserItemMeta } from "@/core/model"
 import { MaterialIcons } from "@expo/vector-icons"
 import { ImageSourcePropType, View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from "react-native"
 import { UserIcon } from "../UserIcon"
@@ -74,43 +73,46 @@ export const ChallengeImageDated = ({ imgSize, imgSource, isApproved, onPress = 
 }
 
 
-const _ChallengeGallery = ({ yes, userInfo, challengeInfo, onTodayImagePress = () => { }, onDatedImagePress = () => { } }: {
+const _ChallengeGallery = ({ userInfo, challengeInfo, onTodayImagePress = () => { }, onDatedImagePress = () => { } }: {
     userInfo: UserItemMeta, challengeInfo: ChallengeItem,
-    onTodayImagePress?: (recoord?: ChallengeRecoordItem) => void,
-    onDatedImagePress?: (recoord?: ChallengeRecoordItem) => void,
-    yes: boolean
+    onTodayImagePress?: (record?: ChallengeRecordItem) => void,
+    onDatedImagePress?: (record?: ChallengeRecordItem) => void,
 }) => {
-    const [myGalleryList, setMyGalleryList] = useState<ChallengeRecoordItem[]>([]);
+    const [myGalleryList, setMyGalleryList] = useState<ChallengeRecordItem[]>([]);
     const [credit, setCredit] = useState<number>(0);
 
     useEffect(() => {
         let approvedCount = 0;
 
-        const challengeRecoords = challengeInfo.participantsRecord;
-        const myRecoords = challengeRecoords.filter((recoord) => {
-            const isMine = recoord.userId === userInfo.id;
+        const challengeRecords = challengeInfo.participantsRecords;
+        const myRecords = challengeRecords.filter((record) => {
+            const isMine = record.userId === userInfo.id;
             if (isMine) {
-                if (recoord.approved) {
+                if (record.approved) {
                     approvedCount += 1;
                 }
             }
             return isMine;
         })
 
-        const sortedRecoords = myRecoords.sort((a, b) => {
-            return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+        const sortedRecords = myRecords.sort((a, b) => {
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
         })
-        setMyGalleryList(sortedRecoords);
+        setMyGalleryList(sortedRecords);
 
-        setCredit(myRecoords.length + approvedCount);
+        setCredit(myRecords.length + approvedCount);
     }, [userInfo, challengeInfo]);
+
+    function getImageSource(arg0: {}): ImageSourcePropType | undefined {
+        throw new Error("Function not implemented.")
+    }
 
     return (
         <View>
             <View style={{ marginBottom: 10, justifyContent: 'center', flexDirection: 'row' }}>
                 <UserIcon message={userInfo.username}
                     iconSize={1}
-                    imgSource={userInfo.thumbnailId ? (yes ? { uri: userInfo.thumbnailId } : getFileSource(userInfo.thumbnailId)) : undefined}
+                    imgSource={userInfo.thumbnailId ? getImageSource({ imageId: userInfo.thumbnailId }) : undefined}
                 />
                 <View style={{ marginRight: 30, justifyContent: 'center' }}>
                     <Text>챌린지 기여도</Text>
@@ -138,16 +140,16 @@ const _ChallengeGallery = ({ yes, userInfo, challengeInfo, onTodayImagePress = (
                         /> : <></>
                     }
                     {
-                        myGalleryList.map((recoord, index) => {
+                        myGalleryList.map((record, index) => {
                             if (index === 0) {
-                                if (!hasDatePassed(new Date(myGalleryList[0].uploadDate))) {
+                                if (!hasDatePassed(new Date(myGalleryList[0].date))) {
                                     return (<ChallengeImageToday
                                         onPress={() => {
                                             onTodayImagePress(myGalleryList[0])
                                         }}
                                         imgSize={IMAGE_SIZE}
                                         isApproved={myGalleryList[0].approved}
-                                        imgSource={getFileSource(myGalleryList[0].recordId)}
+                                        imgSource={getImageSource(myGalleryList[0].imageId)}
                                         key={'b' + index}
                                     />)
                                 } else {
@@ -162,22 +164,22 @@ const _ChallengeGallery = ({ yes, userInfo, challengeInfo, onTodayImagePress = (
                                         />
                                         <ChallengeImageDated
                                             onPress={() => {
-                                                onDatedImagePress(recoord)
+                                                onDatedImagePress(record)
                                             }}
                                             imgSize={IMAGE_SIZE}
-                                            imgSource={getFileSource(recoord.recordId)}
-                                            isApproved={recoord.approved}
+                                            imgSource={getImageSource({ imageId: record.imageId }) || require('@/assets/images/empty.png')}
+                                            isApproved={record.approved}
                                             key={'d' + index} />
                                     </>)
                                 }
                             }
                             return <ChallengeImageDated
                                 onPress={() => {
-                                    onDatedImagePress(recoord)
+                                    onDatedImagePress(record)
                                 }}
                                 imgSize={IMAGE_SIZE}
-                                imgSource={getFileSource(recoord.recordId)}
-                                isApproved={recoord.approved}
+                                imgSource={getImageSource({ imageId: record.imageId }) || require('@/assets/images/empty.png')}
+                                isApproved={record.approved}
                                 key={'e' + index} />
                         })
                     }

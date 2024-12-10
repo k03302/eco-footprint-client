@@ -1,13 +1,12 @@
 import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { getFileSource } from '@/localApi/main';
 import { DonationItem } from '@/core/model';
 import { DonationCard } from '@/components/donation/DonationCard';
 import { adService } from '@/service/ad';
-import { participateDonation } from '@/localApi/user';
 import { ThemeButton } from '@/components/ThemeButton';
 import { useIsFocused } from '@react-navigation/native';
+import { participateDonation, participateDonation2 } from '@/api/donation';
 
 export function DonationModal({ modalVisible, setModalVisible, donationInfo, earnedHandler = () => { } }
     : {
@@ -25,7 +24,7 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
     }
     const closeAdHandler = () => {
         if (adWatchFinished) {
-            participateDonation(donationInfo.id).then(() => {
+            participateDonation2({ donationId: donationInfo.id, rewardPoint: 10 }).then(() => {
                 earnedHandler();
             })
         }
@@ -58,6 +57,17 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
         <TouchableOpacity style={styles.centeredView} onPress={() => { closeAdHandler }}>
             <View style={styles.modalView}>
 
+                {
+                    adWatchFinished && <>
+                        <Text style={{ paddingTop: 10, fontSize: 30, fontWeight: 'bold', color: 'green' }}>
+                            10<Image source={require("@/assets/images/point.png")}
+                                style={{ width: 30, height: 30 }} />만큼 적립했어요
+                        </Text>
+                        <Text style={{ padding: 10, fontSize: 30, fontWeight: 'bold', color: 'green' }}>
+                            도와주셔서 정말 감사해요!
+                        </Text>
+                    </>
+                }
                 <DonationCard donationInfo={donationInfo}></DonationCard>
 
 
@@ -73,7 +83,7 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
                         </View>
                         :
                         <View style={{ flexDirection: 'row', }}>
-                            <ThemeButton title="리워드 받기" onPress={closeAdHandler} />
+                            <ThemeButton title="감사의 10 리워드 받기" onPress={closeAdHandler} />
                         </View>
                 }
             </View>

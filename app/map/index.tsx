@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { View, StyleSheet, Alert, BackHandler, Text, Image, ActivityIndicator, Modal, TouchableOpacity, Button, Touchable, Pressable } from 'react-native';
-import MapView, { Polygon, Marker, Region, Details, Circle, LongPressEvent } from 'react-native-maps';
+import MapView, { Polygon, Marker, Region, Details, LongPressEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Pedometer } from 'expo-sensors';
 import { mapService, MapCoordData, MapCoordAngleData, DEGREE_PER_METER } from '@/service/map';
@@ -13,15 +13,14 @@ import { useIsFocused } from '@react-navigation/native';
 
 import { UserIcon } from '@/components/UserIcon';
 import { DonationItem, DonationItemMeta, UserItem } from '@/core/model';
-import { getFileSource, repo } from '@/localApi/main';
 import * as Progress from 'react-native-progress';
-import { getMyProfile, getRewardPoint } from '@/localApi/user';
 import { PedometerResult } from 'expo-sensors/build/Pedometer';
 import { PointDisplay } from '@/components/PointDisplay';
 import { MapRewardModal } from '@/components/map/MapRewardModal';
 import { MaterialIcons } from '@expo/vector-icons';
-import CircleAnimation from '@/components/CircleAnimation';
-import { getProfile } from '@/api/user';
+import { getItemPoint, getProfile } from '@/api/user';
+import { getImageSoucre } from '@/api/file';
+import { getAllDonations, getDonation } from '@/api/donation';
 
 
 const FORGROUND_LOCATION_PERIOD_SEC = 1;
@@ -57,8 +56,6 @@ export default function App() {
 
     const [locationActive, setForgroundLocationActive] = useState<boolean>(true);
 
-    const [playCircleAnimation, setPlayCircleAnimation] = useState<boolean>(false);
-
     const [showAdModal, setShowAdModal] = useState<boolean>(false);
     const [userInfo, setUserInfo] = useState<UserItem | null>(null);
     const [donationList, setDonationList] = useState<DonationItemMeta[]>([]);
@@ -73,10 +70,20 @@ export default function App() {
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
 
+    const onFetchError = async () => {
+        Alert.alert('에러가 발생했습니다.');
+        router.replace('/');
+    }
+
     const updatePageInfo = async () => {
-        const userInfo = await getMyProfile();
+        const userInfo = await getProfile({ myProfile: true });
+        const donations = await getAllDonations();
+        if (!userInfo || !donations) {
+            onFetchError();
+            return;
+        }
         setUserInfo(userInfo);
-        setDonationList(await repo.donations.getAllDonations());
+        setDonationList(donations);
     }
 
     useEffect(() => {
@@ -90,12 +97,6 @@ export default function App() {
             setHasToUpdate(false);
         });
     }, [hasToUpdate]);
-
-    useEffect(() => {
-        (async () => {
-            console.log("profile", await getProfile({ myProfile: true }));
-        })()
-    }, [])
 
 
 
@@ -124,7 +125,6 @@ export default function App() {
 
 
     const onItemPressed = (coords: MapCoordData) => {
-        setPlayCircleAnimation(true);
         setTargetItemPos(coords);
     }
 
@@ -193,8 +193,6 @@ export default function App() {
         setTimeout(() => {
             setTargetItemPos(itemPos);
         }, 1000);
-
-        setPlayCircleAnimation(true);
     }, [])
 
 
@@ -229,13 +227,13 @@ export default function App() {
             if (donationList.length === 0) return;
             const randomIndex = Math.floor(Math.random() * donationList.length);
             const donationId = donationList[randomIndex].id;
-            repo.donations.getDonation(donationId).then((donationInfo) => {
+            getDonation({ donationId }).then((donationInfo) => {
                 setSelectedDonation(donationInfo);
                 setShowAdModal(true);
             })
 
         } else {
-            getRewardPoint().then(() => {
+            getItemPoint({ point: 1 }).then(() => {
                 setHasToUpdate(true);
                 if (trackItemMode) {
                     setTargetRegionToNextItem();
@@ -312,6 +310,10 @@ export default function App() {
             }
         })();
 
+        return () => {
+            locationService.unRegisterForeground();
+            locationService.unRegisterBackground();
+        }
     }, []);
 
 
@@ -398,7 +400,7 @@ export default function App() {
 
             <View style={styles.profilecontainer}>
                 <UserIcon
-                    imgSource={userInfo && userInfo.thumbnailId ? { uri: userInfo.thumbnailId } : undefined}
+                    imgSource={userInfo && userInfo.thumbnailId ? getImageSoucre({ imageId: userInfo.thumbnailId }) : undefined}
                     message={"프로필"}
                     onPress={() => { router.push('/profile') }} />
             </View>
@@ -433,7 +435,7 @@ export default function App() {
 
                 {/* point display */}
                 <View style={styles.pointdisplay}>
-                    <PointDisplay pointAmount={userInfo ? userInfo.point : 0} displaySizeLevel={2} pointAnimationOption={1}></PointDisplay>
+                    <PointDisplay pointAmount={userInfo ? userInfo.point : 0} displaySizeLevel={2} pointAnimationOption={0}></PointDisplay>
                 </View>
 
                 {/* track item button */}
@@ -459,9 +461,6 @@ export default function App() {
 
             </View>
 
-            <View style={styles.circleanimcontainer}>
-                <CircleAnimation playAnimation={playCircleAnimation} setPlayAnimation={setPlayCircleAnimation} />
-            </View>
 
             <View style={styles.moveinfocontainer}>
                 <View style={styles.movecount}>
@@ -512,9 +511,6 @@ export default function App() {
 
 
 const styles = StyleSheet.create({
-    circleanimcontainer: {
-        justifyContent: 'center'
-    },
     map: {
         width: "100%",
         height: "100%",

@@ -1,11 +1,10 @@
 import { Modal, Text, TouchableOpacity, Image, View, StyleSheet, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { getFileSource, repo } from '@/localApi/main';
-import { DonationItem, DonationItemMeta, NO_DONATION } from '@/core/model';
+import { DonationItem, DonationItemMeta } from '@/core/model';
 import { adService } from '@/service/ad';
-import { participateDonation } from '@/localApi/user';
 import { DonationCard } from '@/components/donation/DonationCard';
+import { getDonation } from '@/api/donation';
 
 export function DonationUnit({ donationMetaInfo, onSelected }:
     { donationMetaInfo: DonationItemMeta, onSelected: (info: DonationItem) => void }) {
@@ -15,7 +14,7 @@ export function DonationUnit({ donationMetaInfo, onSelected }:
 
     useEffect(() => {
         (async () => {
-            const result = await repo.donations.getDonation(donationMetaInfo.id);
+            const result = await getDonation({ donationId: donationMetaInfo.id });
             setDonationInfo(result);
         })()
     }, [donationMetaInfo]);

@@ -1,15 +1,16 @@
 import { Modal, ScrollView, Image, TouchableOpacity, Text, View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
-import { getFileSource, repo } from '@/localApi/main';
-import { CouponItem, NO_COUPON, NO_USER, RewardItemMeta, UserItem } from '@/core/model';
+import { CouponItem, RewardItemMeta, UserItem } from '@/core/model';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import { getMyProfile, purchaseReward } from '@/localApi/user';
 import { PointDisplay } from '@/components/PointDisplay';
 import { ThemeButton } from '@/components/ThemeButton';
+import { extendCoupon, getAllRewards, perchaseReward } from '@/api/reward';
+import { getProfile } from '@/api/user';
+import { getImageSoucre } from '@/api/file';
 
 export default function ShopScreen() {
-    const [userInfo, setUserInfo] = useState<UserItem>(NO_USER)
+    const [userInfo, setUserInfo] = useState<UserItem | null>(null)
     const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
     const [couponModalVisible, setCouponModalVisible] = useState<boolean>(false);
     const [rewardList, setRewardList] = useState<RewardItemMeta[]>([]);
@@ -19,11 +20,19 @@ export default function ShopScreen() {
     const isFocused = useIsFocused();
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
+    const onFetchError = () => {
+        Alert.alert("에러가 발생했습니다.");
+        router.push('/map');
+    }
 
     const updatePageInfo = async () => {
-        const rewards = await repo.rewards.getAllRewards();
+        const rewards = await getAllRewards();
+        const userInfo = await getProfile({ myProfile: true });
+        if (!rewards || !userInfo) {
+            onFetchError();
+            return;
+        }
         setRewardList(rewards);
-        const userInfo = await getMyProfile();
         setUserInfo(userInfo);
     }
 
@@ -44,15 +53,15 @@ export default function ShopScreen() {
     const purchaseHandler = () => {
         (async () => {
             if (!selectedReward) return;
-            const couponInfo = await purchaseReward(selectedReward.id);
-            if (couponInfo !== NO_COUPON) {
+            const couponInfo = await perchaseReward({ rewardId: selectedReward.id });
+            if (couponInfo !== null) {
                 setSelectedCoupon(couponInfo);
                 setConfirmModalVisible(false);
                 setCouponModalVisible(true);
                 setHasToUpdate(true);
             } else {
                 setConfirmModalVisible(false);
-                Alert.alert("포인트가 부족합니다.");
+                Alert.alert("구매를 실패했어요.");
             }
         })()
     }
@@ -110,7 +119,7 @@ export default function ShopScreen() {
                             selectedReward ? <>
                                 {
                                     selectedReward.thumbnailId ? <Image
-                                        source={getFileSource(selectedReward.thumbnailId)}
+                                        source={getImageSoucre({ imageId: selectedReward.thumbnailId })}
                                         style={[styles.image_product, { resizeMode: 'contain' }]} />
                                         : <View style={styles.image_product} />
                                 }
@@ -132,28 +141,6 @@ export default function ShopScreen() {
                 </View>
             </Modal>
 
-            {/* <Modal
-                animationType="slide"
-                visible={couponModalVisible}
-                transparent={true}>
-                <TouchableOpacity onPress={() => { setCouponModalVisible(false) }}>
-                    <View style={styles.centeredView}>
-                        <View style={styles.modalView}>
-                            {
-                                selectedReward ? <>
-                                    <Image source={util.getFileSource(selectedReward.thumbnailId)}
-                                        style={[styles.image_coupon, { resizeMode: 'contain' }]} />
-                                    <Text style={styles.text_brand_modal}>{selectedReward.brandName}</Text>
-                                    <Text style={styles.text_product_modal}>{selectedReward.itemName}</Text>
-                                    <Image source={require("@/assets/images/barcode.png")}
-                                        style={[styles.image_barcode, { resizeMode: 'contain' }]} />
-                                </> : <></>
-                            }
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </Modal> */}
-
         </View>
     );
 }
@@ -166,9 +153,6 @@ const RewardItemCard = ({ setModalVisible, rewardInfo, setSelectedReward }:
     }
 ) => {
 
-
-    useEffect(() => {
-    }, []);
 
     const onPressModalOpen = () => {
         setSelectedReward(rewardInfo);
@@ -183,7 +167,7 @@ const RewardItemCard = ({ setModalVisible, rewardInfo, setSelectedReward }:
                 <View style={styles.box}>
                     {
                         rewardInfo.thumbnailId ? <Image
-                            source={getFileSource(rewardInfo.thumbnailId)}
+                            source={getImageSoucre({ imageId: rewardInfo.thumbnailId })}
                             style={[styles.image_product, { resizeMode: 'contain' }]} />
                             : <View style={styles.image_product} />
                     }

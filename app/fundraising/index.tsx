@@ -1,35 +1,45 @@
-import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
+import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { repo } from '@/localApi/main';
-import { DonationItem, DonationItemMeta, NO_DONATION, NO_USER, UserItem } from '@/core/model';
+import { DonationItem, DonationItemMeta, UserItem } from '@/core/model';
 import { adService } from '@/service/ad';
 import { useIsFocused } from '@react-navigation/native';
 import { DonationUnit } from '@/components/donation/DonationUnit';
-import { getMyProfile, participateDonation } from '@/localApi/user';
 import { PointDisplay } from '@/components/PointDisplay';
 import { DonationModal } from '@/components/donation/DonationModal';
+import { getProfile } from '@/api/user';
+import { router } from 'expo-router';
+import { getAllDonations } from '@/api/donation';
 
 
 export default function DonationScreen() {
     const [fundraisingList, setFundraisingList] = useState<DonationItemMeta[] | null>(null);
     const [userPoint, setUserPoint] = useState<number>(0);
-    const [selectedDonationInfo, setSelectedDonationInfo] = useState<DonationItem>(NO_DONATION);
+    const [selectedDonationInfo, setSelectedDonationInfo] = useState<DonationItem | null>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
 
 
     const isFocused = useIsFocused();
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
+    const onFetchError = () => {
+        Alert.alert('에러가 발생했습니다.');
+        router.push('/map');
+    }
 
     const updatePageInfo = async () => {
         if (!adService.isAdLoaded() && !adService.isAdOnLoading()) {
             adService.loadAd();
         }
-        const donationList = await repo.donations.getAllDonations();
+        const donationList = await getAllDonations();
+        const userInfo = await getProfile({ myProfile: true });
+        if (!donationList || !userInfo) {
+            onFetchError();
+            return;
+        }
         setFundraisingList(donationList);
-        const newPoint = (await getMyProfile()).point;
-        setUserPoint(newPoint);
+        setUserPoint(userInfo.point);
+        console.log(donationList);
     }
 
     useEffect(() => {
@@ -66,13 +76,13 @@ export default function DonationScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.pointdisplay}>
-                <PointDisplay pointAmount={userPoint} displaySizeLevel={2} pointAnimationOption={2}></PointDisplay>
+                <PointDisplay pointAmount={userPoint} displaySizeLevel={2} pointAnimationOption={0}></PointDisplay>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }} >
                 <View style={styles.donationcontainer}>
                     {
                         fundraisingList.map((fundraisingInfo, index) => {
-                            if (fundraisingInfo.currentPoint >= fundraisingInfo.targetPoint) {
+                            if (fundraisingInfo.currentPoint >= fundraisingInfo.totalPoint) {
                                 return <View key={index}></View>
                             }
                             return <DonationUnit
@@ -84,11 +94,13 @@ export default function DonationScreen() {
                     }
                 </View>
             </ScrollView>
-            <DonationModal modalVisible={modalVisible}
-                setModalVisible={setModalVisible}
-                donationInfo={selectedDonationInfo}
-                earnedHandler={earnedHandler}
-            ></DonationModal>
+            {
+                selectedDonationInfo && <DonationModal modalVisible={modalVisible}
+                    setModalVisible={setModalVisible}
+                    donationInfo={selectedDonationInfo}
+                    earnedHandler={earnedHandler}
+                ></DonationModal>
+            }
         </View>
     );
 }
@@ -98,7 +110,7 @@ const styles = StyleSheet.create({
     container: {
         position: 'relative',
         width: '100%',
-        backgroundColor: 'white'
+        backgroundColor: 'forestgreen'
     },
     donationcontainer: {
         justifyContent: 'center',

@@ -4,7 +4,7 @@ import { View, StyleSheet, Alert } from "react-native";
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router'
 import axios from 'axios';
-import { login } from "@/localApi/auth";
+import { login } from "@/utils/login";
 
 
 const REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!;
@@ -32,7 +32,16 @@ const KaKaoLogin = () => {
             })
 
             const { id_token } = res.data;
-            login({ idToken: id_token });
+            login({
+                idToken: id_token, onLoginFail: () => {
+                    Alert.alert('로그인에 실패했습니다.');
+                    router.replace('/');
+                }, onLoginSuccess: () => {
+                    router.replace('/map');
+                }, onNeedRegister: () => {
+                    router.push('/register');
+                }
+            });
         } catch (error) {
             Alert.alert('로그인에 실패했습니다.');
             router.replace('/');

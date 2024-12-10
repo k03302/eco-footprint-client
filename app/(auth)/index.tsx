@@ -5,10 +5,9 @@ import { router } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { KakaoLoginButton } from '@/components/auth/KakaoLoginButton';
-import { getIdToken, login } from '@/localApi/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initialize } from '@/localApi/main';
 import { KakaoLoginFakeButton } from '@/components/auth/KakaoLoginFakeButton';
+import { ThemeButton } from '@/components/ThemeButton';
+import { initializeTestData } from '@/api/test';
 
 LogBox.ignoreLogs(['Asyncstorage: ...']); // Ignore log notification by message
 LogBox.ignoreAllLogs(); //Ignore all log notifications
@@ -17,15 +16,7 @@ LogBox.ignoreAllLogs(); //Ignore all log notifications
 WebBrowser.maybeCompleteAuthSession();
 
 export default function App() {
-    useEffect(() => {
-        (async () => {
-            // if (await getIdToken()) {
-            //     router.replace('/map');
-            // }
-
-
-        })()
-    }, []);
+    const fakeIdToken = '123456';
 
     return (
 
@@ -37,13 +28,11 @@ export default function App() {
 
 
             <GoogleLoginButton />
-            {/* <KakaoLoginButton/> */}
-            <KakaoLoginFakeButton />
-
-            <Button title="init" onPress={() => {
-                initialize();
-            }}></Button>
-
+            <KakaoLoginButton />
+            <KakaoLoginFakeButton fakeIdToken={fakeIdToken} />
+            <ThemeButton title="initialize" onPress={() => {
+                initializeTestData({ userId: fakeIdToken, deleteUser: false });
+            }} />
         </View>
     );
 }

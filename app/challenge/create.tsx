@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, Image, TextInput, Text, View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
-import { createChallenge } from '@/localApi/challenge';
+import { createChallenge2 } from '@/api/challenge';
 
 
 const challengeTypeInfo: Record<string, { name: string, description: string }> = {
@@ -57,20 +57,27 @@ export default function ChallengeScreen() {
     const [challengeType, setChallengeType] = useState<string>('');
 
 
-
-    const handleSubmit = async () => {
-        if (challengeType === '') {
-            Alert.alert('챌린지 유형을 선택해주세요');
-            return;
-        }
-
+    const handleConfirm = async () => {
         const { name, description } = challengeTypeInfo[challengeType];
-        const challengeItem = await createChallenge(name, description);
+        const challengeItem = await createChallenge2({ name, description });
         if (challengeItem) {
             router.replace({ pathname: '/challenge/room/[id]', params: { id: challengeItem.id } });
         } else {
-            Alert.alert('챌린지 생성에 실패했어요.');
-            router.replace('/challenge');
+            Alert.alert('챌린지 개설에 실패했어요!');
+            router.back();
+        }
+    }
+
+    const handleSubmit = () => {
+        if (challengeType === '') {
+            Alert.alert('챌린지 유형을 선택해주세요');
+        } else {
+            Alert.alert('챌린지 개설에 50 리워드를 사용해요!', '', [{
+                text: '확인',
+                onPress: handleConfirm
+            }, {
+                text: '취소'
+            }]);
         }
     };
 

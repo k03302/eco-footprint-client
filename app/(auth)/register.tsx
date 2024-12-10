@@ -12,8 +12,8 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { register } from '@/localApi/auth';
 import { AsyncThemeButton } from '@/components/AsyncThemeButton';
+import { register } from '@/utils/login';
 
 export default function UserProfile() {
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -50,7 +50,18 @@ export default function UserProfile() {
             Alert.alert('썸네일을 선택해주세요');
             return;
         }
-        await register({ username: username, thumbnailUri: imageUri, useStoredToken: true })
+        await register({
+            username: username,
+            thumbnailUri: imageUri,
+            useStoredToken: true,
+            onRegisterSuccess: () => {
+                router.replace('/map');
+            },
+            onRegisterFail: () => {
+                Alert.alert("회원가입에 실패했습니다.");
+                router.replace('/');
+            }
+        })
     };
 
     return (

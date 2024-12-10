@@ -1,25 +1,59 @@
-import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView } from 'react-native';
+import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ChallengeItem, ChallengeItemMeta, UserItem } from '@/core/model';
-import { repo } from '@/localApi/main';
 import { useIsFocused } from '@react-navigation/native';
-import { getMyProfile } from '@/localApi/user';
 import { getDayDifference } from '@/utils/time';
+import { getProfile } from '@/api/user';
+import { getAllChallenges, getChallenge } from '@/api/challenge';
 
 export default function ChallengeScreen() {
-    const [participatedChallList, setParticipatedChallList] = useState<ChallengeItemMeta[]>([]);
-    const [allChallList, setAllChallList] = useState<ChallengeItemMeta[]>([]);
+    const [otherChallengeList, setOtherChallengeList] = useState<ChallengeItem[]>([]);
+    const [myChallengeList, setMyChallengeList] = useState<ChallengeItem[]>([]);
     const [myUserInfo, setMyUserInfo] = useState<UserItem | null>(null);
     const isFocused = useIsFocused();
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
+    const onFetchError = () => {
+        Alert.alert('');
+    }
 
     const updatePageInfo = async () => {
-        const userInfo = await getMyProfile();
+        const userInfo = await getProfile({ myProfile: true });
         setMyUserInfo(userInfo);
-        setParticipatedChallList(userInfo.challengeList);
-        setAllChallList(await repo.challenges.getAllChallenges());
+        if (!userInfo) {
+            onFetchError();
+            return;
+        }
+
+        const myChallenges = [];
+        const otherChallenges = [];
+        const allChallengeMetas = await getAllChallenges();
+        if (!allChallengeMetas) {
+            onFetchError();
+            return;
+        }
+
+        for (const challengeMeta of allChallengeMetas) {
+            const challenge = await getChallenge({ challengeId: challengeMeta.id });
+            if (!challenge) continue;
+
+            let participated = false;
+            for (const participant of challenge.participants) {
+                if (participant.id === userInfo.id) {
+                    participated = true;
+                }
+            }
+
+            if (participated) {
+                myChallenges.push(challenge);
+            } else {
+                otherChallenges.push(challenge);
+            }
+        }
+
+        setMyChallengeList(myChallengeList);
+        setOtherChallengeList(otherChallenges);
     }
 
     useEffect(() => {
@@ -38,12 +72,12 @@ export default function ChallengeScreen() {
         <View style={styles.container}>
             <ScrollView>
                 {
-                    participatedChallList.length > 0 ? (
+                    myChallengeList.length > 0 ? (
                         <View style={styles.challengecontainer}>
                             <Text style={{ fontSize: 15, marginTop: 10, marginLeft: 10 }}>현재 나의 참여 챌린지</Text>
                             {
-                                participatedChallList.map((challengeInfo, index) => <ChallengeCard
-                                    challengeMetaInfo={challengeInfo} key={index} isParticipated={true}>
+                                myChallengeList.map((challengeInfo, index) => <ChallengeCard
+                                    challengeInfo={challengeInfo} key={index} isParticipated={true}>
 
                                 </ChallengeCard>)
                             }
@@ -55,14 +89,9 @@ export default function ChallengeScreen() {
                 <View style={styles.challengecontainer}>
                     <Text style={{ fontSize: 15, marginTop: 10, marginLeft: 10 }}>참여할 수 있는 챌린지</Text>
                     {
-                        allChallList.length > 0 ? allChallList.map((challengeInfo, index) => {
-                            for (const myChallengeInfo of participatedChallList) {
-                                if (myChallengeInfo.id === challengeInfo.id) {
-                                    return <View key={index}></View>
-                                }
-                            }
+                        otherChallengeList.length > 0 ? otherChallengeList.map((challengeInfo, index) => {
                             return <ChallengeCard
-                                challengeMetaInfo={challengeInfo} key={index} isParticipated={false}></ChallengeCard>
+                                challengeInfo={challengeInfo} key={index} isParticipated={false}></ChallengeCard>
                         }
 
                         ) : <></>
@@ -79,22 +108,15 @@ export default function ChallengeScreen() {
     )
 }
 
-const ChallengeCard = ({ challengeMetaInfo, isParticipated: isRegistered }: { challengeMetaInfo: ChallengeItemMeta, isParticipated: boolean }) => {
-    const [challengeInfo, setChallengeInfo] = useState<ChallengeItem>();
+const ChallengeCard = ({ challengeInfo, isParticipated: isRegistered }: { challengeInfo: ChallengeItem, isParticipated: boolean }) => {
     const [datePassed, setDatePassed] = useState<boolean>(false);
+    const [dayLeft, setDayLeft] = useState<number>(0);
 
     useEffect(() => {
-        (async () => {
-            const result = await repo.challenges.getChallenge(challengeMetaInfo.id);
-            setChallengeInfo(result);
-
-            const currentTimestamp = Date.now();
-            const endTimestamp = new Date(result.dateEnd).getTime();
-            setDatePassed(currentTimestamp > endTimestamp);
-        })()
-    }, [])
-
-    if (!challengeInfo) return <></>
+        const diff = getDayDifference({ from: new Date(), to: challengeInfo.dateEnd });
+        setDayLeft(diff);
+        setDatePassed(diff < 0);
+    }, [challengeInfo])
 
     return (
         <View style={{ width: "95%" }} >
@@ -103,11 +125,11 @@ const ChallengeCard = ({ challengeMetaInfo, isParticipated: isRegistered }: { ch
                     if (datePassed) {
                         //router.push()
                     } else {
-                        router.push(`/challenge/room/${challengeMetaInfo.id}`)
+                        router.push(`/challenge/room/${challengeInfo.id}`)
                     }
                 } else {
                     if (!datePassed) {
-                        router.push(`/challenge/register/${challengeMetaInfo.id}`)
+                        router.push(`/challenge/register/${challengeInfo.id}`)
                     }
                 }
 
@@ -123,13 +145,13 @@ const ChallengeCard = ({ challengeMetaInfo, isParticipated: isRegistered }: { ch
                                 {datePassed ? '종료' : '진행중'}
                             </Text>
                         </View>
-                        <Text style={{ fontSize: 15, marginRight: 5 }}>{challengeMetaInfo.name}</Text>
+                        <Text style={{ fontSize: 15, marginRight: 5 }}>{challengeInfo.name}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', marginTop: 3, marginLeft: 20, }}>
                         <Text style={{ fontSize: 13 }}>함께하는 인원 </Text>
-                        <Text style={{ fontSize: 13 }}>{challengeMetaInfo.currentParticipants}/{challengeMetaInfo.totalParticipants}</Text>
+                        <Text style={{ fontSize: 13 }}>{challengeInfo.currentParticipants}/{challengeInfo.totalParticipants}</Text>
                         <Text>   </Text>
-                        <Text style={{ fontSize: 13, color: '#3E81A9' }}>마감 {getDayDifference(new Date(challengeMetaInfo.dateEnd), new Date())}일 전 </Text>
+                        <Text style={{ fontSize: 13, color: '#3E81A9' }}>마감 {dayLeft}일 전 </Text>
                         <Text>   </Text>
                     </View>
                 </View>

@@ -1,13 +1,12 @@
 import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { getFileSource } from '@/localApi/main';
 import { DonationItem } from '@/core/model';
 import { DonationCard } from '@/components/donation/DonationCard';
 import { adService } from '@/service/ad';
-import { participateDonation } from '@/localApi/user';
 import { ThemeButton } from '@/components/ThemeButton';
 import { useIsFocused } from '@react-navigation/native';
+import { participateDonation, participateDonation2 } from '@/api/donation';
 
 export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, onEarnReward = () => { }, onCancel = () => { } }
     : {
@@ -28,7 +27,7 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, on
 
     const closeAdHandler = (donationPoint = 0) => {
         if (adWatchFinished) {
-            participateDonation(donationInfo.id, donationPoint).then(() => {
+            participateDonation2({ donationId: donationInfo.id, rewardPoint: donationPoint }).then(() => {
                 onEarnReward();
             }).then(() => {
                 if (donationPoint > 0) {

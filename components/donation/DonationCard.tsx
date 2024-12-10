@@ -2,14 +2,14 @@ import { DonationItem } from "@/core/model";
 import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { getFileSource } from '@/localApi/main';
+import { getImageSoucre } from "@/api/file";
 
 export function DonationCard({ donationInfo }: { donationInfo: DonationItem }) {
     return (
         <View style={styles.frame}>
             <View style={styles.imageWrapper}>
                 <Image
-                    source={getFileSource(donationInfo.thumbnailId)}
+                    source={getImageSoucre({ imageId: donationInfo.thumbnailId })}
                     style={styles.image}
                 />
             </View>
@@ -18,7 +18,7 @@ export function DonationCard({ donationInfo }: { donationInfo: DonationItem }) {
                 <Text style={styles.description}>{donationInfo.name}</Text>
                 <View style={styles.progressBarContainer}>
                     <Progress.Bar
-                        progress={donationInfo.currentPoint / donationInfo.targetPoint}
+                        progress={donationInfo.currentPoint / donationInfo.totalPoint}
                         width={150}
                         height={25}
                         color="green"
@@ -26,13 +26,13 @@ export function DonationCard({ donationInfo }: { donationInfo: DonationItem }) {
                         borderWidth={0}
                         borderRadius={3}
                     />
-                    <Text style={{ marginLeft: 10 }}>{(100 * donationInfo.currentPoint / donationInfo.targetPoint).toFixed(0)}%</Text>
+                    <Text style={{ marginLeft: 10 }}>{(100 * donationInfo.currentPoint / donationInfo.totalPoint).toFixed(0)}%</Text>
                 </View>
                 <View style={styles.progressText}>
                     <Text style={{ alignItems: 'center' }}>
                         {donationInfo.currentPoint}
                         <Image source={require("@/assets/images/point.png")} style={{ width: 10, height: 10 }} />
-                        /{donationInfo.targetPoint}
+                        /{donationInfo.totalPoint}
                         <Image source={require("@/assets/images/point.png")} style={{ width: 10, height: 10 }} />
                     </Text>
                 </View>

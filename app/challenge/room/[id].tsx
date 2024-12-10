@@ -2,19 +2,18 @@ import { Modal, TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, Act
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
-import { ChallengeItem, ChallengeRecoordItem, UserItemMeta } from '@/core/model';
-import { getFileSource, repo } from '@/localApi/main';
+import { ChallengeItem, ChallengeRecordItem, UserItemMeta } from '@/core/model';
 import * as ImagePicker from 'expo-image-picker';
 import * as Progress from 'react-native-progress';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { HorizontalLine } from '@/components/HorizontalLine';
 import { ChallengeGallery } from '@/components/challenge/Gallery';
-import { getMyProfile } from '@/localApi/user';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
-import { setApproveProofShot, uploadProofShoot } from '@/localApi/challenge';
 import { getDayDifference } from '@/utils/time';
 import { ThemeButton } from '@/components/ThemeButton';
+import { getProfile } from '@/api/user';
+import { addChallengeRecord, getChallenge, setApproveState } from '@/api/challenge';
+import { getImageSoucre } from '@/api/file';
 
 const OBJECTIVE_POINT = 100;
 const TOTAL_CHALLENGE_DAY = 30;
@@ -24,13 +23,13 @@ export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
     const [totalPoint, setTotalPoint] = useState<number>(0);
 
-
+    const [dayLeft, setDayLeft] = useState<number>(0);
     const [showMyImageModal, setShowMyImageModal] = useState<boolean>(false);
     const [showMemImageModal, setShowMemImageModal] = useState<boolean>(false);
     const [showButton, setShowButton] = useState<boolean>(false);
     const [imgDate, setImgDate] = useState<Date | undefined>(undefined);
     const [memButtonTitle, setMemButtonTitle] = useState<string>('');
-    const [selectedMemRecoord, setSelectedMemRecoord] = useState<ChallengeRecoordItem | null>(null);
+    const [selectedMemRecord, setSelectedMemRecord] = useState<ChallengeRecordItem | null>(null);
     const [modalImage, setModalImage] = useState<ImageSourcePropType | undefined>(undefined);
 
 
@@ -43,33 +42,45 @@ export default function ChallengeScreen() {
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
 
+    const onFetchError = () => {
+        Alert.alert('에러가 발생했어요.');
+        router.push('/map');
+    }
+
     const updatePageInfo = async () => {
         // redirect to register page if user didn't registered to challenge
-        const userInfo = await getMyProfile();
+        const userInfo = await getProfile({ myProfile: true });
+        const challengeInfo = await getChallenge({ challengeId });
+        if (!userInfo || !challengeInfo) {
+            onFetchError();
+            return;
+        }
         setMyProfileInfo(userInfo);
+        setChallengeInfo(challengeInfo);
+        setDayLeft(getDayDifference({ from: new Date(), to: challengeInfo.dateEnd }));
+
         let participated = false;
-        if (userInfo) {
-            for (const myChallengeInfo of userInfo.challengeList) {
-                if (myChallengeInfo.id === challengeId) {
-                    participated = true;
-                }
+        for (const participant of challengeInfo.participants) {
+            if (participant.id = userInfo.id) {
+                participated = true;
+                break;
             }
         }
+
         if (!participated) {
             router.replace({ pathname: '/challenge/register/[id]', params: { id: challengeId } });
             return;
         }
 
-        const challengeInfo = await repo.challenges.getChallenge(challengeId);
-        setChallengeInfo(challengeInfo);
+
 
         let approvedCount = 0;
-        challengeInfo.participantsRecord.forEach((recoord) => {
-            if (recoord.approved) {
+        challengeInfo.participantsRecords.forEach((record) => {
+            if (record.approved) {
                 approvedCount += 1;
             }
         })
-        setTotalPoint(challengeInfo.participantsRecord.length + approvedCount);
+        setTotalPoint(challengeInfo.participantsRecords.length + approvedCount);
     }
 
     useEffect(() => {
@@ -102,26 +113,27 @@ export default function ChallengeScreen() {
         });
 
         if (!result.canceled) {
-            await uploadProofShoot(challengeId, result.assets[0].uri);
+            await addChallengeRecord({ challengeId: challengeId, imageUri: result.assets[0].uri });
         }
 
         setHasToUpdate(true);
         setShowMyImageModal(false);
     };
 
-    const toggleApproveState = async (recoord: ChallengeRecoordItem) => {
-        const newApprovedState = !recoord.approved;
-        await setApproveProofShot(challengeId, recoord.recordId, newApprovedState);
+    const toggleApproveState = async (record: ChallengeRecordItem) => {
+        const approved = !record.approved;
+        const recordId = record.id;
+        await setApproveState({ challengeId, recordId, approved });
         setHasToUpdate(true);
         setShowButton(false);
         setShowMyImageModal(false);
     }
 
 
-    const onMyTodayImagePress = (recoord?: ChallengeRecoordItem) => {
-        if (recoord) {
-            setModalImage(getFileSource(recoord.recordId));
-            setImgDate(new Date(recoord.uploadDate));
+    const onMyTodayImagePress = (record?: ChallengeRecordItem) => {
+        if (record) {
+            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setImgDate(new Date(record.date));
         } else {
             setModalImage(undefined);
             setImgDate(undefined);
@@ -130,26 +142,26 @@ export default function ChallengeScreen() {
         setShowButton(true);
     }
 
-    const onMemTodayImagePress = (recoord?: ChallengeRecoordItem) => {
-        if (recoord) {
-            setModalImage(getFileSource(recoord.recordId));
-            setImgDate(new Date(recoord.uploadDate));
+    const onMemTodayImagePress = (record?: ChallengeRecordItem) => {
+        if (record) {
+            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setImgDate(new Date(record.date));
             setShowButton(true);
-            setMemButtonTitle(recoord.approved ? '승인 해제하기' : '인증사진 승인하기');
-            setSelectedMemRecoord(recoord);
+            setMemButtonTitle(record.approved ? '승인 해제하기' : '인증사진 승인하기');
+            setSelectedMemRecord(record);
         } else {
             setModalImage(undefined);
             setImgDate(undefined);
             setShowButton(false);
-            setSelectedMemRecoord(null);
+            setSelectedMemRecord(null);
         }
         setShowMemImageModal(true);
     }
 
-    const onMyDatedImagePress = (recoord?: ChallengeRecoordItem) => {
-        if (recoord) {
-            setModalImage(getFileSource(recoord.recordId));
-            setImgDate(new Date(recoord.uploadDate));
+    const onMyDatedImagePress = (record?: ChallengeRecordItem) => {
+        if (record) {
+            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setImgDate(new Date(record.date));
         } else {
             setModalImage(undefined);
             setImgDate(undefined);
@@ -159,10 +171,10 @@ export default function ChallengeScreen() {
         setShowMyImageModal(true);
     }
 
-    const onMemDatedImagePress = (recoord?: ChallengeRecoordItem) => {
-        if (recoord) {
-            setModalImage(getFileSource(recoord.recordId));
-            setImgDate(new Date(recoord.uploadDate));
+    const onMemDatedImagePress = (record?: ChallengeRecordItem) => {
+        if (record) {
+            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setImgDate(new Date(record.date));
         } else {
             setModalImage(undefined);
             setImgDate(undefined);
@@ -210,7 +222,7 @@ export default function ChallengeScreen() {
                     <Text style={{ fontSize: 22, fontWeight: 'bold', margin: 20 }}>챌린지 마감기한</Text>
                     <View style={{ alignItems: 'center' }}>
                         <Progress.Bar
-                            progress={getDayDifference(new Date(), new Date(challengeInfo.dateStart)) / TOTAL_CHALLENGE_DAY}
+                            progress={(TOTAL_CHALLENGE_DAY - dayLeft) / TOTAL_CHALLENGE_DAY}
                             width={300}
                             height={30}
                             borderRadius={8}
@@ -221,12 +233,12 @@ export default function ChallengeScreen() {
                             unfilledColor='lightgray'
                         />
                     </View>
-                    <Text>챌린지 마감 {getDayDifference(new Date(), new Date(challengeInfo.dateStart))}일 전</Text>
+                    <Text>챌린지 마감 {dayLeft}일 전</Text>
                     <HorizontalLine />
                 </View>
                 <View style={styles.recordcontainer}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>나의 챌린지 기록</Text>
-                    <ChallengeGallery yes={true} userInfo={myProfileInfo} challengeInfo={challengeInfo}
+                    <ChallengeGallery userInfo={myProfileInfo} challengeInfo={challengeInfo}
                         onTodayImagePress={onMyTodayImagePress} onDatedImagePress={onMyDatedImagePress} />
                     <View style={{ alignItems: 'center' }}>
                         <ThemeButton title="오늘 챌린지 기록하기" onPress={takePhotoAndUpload}></ThemeButton>
@@ -241,7 +253,6 @@ export default function ChallengeScreen() {
                                 return <View key={participant.id + index}></View>
                             }
                             return <ChallengeGallery
-                                yes={false}
                                 userInfo={participant}
                                 challengeInfo={challengeInfo}
                                 onTodayImagePress={onMemTodayImagePress}
@@ -261,7 +272,7 @@ export default function ChallengeScreen() {
                 modalVisible={showMemImageModal}
                 setModalVisible={setShowMemImageModal} imgSource={modalImage}
                 buttonTitle={memButtonTitle} onPress={async () => {
-                    selectedMemRecoord && toggleApproveState(selectedMemRecoord);
+                    selectedMemRecord && toggleApproveState(selectedMemRecord);
                 }} showButton={showButton}
                 imgDate={imgDate} />
 

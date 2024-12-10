@@ -5,20 +5,21 @@ import { UserIcon } from '@/components/UserIcon';
 import { logout } from '@/utils/login';
 import { useIsFocused } from '@react-navigation/native';
 import { UserItem } from '@/core/model';
-import { getMyProfile } from '@/localApi/user';
-import { getFileSource } from '@/localApi/main';
+import { getProfile } from '@/api/user';
+import { getImageSoucre } from '@/api/file';
 
 
 export default function ProfileScreen() {
     const isFocused = useIsFocused();
     const [userInfo, setUserInfo] = useState<UserItem | null>(null);
+
     useEffect(() => {
         (async () => {
-            setUserInfo(await getMyProfile());
+            setUserInfo(await getProfile({ myProfile: true }));
         })()
-    }, [isFocused])
-    const logoutHandler = async () => {
+    }, [isFocused]);
 
+    const logoutHandler = async () => {
         await logout();
         router.replace('/');
     }
@@ -27,7 +28,7 @@ export default function ProfileScreen() {
         <View style={styles.container}>
             <View style={styles.row_profile}>
                 <UserIcon
-                    imgSource={userInfo && userInfo.thumbnailId ? { uri: userInfo.thumbnailId } : undefined}
+                    imgSource={userInfo && userInfo.thumbnailId ? getImageSoucre({ imageId: userInfo.thumbnailId }) : undefined}
                     message={userInfo ? userInfo.username : ""} />
             </View>
 

@@ -2,12 +2,12 @@ import { TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, ActivityIn
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ChallengeItem } from '@/core/model';
-import { getFileSource, repo } from '@/localApi/main';
 import { UserIcon } from '@/components/UserIcon';
 import { useIsFocused } from '@react-navigation/native';
-import { participateChallenge } from '@/localApi/challenge';
 import { HorizontalLine } from '@/components/HorizontalLine';
 import { ThemeButton } from '@/components/ThemeButton';
+import { getChallenge, participateChallenge } from '@/api/challenge';
+import { getImageSoucre } from '@/api/file';
 
 export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
@@ -18,7 +18,7 @@ export default function ChallengeScreen() {
 
 
     const updatePageInfo = async () => {
-        setChallengeInfo(await repo.challenges.getChallenge(challengeId));
+        setChallengeInfo(await getChallenge({ challengeId }));
     }
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export default function ChallengeScreen() {
 
 
     const participateChallengeHandler = async () => {
-        const success = await participateChallenge(challengeId);
+        const success = await participateChallenge({ challengeId });
         if (success) {
             router.push({ pathname: '/challenge/room/[id]', params: { id: challengeId } })
         } else {
@@ -63,7 +63,7 @@ export default function ChallengeScreen() {
                         {
                             challengeInfo.participants.map((participant, index) => <UserIcon
                                 key={index}
-                                imgSource={getFileSource(participant.thumbnailId)}
+                                imgSource={getImageSoucre({ imageId: participant.thumbnailId })}
                                 iconSize={1}
                                 message={participant.username}
                             >
