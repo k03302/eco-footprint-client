@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getIdToken } from './login';
+import { getIdTokenAsync } from './login';
 import * as FileSystem from 'expo-file-system';
 
 const apiRoot = process.env.EXPO_PUBLIC_SERVER_API!;
@@ -7,8 +7,7 @@ const apiRoot = process.env.EXPO_PUBLIC_SERVER_API!;
 export async function filePost(path: string, fileUri: string): Promise<any> {
 
     const fullPath = apiRoot + path;
-    const idToken = await getIdToken();
-    console.log("[filePost]", fullPath, idToken);
+    const idToken = await getIdTokenAsync();
 
     return FileSystem.uploadAsync(apiRoot + path, fileUri, {
         httpMethod: 'POST',
@@ -19,18 +18,18 @@ export async function filePost(path: string, fileUri: string): Promise<any> {
         }
     }).then(response => {
         const data = JSON.parse(response.body);
-        console.log("---->[response] success");
         return data;
     }).catch(error => {
-        console.log("---->[error]", error.status, error.message);
         return null;
     });
 }
 
-export async function axiosGet(path: string): Promise<any> {
+export async function axiosGet(path: string,
+    onSuccess: (data: any) => void = (data: any) => { },
+    onFail: (error: any) => void = (error: any) => { }
+): Promise<any> {
     const fullPath = apiRoot + path;
-    const idToken = await getIdToken();
-    console.log("[axiosGet]", fullPath, idToken);
+    const idToken = await getIdTokenAsync();
 
 
     return axios.get(fullPath, {
@@ -38,67 +37,81 @@ export async function axiosGet(path: string): Promise<any> {
             Authorization: 'Bearer ' + idToken
         }
     }).then(response => {
-        console.log(response.data);
-        return response.data;
+        const data = response.data;
+        onSuccess(data);
+        return data;
     }).catch(error => {
-        console.error(error.response.data.message, error.response.status);
+        onFail(error);
         return null;
     });
 }
 
-export async function axiosPost(path: string, body: any) {
+export async function axiosPost(path: string, body: any, params?: any,
+    onSuccess: (data: any) => void = (data: any) => { },
+    onFail: (error: any) => void = (error: any) => { }
+): Promise<any> {
     const fullPath = apiRoot + path;
-    const idToken = await getIdToken();
-    console.log("[axiosPost]", fullPath, idToken);
+    const idToken = await getIdTokenAsync();
 
-
-    return axios.post(fullPath, body, {
+    const axiosQuery = params ? axios.post(fullPath, body, {
+        headers: {
+            Authorization: 'Bearer ' + idToken
+        },
+        params
+    }) : axios.post(fullPath, body, {
         headers: {
             Authorization: 'Bearer ' + idToken
         }
-    }).then(response => {
-        console.log(response.data);
+    })
+
+    return axiosQuery.then(response => {
+        const data = response.data;
+        onSuccess(data);
         return response.data;
     }).catch(error => {
-        console.error(error.response.data.message, error.response.status);
+        onFail(error);
         return null;
     });
 }
 
-export async function axiosPut(path: string, body: any) {
+export async function axiosPut(path: string, body: any,
+    onSuccess: (data: any) => void = (data: any) => { },
+    onFail: (error: any) => void = (error: any) => { }
+): Promise<any> {
     const fullPath = apiRoot + path;
-    const idToken = await getIdToken();
-    console.log("[axiosPut]", fullPath, idToken);
-
+    const idToken = await getIdTokenAsync();
 
     return axios.put(fullPath, body, {
         headers: {
             Authorization: 'Bearer ' + idToken
         }
     }).then(response => {
-        console.log(response.data);
+        const data = response.data;
+        onSuccess(data);
         return response.data;
     }).catch(error => {
-        console.error(error.response.data.message, error.response.status);
+        onFail(error);
         return null;
     });
 }
 
-export async function axiosDelete(path: string) {
+export async function axiosDelete(path: string,
+    onSuccess: (data: any) => void = (data: any) => { },
+    onFail: (error: any) => void = (error: any) => { }
+): Promise<boolean> {
     const fullPath = apiRoot + path;
-    const idToken = await getIdToken();
-    console.log("[axiosDelete]", fullPath, idToken);
+    const idToken = await getIdTokenAsync();
 
-
-    return axios.get(fullPath, {
+    return axios.delete(fullPath, {
         headers: {
             Authorization: 'Bearer ' + idToken
         }
     }).then(response => {
-        console.log(response.data);
+        const data = response.data;
+        onSuccess(data);
         return response.data;
     }).catch(error => {
-        console.error(error.response.data.message, error.response.status);
-        return null;
+        onFail(error);
+        return false;
     });
 }
