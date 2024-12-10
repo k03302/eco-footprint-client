@@ -19,7 +19,6 @@ export function PointDisplay({ pointAmount = 0, displaySizeLevel, pointAnimation
     const iconSize = (displaySizeLevel === PointDisplaySizeLevel.BIG) ? 25 : 15;
     const fontSize = (displaySizeLevel === PointDisplaySizeLevel.BIG) ? 18 : 15;
 
-    const [isFirst, setIsFirst] = useState<boolean>(true);
     const [currentPoint, setCurrentPoint] = useState<number>(0);
     const [pointDiff, setPointDiff] = useState<number>(0);
 
@@ -32,11 +31,6 @@ export function PointDisplay({ pointAmount = 0, displaySizeLevel, pointAnimation
         setPointDiff(diff);
         setCurrentPoint(pointAmount);
 
-        const first = isFirst;
-        console.log("first", first, pointAmount);
-
-        setIsFirst(false);
-        if (first) return;
         if (diff === 0) return;
         if (pointAnimationOption === PointAnimationOption.NONE) return;
 
