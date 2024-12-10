@@ -12,6 +12,7 @@ let backgroundCallback: (coords: MapCoordData) => void = (coords: MapCoordData) 
 let foregroundActive: boolean = false;
 
 class LocationService {
+    private foregroundSubscription: Location.LocationSubscription | null = null;
     private foregroundUpdated: boolean = false;
     private onActiveChange: (active: boolean) => void = (active: boolean) => { };
 
@@ -30,7 +31,7 @@ class LocationService {
     }
 
     async registerForeground(callback: (coords: MapCoordData) => void, periodSec: number) {
-        Location.watchPositionAsync({
+        this.foregroundSubscription = await Location.watchPositionAsync({
             accuracy: Location.Accuracy.High,
             timeInterval: periodSec * 1000,
             distanceInterval: 1,
@@ -49,6 +50,12 @@ class LocationService {
         }, periodSec * 1000 * 2);
     }
 
+    unRegisterForeground() {
+        if (this.foregroundSubscription) {
+            this.foregroundSubscription.remove();
+        }
+    }
+
     async registerBackground(callback: (coords: MapCoordData) => void, periodSec: number) {
         backgroundCallback = callback;
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
@@ -56,6 +63,10 @@ class LocationService {
             distanceInterval: 50, // minimum change in meters to report
             timeInterval: periodSec * 1000, // minimum interval in milliseconds
         });
+    }
+
+    unRegisterBackground() {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
 
 

@@ -6,7 +6,7 @@ import {
 } from 'react-native-google-mobile-ads';
 
 
-const adUnitId: string = TestIds.REWARDED || process.env.EXPO_PUBLIC_ADMOB_REWARDED_AD_KEY!;
+const adUnitId: string = process.env.EXPO_PUBLIC_ADMOB_REWARDED_AD_KEY!;
 
 class AdService {
     private rewarded: RewardedAd | null = null;
