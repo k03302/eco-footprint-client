@@ -6,7 +6,7 @@ import { logout } from '@/utils/login';
 import { useIsFocused } from '@react-navigation/native';
 import { UserItem } from '@/core/model';
 import { getProfile } from '@/api/user';
-import { getImageSoucre } from '@/api/file';
+import { getImageSource } from '@/api/file';
 
 
 export default function ProfileScreen() {
@@ -15,7 +15,9 @@ export default function ProfileScreen() {
 
     useEffect(() => {
         (async () => {
-            setUserInfo(await getProfile({ myProfile: true }));
+            const info = await getProfile({ myProfile: true });
+            console.log(info);
+            setUserInfo(info);
         })()
     }, [isFocused]);
 
@@ -28,7 +30,7 @@ export default function ProfileScreen() {
         <View style={styles.container}>
             <View style={styles.row_profile}>
                 <UserIcon
-                    imgSource={userInfo && userInfo.thumbnailId ? getImageSoucre({ imageId: userInfo.thumbnailId }) : undefined}
+                    imgSource={userInfo && userInfo.thumbnailId ? getImageSource({ imageId: userInfo.thumbnailId }) : undefined}
                     message={userInfo ? userInfo.username : ""} />
             </View>
 

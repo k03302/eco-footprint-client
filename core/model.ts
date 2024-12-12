@@ -36,7 +36,7 @@ export type ChallengeItemMeta = {
     name: string;
     totalParticipants: number;
     currentParticipants: number;
-    dateEnd: Date;
+    dateEnd: string;
 }
 
 export type ChallengeRecordItem = {
@@ -95,11 +95,11 @@ export type ChallengeItem = {
     name: string;
     totalParticipants: number;
     currentParticipants: number;
-    createdAt: string;
+    createdAt?: string;
     participants: UserItemMeta[];
-    participantsRecords: ChallengeRecordItem[];
-    dateStart: Date;
-    dateEnd: Date;
+    participantRecords: ChallengeRecordItem[];
+    dateStart?: string;
+    dateEnd: string;
     description: string;
     state: ItemState;
 }

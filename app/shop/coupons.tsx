@@ -5,7 +5,7 @@ import { CouponItem, CouponItemMeta, RewardItem } from '@/core/model';
 import { useIsFocused } from '@react-navigation/native';
 import { PointDisplay } from '@/components/PointDisplay';
 import { getProfile } from '@/api/user';
-import { getImageSoucre } from '@/api/file';
+import { getImageSource } from '@/api/file';
 import { extendCoupon } from '@/api/reward';
 
 export default function CouponScreen() {
@@ -16,7 +16,7 @@ export default function CouponScreen() {
 
     const onFetchError = () => {
         Alert.alert("에러가 발생했습니다.");
-        router.push('/map');
+        router.back();
     }
 
 
@@ -68,7 +68,7 @@ export default function CouponScreen() {
                             {
                                 selectedCouponMeta ? <>
                                     <Image
-                                        source={getImageSoucre({ imageId: selectedCouponMeta.thumbnailId })}
+                                        source={getImageSource({ imageId: selectedCouponMeta.thumbnailId })}
                                         style={[styles.image_coupon, { resizeMode: 'contain' }]} />
                                 </> : <></>
                             }
@@ -99,7 +99,7 @@ const CouponItemCard = ({ setModalVisible, couponInfoMeta, setSelectedCoupon }:
             <TouchableOpacity onPress={onPressModalOpen}>
                 <View style={styles.box}>
                     <Image
-                        source={getImageSoucre({ imageId: couponInfoMeta.thumbnailId })}
+                        source={getImageSource({ imageId: couponInfoMeta.thumbnailId })}
                         style={[styles.image_product, { resizeMode: 'contain' }]} />
                     <Text style={styles.text_brand}>{couponInfoMeta.brandName}</Text>
                     <Text style={styles.text_product}>{couponInfoMeta.itemName}</Text>

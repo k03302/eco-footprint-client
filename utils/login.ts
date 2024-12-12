@@ -13,7 +13,7 @@ let idTokenCache: string | null = null;
 let userIdCache: string | null = null;
 
 
-const apiRoot = process.env.EXPO_PUBLIC_SERVER_API!;
+const apiRoot = "https://eccofootprint.com/api";
 const registerUrl = apiRoot + 'user/register';
 const updateUserUrl = apiRoot + 'user/profile/';
 const uploadFileUrl = apiRoot + 'file/create';
@@ -39,9 +39,9 @@ export async function login(
     // useStoredToken 값에 따라 저장된 값을 가져오거나 idToken값을 사용
     const token = useStoredToken ? await getIdTokenAsync() : idToken;
     if (!token) {
-        // Alert.alert("로그인에 실패했습니다.");
+        Alert.alert("로그인에 실패했습니다. 토큰 없음");
         // router.replace('/');
-        onLoginFail();
+        //onLoginFail();
         return;
     }
 
@@ -80,9 +80,9 @@ export async function login(
                 });
 
         } else {
-            // Alert.alert("로그인에 실패했습니다.");
+            Alert.alert("로그인에 실패했습니다." + registerUrl + error.response.message + error.response.status + token);
             // router.replace('/');
-            onLoginFail();
+            //onLoginFail();
         }
     });
 }

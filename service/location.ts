@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { MapCoordData } from './map';
+import { Alert } from 'react-native';
 
 
 
@@ -17,13 +18,33 @@ class LocationService {
     private onActiveChange: (active: boolean) => void = (active: boolean) => { };
 
     async getPermission() {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return false;
+        const { status: statusForeground } = await Location.getForegroundPermissionsAsync();
+        console.log(statusForeground);
+        const { status: statusBackground } = await Location.getBackgroundPermissionsAsync();
+        console.log(statusForeground, statusBackground);
+        if (statusForeground === 'granted' && statusBackground === 'granted') return true;
 
-        const backgroundStatus = await Location.requestBackgroundPermissionsAsync();
-        if (backgroundStatus.status !== 'granted') return false;
+        return new Promise<boolean>((resolve, reject) => {
 
-        return true;
+            Alert.alert("지도 기능을 사용하기 위해 위치 기능을 활성화해주세요", "", [
+                {
+                    text: "확인",
+                    onPress: async () => {
+                        const { status } = await Location.requestForegroundPermissionsAsync();
+                        console.log('0');
+                        if (status !== 'granted') resolve(false);
+                        console.log('1');
+                        const backgroundStatus = await Location.requestBackgroundPermissionsAsync();
+                        console.log('2');
+                        if (backgroundStatus.status !== 'granted') resolve(false);
+
+                        resolve(true);
+                    }
+                }, {
+                    text: "앱 종료"
+                }
+            ])
+        })
     }
 
     registerOnActiveChange(callback: (active: boolean) => void) {

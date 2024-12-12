@@ -3,7 +3,7 @@ import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/ax
 import { getUserId, getUserIdAsync } from '@/utils/login';
 import * as Crypto from 'expo-crypto';
 
-const secret = process.env.EXPO_PUBLIC_SECRET! || 'secret';
+const secret = 'secret';
 
 export async function getProfile(
     { myProfile = false, userId = "" }:
@@ -50,17 +50,17 @@ export async function getItemPoint(
 
 }
 
-export async function getItemPoint2(
-    { point }:
-        { point: number }
-): Promise<UserItem | null> {
-    return updateProfile({
-        myProfile: true, update: (userInfo: UserItem) => {
-            userInfo.point += point;
-            return userInfo;
-        }
-    })
-}
+// export async function getItemPoint2(
+//     { point }:
+//         { point: number }
+// ): Promise<UserItem | null> {
+//     return updateProfile({
+//         myProfile: true, update: (userInfo: UserItem) => {
+//             userInfo.point += point;
+//             return userInfo;
+//         }
+//     })
+// }
 
 export async function deleteProfile(
     { myProfile = false, userId = "" }:

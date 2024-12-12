@@ -5,10 +5,13 @@ import { UserIcon } from "../UserIcon"
 import { hasDatePassed } from "@/utils/time"
 import { memo, useEffect, useState } from "react"
 import * as Progress from 'react-native-progress';
+import { getImageSource } from "@/api/file"
 
 const IMAGE_SIZE = 75;
-const OBJECTIVE_POINT = 100;
-const MIN_BLANK_COUNT = 5;
+const OBJECTIVE_CREDIT = 100;
+const MIN_CREDIT_FOR_REWARD = 30;
+const DEFAULT_REWARD = 600;
+const REWARD_PER_CREDIT = 10;
 
 export const GalleryBlankImage = ({ imgSize }: { imgSize: number }) => {
     return (<View
@@ -82,9 +85,10 @@ const _ChallengeGallery = ({ userInfo, challengeInfo, onTodayImagePress = () => 
     const [credit, setCredit] = useState<number>(0);
 
     useEffect(() => {
+
         let approvedCount = 0;
 
-        const challengeRecords = challengeInfo.participantsRecords;
+        const challengeRecords = challengeInfo.participantRecords || [];
         const myRecords = challengeRecords.filter((record) => {
             const isMine = record.userId === userInfo.id;
             if (isMine) {
@@ -96,35 +100,44 @@ const _ChallengeGallery = ({ userInfo, challengeInfo, onTodayImagePress = () => 
         })
 
         const sortedRecords = myRecords.sort((a, b) => {
-            return new Date(b.date).getTime() - new Date(a.date).getTime();
+            const first = new Date(a.date);
+            const next = new Date(b.date);
+            return new Date(next).getTime() - new Date(first).getTime();
         })
         setMyGalleryList(sortedRecords);
 
         setCredit(myRecords.length + approvedCount);
+
+        console.log(challengeInfo !== null, challengeInfo.participantRecords);
     }, [userInfo, challengeInfo]);
 
-    function getImageSource(arg0: {}): ImageSourcePropType | undefined {
-        throw new Error("Function not implemented.")
-    }
+
 
     return (
         <View>
-            <View style={{ marginBottom: 10, justifyContent: 'center', flexDirection: 'row' }}>
+            <View style={{ marginBottom: 10, justifyContent: 'center', flexDirection: 'column' }}>
                 <UserIcon message={userInfo.username}
                     iconSize={1}
                     imgSource={userInfo.thumbnailId ? getImageSource({ imageId: userInfo.thumbnailId }) : undefined}
                 />
-                <View style={{ marginRight: 30, justifyContent: 'center' }}>
-                    <Text>챌린지 기여도</Text>
-                    <Progress.Bar
-                        progress={credit / OBJECTIVE_POINT}
-                        width={200}
-                        height={10}
-                        color="#849C6A"
-                        style={styles.progressBar}
-                        borderWidth={0}
-                        unfilledColor='lightgray'
-                    />
+                <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
+                    <Text>챌린지 기여</Text>
+                    <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>{credit}</Text>
+                </View>
+                <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
+                    <Text>포인트를 받기 위해 남은 기여</Text>
+                    <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>
+                        {
+                            Math.max(MIN_CREDIT_FOR_REWARD - credit, 0)
+                        }
+                    </Text>
+                </View>
+                <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
+                    <Text>받을 포인트</Text>
+                    <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>
+                        {credit >= MIN_CREDIT_FOR_REWARD ? DEFAULT_REWARD + credit * REWARD_PER_CREDIT : 0}
+                    </Text>
+                    <Image source={require("@/assets/images/point.png")} style={{ width: 10, height: 10, marginTop: 5 }} />
                 </View>
             </View>
             <View style={{ flexDirection: 'row', backgroundColor: 'ghostwhite', padding: 8, borderRadius: 10 }}>
@@ -136,43 +149,38 @@ const _ChallengeGallery = ({ userInfo, challengeInfo, onTodayImagePress = () => 
                             }}
                             imgSize={IMAGE_SIZE}
                             isApproved={false}
-                            key={'a'}
-                        /> : <></>
+                            key={1000}
+                        /> : (
+                            !hasDatePassed(new Date(myGalleryList[0].date)) ? <ChallengeImageToday
+                                onPress={() => {
+                                    onTodayImagePress(myGalleryList[0])
+                                }}
+                                imgSize={IMAGE_SIZE}
+                                isApproved={myGalleryList[0].approved}
+                                imgSource={getImageSource({ imageId: myGalleryList[0].imageId })}
+                                key={0}
+                            /> : <>
+                                <ChallengeImageToday
+                                    onPress={() => {
+                                        onTodayImagePress()
+                                    }}
+                                    imgSize={IMAGE_SIZE}
+                                    isApproved={false}
+                                    key={-1}
+                                />
+                                <ChallengeImageDated
+                                    onPress={() => {
+                                        onDatedImagePress(myGalleryList[0])
+                                    }}
+                                    imgSize={IMAGE_SIZE}
+                                    imgSource={getImageSource({ imageId: myGalleryList[0].imageId }) || require('@/assets/images/empty.png')}
+                                    isApproved={myGalleryList[0].approved}
+                                    key={0} />
+                            </>
+                        )
                     }
                     {
-                        myGalleryList.map((record, index) => {
-                            if (index === 0) {
-                                if (!hasDatePassed(new Date(myGalleryList[0].date))) {
-                                    return (<ChallengeImageToday
-                                        onPress={() => {
-                                            onTodayImagePress(myGalleryList[0])
-                                        }}
-                                        imgSize={IMAGE_SIZE}
-                                        isApproved={myGalleryList[0].approved}
-                                        imgSource={getImageSource(myGalleryList[0].imageId)}
-                                        key={'b' + index}
-                                    />)
-                                } else {
-                                    return (<>
-                                        <ChallengeImageToday
-                                            onPress={() => {
-                                                onTodayImagePress()
-                                            }}
-                                            imgSize={IMAGE_SIZE}
-                                            isApproved={false}
-                                            key={'c' + index}
-                                        />
-                                        <ChallengeImageDated
-                                            onPress={() => {
-                                                onDatedImagePress(record)
-                                            }}
-                                            imgSize={IMAGE_SIZE}
-                                            imgSource={getImageSource({ imageId: record.imageId }) || require('@/assets/images/empty.png')}
-                                            isApproved={record.approved}
-                                            key={'d' + index} />
-                                    </>)
-                                }
-                            }
+                        myGalleryList.slice(1, myGalleryList.length).map((record, index) => {
                             return <ChallengeImageDated
                                 onPress={() => {
                                     onDatedImagePress(record)
@@ -180,14 +188,10 @@ const _ChallengeGallery = ({ userInfo, challengeInfo, onTodayImagePress = () => 
                                 imgSize={IMAGE_SIZE}
                                 imgSource={getImageSource({ imageId: record.imageId }) || require('@/assets/images/empty.png')}
                                 isApproved={record.approved}
-                                key={'e' + index} />
+                                key={index} />
                         })
                     }
-                    {
-                        myGalleryList.length < MIN_BLANK_COUNT ? [...Array(MIN_BLANK_COUNT - myGalleryList.length)].map(i => {
-                            return <GalleryBlankImage imgSize={IMAGE_SIZE} key={i}></GalleryBlankImage>
-                        }) : <></>
-                    }
+
                 </ScrollView>
             </View>
         </View>

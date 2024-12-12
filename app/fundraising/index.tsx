@@ -16,15 +16,16 @@ export default function DonationScreen() {
     const [fundraisingList, setFundraisingList] = useState<DonationItemMeta[] | null>(null);
     const [userPoint, setUserPoint] = useState<number>(0);
     const [selectedDonationInfo, setSelectedDonationInfo] = useState<DonationItem | null>(null);
+    const [earnedDonationInfo, setEarnedDonationInfo] = useState<DonationItem | null>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
-
+    const [active, setActive] = useState<boolean>(true);
 
     const isFocused = useIsFocused();
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
     const onFetchError = () => {
         Alert.alert('에러가 발생했습니다.');
-        router.push('/map');
+        router.back();
     }
 
     const updatePageInfo = async () => {
@@ -39,7 +40,6 @@ export default function DonationScreen() {
         }
         setFundraisingList(donationList);
         setUserPoint(userInfo.point);
-        console.log(donationList);
     }
 
     useEffect(() => {
@@ -62,6 +62,7 @@ export default function DonationScreen() {
 
     const earnedHandler = () => {
         console.log('earned');
+        setActive(false);
         setHasToUpdate(true);
     }
 
@@ -89,6 +90,8 @@ export default function DonationScreen() {
                                 donationMetaInfo={fundraisingInfo}
                                 key={index}
                                 onSelected={onDonationSelected}
+                                active={active}
+                                setActive={setActive}
                             ></DonationUnit>
                         })
                     }

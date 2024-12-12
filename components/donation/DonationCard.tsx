@@ -2,15 +2,18 @@ import { DonationItem } from "@/core/model";
 import { Modal, Text, TouchableOpacity, ImageBackground, ScrollView, Image, View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from "react";
 import * as Progress from 'react-native-progress';
-import { getImageSoucre } from "@/api/file";
+import { getImageSource } from "@/api/file";
 
-export function DonationCard({ donationInfo }: { donationInfo: DonationItem }) {
+export function DonationCard({ donationInfo, waiting = false }: { donationInfo: DonationItem, waiting?: boolean }) {
     return (
         <View style={styles.frame}>
             <View style={styles.imageWrapper}>
+                {
+                    waiting && <ActivityIndicator size='large' style={{ alignSelf: 'center', position: 'absolute', zIndex: 10 }} />
+                }
                 <Image
-                    source={getImageSoucre({ imageId: donationInfo.thumbnailId })}
-                    style={styles.image}
+                    source={getImageSource({ imageId: donationInfo.thumbnailId })}
+                    style={[styles.image, { tintColor: waiting ? 'lightgray' : undefined }]}
                 />
             </View>
 
@@ -60,6 +63,7 @@ const styles = StyleSheet.create({
         height: '75%',
         borderRadius: 20,
         overflow: 'hidden',
+        justifyContent: 'center'
     },
     image: {
         width: '100%',

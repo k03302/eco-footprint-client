@@ -19,12 +19,13 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
 
 
 
+
     const viewAdHandler = () => {
         adService.showAd();
     }
     const closeAdHandler = () => {
         if (adWatchFinished) {
-            participateDonation2({ donationId: donationInfo.id, rewardPoint: 10 }).then(() => {
+            participateDonation({ donationId: donationInfo.id, rewardPoint: 10 }).then(() => {
                 earnedHandler();
             })
         }

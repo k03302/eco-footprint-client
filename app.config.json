@@ -1,10 +1,10 @@
 {
     "expo": {
-        "name": "client",
+        "name": "환경발자국",
         "slug": "client",
         "version": "1.0.0",
         "orientation": "portrait",
-        "icon": "./assets/images/icon.png",
+        "icon": "./assets/images/icon_2.png",
         "scheme": "myapp",
         "userInterfaceStyle": "automatic",
         "jsEngine": "hermes",
@@ -18,11 +18,12 @@
             "bundleIdentifier": "com.jobgrass.client"
         },
         "android": {
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/images/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
-            },
-            "package": "com.jobgrass.client"
+            "package": "com.jobgrass.client",
+            "config": {
+                "googleMaps": {
+                    "apiKey": "AIzaSyAZFt0qhnszhyMTFMfYqrj7sS0-wKAUXUo"
+                }
+            }
         },
         "web": {
             "bundler": "metro",
@@ -39,7 +40,13 @@
         },
         "plugins": [
             "expo-build-properties",
-            "react-native-google-mobile-ads"
+            "react-native-google-mobile-ads",
+            [
+                "expo-location",
+                {
+                    "isAndroidBackgroundLocationEnabled": true
+                }
+            ]
         ],
         "androidNavigationBar": {
             "visible": "sticky-immersive"

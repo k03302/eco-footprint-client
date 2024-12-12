@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, TouchableOpacity, Image, StyleSheet, View, Pressable, LogBox } from 'react-native';
+import { Button, TouchableOpacity, Image, StyleSheet, View, Pressable, LogBox, Alert } from 'react-native';
 import { router } from 'expo-router'
 
 import * as WebBrowser from 'expo-web-browser';
@@ -8,6 +8,7 @@ import { KakaoLoginButton } from '@/components/auth/KakaoLoginButton';
 import { KakaoLoginFakeButton } from '@/components/auth/KakaoLoginFakeButton';
 import { ThemeButton } from '@/components/ThemeButton';
 import { initializeTestData } from '@/api/test';
+import { login } from '@/utils/login';
 
 LogBox.ignoreLogs(['Asyncstorage: ...']); // Ignore log notification by message
 LogBox.ignoreAllLogs(); //Ignore all log notifications
@@ -15,8 +16,10 @@ LogBox.ignoreAllLogs(); //Ignore all log notifications
 // Allows deep linking to function properly in Expo Go
 WebBrowser.maybeCompleteAuthSession();
 
+
+
 export default function App() {
-    const fakeIdToken = '123456';
+    const fakeIdToken = 'eyJraWQi';
 
     return (
 
@@ -25,9 +28,6 @@ export default function App() {
                 style={[styles.image_icon, { resizeMode: 'contain' }]} />
             <Image source={require("@/assets/images/line_login.png")}
                 style={[styles.image_line_login, { resizeMode: 'contain' }]} />
-
-
-            <GoogleLoginButton />
             <KakaoLoginButton />
             <KakaoLoginFakeButton fakeIdToken={fakeIdToken} />
             <ThemeButton title="initialize" onPress={() => {

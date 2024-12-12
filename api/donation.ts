@@ -1,7 +1,7 @@
 import { DonationItem, UserItem } from '@/core/model';
 import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/axios';
 import { getUserId, getUserIdAsync } from '@/utils/login';
-import { updateProfile } from './user';
+import { getItemPoint } from './user';
 
 export async function createDonation(
     { donationItem }:
@@ -29,7 +29,7 @@ export async function updateDonation({ donationId, update }: {
     const donationInfo = await getDonation({ donationId });
     if (!donationInfo) return null;
     const updatedInfo = update(donationInfo);
-    return axiosPut('donation/' + donationId + '/update', updatedInfo);
+    return axiosPut('donation/' + donationId + '/update', updatedInfo, () => { }, error => { console.log(error.response.message, error.response.status) });
 }
 
 export async function deleteDonation(
@@ -44,9 +44,12 @@ export async function participateDonation(
         { donationId: string, rewardPoint: number }
 ): Promise<DonationItem | null> {
     const userId = getUserId();
+    // await axiosPost('ssv/verify', null, {
+
+    // }, (data) => { console.log("ssv success") }, (error) => { console.log(error.response.message, error.response.status, "ssv error") });
     return axiosPost(`donation/${donationId}/participate/${userId}`, null, { rewardPoint },
         (data) => { console.log(`donation/${donationId}/participate/${userId}`, data) },
-        (error) => { console.error(`donation/${donationId}/participate/${userId}`, error) }
+        (error) => { console.log(`donation/${donationId}/participate/${userId}`, error) }
     );
 }
 
@@ -61,14 +64,10 @@ export async function participateDonation2(
         }
     })
 
+    console.log(donationUpdate);
 
 
-    const upserUpdate = await updateProfile({
-        myProfile: true, update: (userInfo: UserItem) => {
-            userInfo.point += rewardPoint;
-            return userInfo;
-        }
-    });
+    const update = await getItemPoint({ point: rewardPoint })
 
     return donationUpdate;
 }

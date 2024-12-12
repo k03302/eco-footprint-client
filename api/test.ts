@@ -3,10 +3,14 @@ import { DonationItem, UserItem } from "@/core/model";
 import { deleteProfile, getProfile, updateProfile } from "@/api/user";
 import { deleteImage } from "@/api/file";
 import { login } from "@/utils/login";
+import { getAllChallenges } from "./challenge";
 
 
 export async function initializeTestData({ userId, deleteUser }: { userId: string, deleteUser: boolean }) {
     await login({ idToken: userId });
+
+    const challenges = await getAllChallenges();
+
 
     const userInfo = await getProfile({ userId });
     if (deleteUser) {

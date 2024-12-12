@@ -7,7 +7,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { HorizontalLine } from '@/components/HorizontalLine';
 import { ThemeButton } from '@/components/ThemeButton';
 import { getChallenge, participateChallenge } from '@/api/challenge';
-import { getImageSoucre } from '@/api/file';
+import { getImageSource } from '@/api/file';
 
 export default function ChallengeScreen() {
     const challengeId = useLocalSearchParams().id as string;
@@ -34,14 +34,23 @@ export default function ChallengeScreen() {
     }, [hasToUpdate]);
 
 
-    const participateChallengeHandler = async () => {
+    const onParticipate = async () => {
         const success = await participateChallenge({ challengeId });
         if (success) {
             router.push({ pathname: '/challenge/room/[id]', params: { id: challengeId } })
         } else {
-            Alert.alert('잘못된 요청입니다.');
-            router.push('/challenge');
+            Alert.alert('챌린지 참여에 실패했어요');
+            router.back();
         }
+    }
+
+    const buttonPressHandler = () => {
+        Alert.alert('챌린지 참여에 50 리워드가 필요해요!', '', [{
+            text: '확인',
+            onPress: onParticipate
+        }, {
+            text: '취소'
+        }]);
     }
 
 
@@ -63,7 +72,7 @@ export default function ChallengeScreen() {
                         {
                             challengeInfo.participants.map((participant, index) => <UserIcon
                                 key={index}
-                                imgSource={getImageSoucre({ imageId: participant.thumbnailId })}
+                                imgSource={getImageSource({ imageId: participant.thumbnailId })}
                                 iconSize={1}
                                 message={participant.username}
                             >
@@ -86,7 +95,7 @@ export default function ChallengeScreen() {
                 </View> */}
             </ScrollView>
             <View style={styles.container_button}>
-                <ThemeButton title="챌린지 참가하기" onPress={participateChallengeHandler}></ThemeButton>
+                <ThemeButton title="챌린지 참가하기" onPress={buttonPressHandler}></ThemeButton>
             </View>
         </View>
     )

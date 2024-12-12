@@ -6,7 +6,7 @@ import {
 } from 'react-native-google-mobile-ads';
 
 
-const adUnitId: string = process.env.EXPO_PUBLIC_ADMOB_REWARDED_AD_KEY!;
+const adUnitId: string = TestIds.REWARDED || "ca-app-pub-5756122103903893/4303746169";
 
 class AdService {
     private rewarded: RewardedAd | null = null;
@@ -26,6 +26,7 @@ class AdService {
 
     showAd(showAdOnLoad: boolean = false): boolean {
         if (this.loaded && this.rewarded) {
+
             this.rewarded.show();
             return true;
         } else if (showAdOnLoad) {
@@ -52,7 +53,7 @@ class AdService {
                     this.loaded = true;
                 }
                 this.loadedHandler();
-            }
+            },
         );
 
         // 라워드를 받았을 때 이벤트 리스너

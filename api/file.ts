@@ -1,18 +1,18 @@
+import { FileData } from '@/core/model';
 import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/axios';
 import { getIdToken, getIdTokenAsync, getUserIdAsync } from '@/utils/login';
 import { ImageSourcePropType } from 'react-native';
 
-const apiRoot = process.env.EXPO_PUBLIC_SERVER_API!;
+const apiRoot = "https://eccofootprint.com/api";
 
 export async function uploadImage(
     { uri }:
         { uri: string }
-): Promise<boolean> {
-    const result = filePost('file/create', uri);
-    return result !== null;
+): Promise<FileData | null> {
+    return await filePost('file/create', uri)
 }
 
-export function getImageSoucre(
+export function getImageSource(
     { imageId }:
         { imageId: string }
 ): ImageSourcePropType {

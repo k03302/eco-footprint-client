@@ -2,7 +2,7 @@ import { Modal, TouchableOpacity, ScrollView, Image, Text, View, StyleSheet, Act
 import React, { useEffect, useState } from "react";
 import { router } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
-import { ChallengeItem, ChallengeRecordItem, UserItemMeta } from '@/core/model';
+import { ChallengeItem, ChallengeRecordItem, UserItem, UserItemMeta } from '@/core/model';
 import * as ImagePicker from 'expo-image-picker';
 import * as Progress from 'react-native-progress';
 import { useIsFocused } from '@react-navigation/native';
@@ -13,7 +13,7 @@ import { getDayDifference } from '@/utils/time';
 import { ThemeButton } from '@/components/ThemeButton';
 import { getProfile } from '@/api/user';
 import { addChallengeRecord, getChallenge, setApproveState } from '@/api/challenge';
-import { getImageSoucre } from '@/api/file';
+import { getImageSource } from '@/api/file';
 
 const OBJECTIVE_POINT = 100;
 const TOTAL_CHALLENGE_DAY = 30;
@@ -36,7 +36,7 @@ export default function ChallengeScreen() {
 
 
     const [challengeInfo, setChallengeInfo] = useState<ChallengeItem | null>(null);
-    const [myProfileInfo, setMyProfileInfo] = useState<UserItemMeta | null>(null);
+    const [myProfileInfo, setMyProfileInfo] = useState<UserItem | null>(null);
 
     const isFocused = useIsFocused();
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
@@ -44,43 +44,42 @@ export default function ChallengeScreen() {
 
     const onFetchError = () => {
         Alert.alert('에러가 발생했어요.');
-        router.push('/map');
+        router.back();
     }
 
     const updatePageInfo = async () => {
         // redirect to register page if user didn't registered to challenge
         const userInfo = await getProfile({ myProfile: true });
-        const challengeInfo = await getChallenge({ challengeId });
-        if (!userInfo || !challengeInfo) {
+        const challInfo = await getChallenge({ challengeId });
+        if (!userInfo || !challInfo) {
             onFetchError();
             return;
         }
-        setMyProfileInfo(userInfo);
-        setChallengeInfo(challengeInfo);
-        setDayLeft(getDayDifference({ from: new Date(), to: challengeInfo.dateEnd }));
 
+        setMyProfileInfo(userInfo);
+        setChallengeInfo(challInfo);
+
+        setDayLeft(getDayDifference({ from: Date.now(), to: Number(challInfo.dateEnd) }));
         let participated = false;
-        for (const participant of challengeInfo.participants) {
+        for (const participant of challInfo.participants) {
             if (participant.id = userInfo.id) {
                 participated = true;
                 break;
             }
         }
-
         if (!participated) {
             router.replace({ pathname: '/challenge/register/[id]', params: { id: challengeId } });
             return;
         }
 
 
-
         let approvedCount = 0;
-        challengeInfo.participantsRecords.forEach((record) => {
+        challInfo.participantRecords.forEach((record) => {
             if (record.approved) {
                 approvedCount += 1;
             }
         })
-        setTotalPoint(challengeInfo.participantsRecords.length + approvedCount);
+        setTotalPoint(challInfo.participantRecords.length + approvedCount);
     }
 
     useEffect(() => {
@@ -113,7 +112,8 @@ export default function ChallengeScreen() {
         });
 
         if (!result.canceled) {
-            await addChallengeRecord({ challengeId: challengeId, imageUri: result.assets[0].uri });
+            const uploadResult = await addChallengeRecord({ challengeId: challengeId, imageUri: result.assets[0].uri });
+            //console.log(uploadResult);
         }
 
         setHasToUpdate(true);
@@ -132,7 +132,7 @@ export default function ChallengeScreen() {
 
     const onMyTodayImagePress = (record?: ChallengeRecordItem) => {
         if (record) {
-            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setModalImage(getImageSource({ imageId: record.imageId }));
             setImgDate(new Date(record.date));
         } else {
             setModalImage(undefined);
@@ -144,7 +144,7 @@ export default function ChallengeScreen() {
 
     const onMemTodayImagePress = (record?: ChallengeRecordItem) => {
         if (record) {
-            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setModalImage(getImageSource({ imageId: record.imageId }));
             setImgDate(new Date(record.date));
             setShowButton(true);
             setMemButtonTitle(record.approved ? '승인 해제하기' : '인증사진 승인하기');
@@ -160,7 +160,7 @@ export default function ChallengeScreen() {
 
     const onMyDatedImagePress = (record?: ChallengeRecordItem) => {
         if (record) {
-            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setModalImage(getImageSource({ imageId: record.imageId }));
             setImgDate(new Date(record.date));
         } else {
             setModalImage(undefined);
@@ -173,7 +173,7 @@ export default function ChallengeScreen() {
 
     const onMemDatedImagePress = (record?: ChallengeRecordItem) => {
         if (record) {
-            setModalImage(getImageSoucre({ imageId: record.imageId }));
+            setModalImage(getImageSource({ imageId: record.imageId }));
             setImgDate(new Date(record.date));
         } else {
             setModalImage(undefined);
@@ -248,18 +248,16 @@ export default function ChallengeScreen() {
                 <View style={styles.recordcontainer}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>멤버의 기록을 확인하세요!</Text>
                     {
-                        challengeInfo.participants.map((participant, index) => {
-                            if (participant.id === myProfileInfo.id) {
-                                return <View key={participant.id + index}></View>
-                            }
-                            return <ChallengeGallery
-                                userInfo={participant}
-                                challengeInfo={challengeInfo}
-                                onTodayImagePress={onMemTodayImagePress}
-                                onDatedImagePress={onMemDatedImagePress}
-                                key={participant.id + index}
-                            ></ChallengeGallery>
-                        })
+                        challengeInfo.participants
+                            .map((participant, index) => {
+                                return <ChallengeGallery
+                                    userInfo={participant}
+                                    challengeInfo={challengeInfo}
+                                    onTodayImagePress={onMemTodayImagePress}
+                                    onDatedImagePress={onMemDatedImagePress}
+                                    key={index}
+                                ></ChallengeGallery>
+                            })
                     }
                 </View>
             </ScrollView>

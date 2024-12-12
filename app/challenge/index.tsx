@@ -1,4 +1,4 @@
-import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { TouchableOpacity, Image, Text, View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ChallengeItem, ChallengeItemMeta, UserItem } from '@/core/model';
@@ -8,14 +8,15 @@ import { getProfile } from '@/api/user';
 import { getAllChallenges, getChallenge } from '@/api/challenge';
 
 export default function ChallengeScreen() {
-    const [otherChallengeList, setOtherChallengeList] = useState<ChallengeItem[]>([]);
-    const [myChallengeList, setMyChallengeList] = useState<ChallengeItem[]>([]);
+    const [otherChallengeList, setOtherChallengeList] = useState<ChallengeItem[] | null>(null);
+    const [myChallengeList, setMyChallengeList] = useState<ChallengeItem[] | null>(null);
     const [myUserInfo, setMyUserInfo] = useState<UserItem | null>(null);
     const isFocused = useIsFocused();
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
     const onFetchError = () => {
-        Alert.alert('');
+        Alert.alert('에러가 발생했어요');
+        router.back();
     }
 
     const updatePageInfo = async () => {
@@ -37,6 +38,7 @@ export default function ChallengeScreen() {
         for (const challengeMeta of allChallengeMetas) {
             const challenge = await getChallenge({ challengeId: challengeMeta.id });
             if (!challenge) continue;
+            if (challenge.totalParticipants <= challenge.currentParticipants) continue;
 
             let participated = false;
             for (const participant of challenge.participants) {
@@ -52,7 +54,7 @@ export default function ChallengeScreen() {
             }
         }
 
-        setMyChallengeList(myChallengeList);
+        setMyChallengeList(myChallenges);
         setOtherChallengeList(otherChallenges);
     }
 
@@ -72,7 +74,7 @@ export default function ChallengeScreen() {
         <View style={styles.container}>
             <ScrollView>
                 {
-                    myChallengeList.length > 0 ? (
+                    myChallengeList && myChallengeList.length > 0 ? (
                         <View style={styles.challengecontainer}>
                             <Text style={{ fontSize: 15, marginTop: 10, marginLeft: 10 }}>현재 나의 참여 챌린지</Text>
                             {
@@ -89,12 +91,12 @@ export default function ChallengeScreen() {
                 <View style={styles.challengecontainer}>
                     <Text style={{ fontSize: 15, marginTop: 10, marginLeft: 10 }}>참여할 수 있는 챌린지</Text>
                     {
-                        otherChallengeList.length > 0 ? otherChallengeList.map((challengeInfo, index) => {
+                        otherChallengeList ? otherChallengeList.map((challengeInfo, index) => {
                             return <ChallengeCard
                                 challengeInfo={challengeInfo} key={index} isParticipated={false}></ChallengeCard>
                         }
 
-                        ) : <></>
+                        ) : <ActivityIndicator size={'large'} />
                     }
                 </View>
             </ScrollView>
@@ -113,7 +115,7 @@ const ChallengeCard = ({ challengeInfo, isParticipated: isRegistered }: { challe
     const [dayLeft, setDayLeft] = useState<number>(0);
 
     useEffect(() => {
-        const diff = getDayDifference({ from: new Date(), to: challengeInfo.dateEnd });
+        const diff = getDayDifference({ from: Date.now(), to: Number(challengeInfo.dateEnd) });
         setDayLeft(diff);
         setDatePassed(diff < 0);
     }, [challengeInfo])

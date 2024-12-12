@@ -19,7 +19,7 @@ import { PointDisplay } from '@/components/PointDisplay';
 import { MapRewardModal } from '@/components/map/MapRewardModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getItemPoint, getProfile } from '@/api/user';
-import { getImageSoucre } from '@/api/file';
+import { getImageSource } from '@/api/file';
 import { getAllDonations, getDonation } from '@/api/donation';
 
 
@@ -72,7 +72,7 @@ export default function App() {
 
     const onFetchError = async () => {
         Alert.alert('에러가 발생했습니다.');
-        router.replace('/');
+        router.back();
     }
 
     const updatePageInfo = async () => {
@@ -130,6 +130,7 @@ export default function App() {
 
 
     const onNewLocation = (newLocation: MapCoordData) => {
+        console.log(newLocation);
         const isWalking = walkMonitorService.update(newLocation, 0);
         if (isWalking) {
             mapService.addPoint(newLocation.latitude, newLocation.longitude);
@@ -293,12 +294,10 @@ export default function App() {
         (async () => {
             const locationStatus = await locationService.getPermission();
             const pedometerStatus = await requestPedometerPermissions();
-
             if (!locationStatus || !pedometerStatus) {
                 exitApp();
                 return;
             }
-
             locationService.registerForeground(onNewLocation, FORGROUND_LOCATION_PERIOD_SEC);
             locationService.registerBackground(onNewLocation, BACKGROUND_LOCATION_PERIOD_SEC);
 
@@ -400,7 +399,7 @@ export default function App() {
 
             <View style={styles.profilecontainer}>
                 <UserIcon
-                    imgSource={userInfo && userInfo.thumbnailId ? getImageSoucre({ imageId: userInfo.thumbnailId }) : undefined}
+                    imgSource={userInfo && userInfo.thumbnailId ? getImageSource({ imageId: userInfo.thumbnailId }) : undefined}
                     message={"프로필"}
                     onPress={() => { router.push('/profile') }} />
             </View>
@@ -418,7 +417,7 @@ export default function App() {
                     onRegionChangeComplete={onRegionChangeComplete}
                     onMapLoaded={onMapLoaded}
 
-                    onLongPress={onMapLongPressed}
+                    // onLongPress={onMapLongPressed}
 
                     showsBuildings={false}
                     showsCompass={false}

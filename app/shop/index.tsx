@@ -7,7 +7,7 @@ import { PointDisplay } from '@/components/PointDisplay';
 import { ThemeButton } from '@/components/ThemeButton';
 import { extendCoupon, getAllRewards, perchaseReward } from '@/api/reward';
 import { getProfile } from '@/api/user';
-import { getImageSoucre } from '@/api/file';
+import { getImageSource } from '@/api/file';
 
 export default function ShopScreen() {
     const [userInfo, setUserInfo] = useState<UserItem | null>(null)
@@ -22,7 +22,7 @@ export default function ShopScreen() {
 
     const onFetchError = () => {
         Alert.alert("에러가 발생했습니다.");
-        router.push('/map');
+        router.back();
     }
 
     const updatePageInfo = async () => {
@@ -119,7 +119,7 @@ export default function ShopScreen() {
                             selectedReward ? <>
                                 {
                                     selectedReward.thumbnailId ? <Image
-                                        source={getImageSoucre({ imageId: selectedReward.thumbnailId })}
+                                        source={getImageSource({ imageId: selectedReward.thumbnailId })}
                                         style={[styles.image_product, { resizeMode: 'contain' }]} />
                                         : <View style={styles.image_product} />
                                 }
@@ -167,7 +167,7 @@ const RewardItemCard = ({ setModalVisible, rewardInfo, setSelectedReward }:
                 <View style={styles.box}>
                     {
                         rewardInfo.thumbnailId ? <Image
-                            source={getImageSoucre({ imageId: rewardInfo.thumbnailId })}
+                            source={getImageSource({ imageId: rewardInfo.thumbnailId })}
                             style={[styles.image_product, { resizeMode: 'contain' }]} />
                             : <View style={styles.image_product} />
                     }

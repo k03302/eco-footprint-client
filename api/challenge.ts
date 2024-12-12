@@ -2,6 +2,7 @@ import { ChallengeItem, ChallengeItemMeta } from '@/core/model';
 import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/axios';
 import { getUserIdAsync } from '@/utils/login';
 import { getDateFromToday } from '@/utils/time';
+import { uploadImage } from '@/api/file';
 
 
 export async function createChallenge2(
@@ -12,13 +13,13 @@ export async function createChallenge2(
         challengeInfo: {
             id: '',
             name: name,
-            totalParticipants: 0,
+            totalParticipants: 5,
             currentParticipants: 0,
             createdAt: '',
             participants: [],
-            participantsRecords: [],
-            dateStart: new Date(),
-            dateEnd: getDateFromToday({ dayDiff: 30 }),
+            participantRecords: [],
+            dateStart: Date.now().toString(),
+            dateEnd: getDateFromToday({ dayDiff: 30 }).toString(),
             description: description,
             state: 1
         }
@@ -48,14 +49,22 @@ export async function participateChallenge(
     { challengeId }:
         { challengeId: string }
 ): Promise<ChallengeItem | null> {
-    return axiosPost('challenge/' + challengeId + '/participate', {});
+    return axiosPost('challenge/' + challengeId + '/participate', {}, {
+        challengeId: challengeId
+    }, () => { }, error => { console.log(error.response.status, error.response.message) });
 }
 
 export async function addChallengeRecord(
     { challengeId, imageUri }:
         { challengeId: string, imageUri: string }
 ): Promise<ChallengeItem | null> {
-    return null;
+    const imgInfo = await uploadImage({ uri: imageUri });
+
+    if (!imgInfo) return null;
+
+    const imageId = imgInfo.id;
+    console.log(imageId);
+    return axiosPost(`challenge/${challengeId}/add/${imageId}`, {}, { challengeId, imageId }, () => { }, error => { console.log(error) })
 }
 
 
