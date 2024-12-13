@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getIdTokenAsync } from './login';
 import * as FileSystem from 'expo-file-system';
 
-const apiRoot = "https://eccofootprint.com/api";
+const apiRoot = "https://eccofootprint.com/api/";
 
 export async function filePost(path: string, fileUri: string): Promise<any> {
 
@@ -94,6 +94,27 @@ export async function axiosPut(path: string, body: any,
         return null;
     });
 }
+
+export async function axiosPutAdmin(path: string, body: any,
+    onSuccess: (data: any) => void = (data: any) => { },
+    onFail: (error: any) => void = (error: any) => { }
+): Promise<any> {
+    const fullPath = apiRoot + path;
+
+    return axios.put(fullPath, body, {
+        headers: {
+            Authorization: 'Bearer ' + 1
+        }
+    }).then(response => {
+        const data = response.data;
+        onSuccess(data);
+        return response.data;
+    }).catch(error => {
+        onFail(error);
+        return null;
+    });
+}
+
 
 export async function axiosDelete(path: string,
     onSuccess: (data: any) => void = (data: any) => { },

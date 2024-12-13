@@ -10,11 +10,7 @@ npm-debug.*
 *.orig.*
 web-build/
 
-android/**
-!android/app/src/main/AndroidManifest.xml
-!android/app/
-!android/app/src/
-!android/app/src/main/
+android
 
 ios
 %ProgramData%

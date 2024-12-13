@@ -115,7 +115,7 @@ const ChallengeCard = ({ challengeInfo, isParticipated: isRegistered }: { challe
     const [dayLeft, setDayLeft] = useState<number>(0);
 
     useEffect(() => {
-        const diff = getDayDifference({ from: Date.now(), to: Number(challengeInfo.dateEnd) });
+        const diff = getDayDifference({ from: Date.now(), to: Number(challengeInfo.dateEnd) * 1000 });
         setDayLeft(diff);
         setDatePassed(diff < 0);
     }, [challengeInfo])

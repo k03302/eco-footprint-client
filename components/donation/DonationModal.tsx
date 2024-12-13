@@ -25,7 +25,7 @@ export function DonationModal({ modalVisible, setModalVisible, donationInfo, ear
     }
     const closeAdHandler = () => {
         if (adWatchFinished) {
-            participateDonation({ donationId: donationInfo.id, rewardPoint: 10 }).then(() => {
+            participateDonation2({ donationId: donationInfo.id, rewardPoint: 10 }).then(() => {
                 earnedHandler();
             })
         }

@@ -27,7 +27,7 @@ export function MapRewardModal({ modalVisible, setModalVisible, donationInfo, on
 
     const closeAdHandler = (donationPoint = 0) => {
         if (adWatchFinished) {
-            participateDonation({ donationId: donationInfo.id, rewardPoint: donationPoint }).then(() => {
+            participateDonation2({ donationId: donationInfo.id, rewardPoint: donationPoint }).then(() => {
                 onEarnReward();
             }).then(() => {
                 if (donationPoint > 0) {

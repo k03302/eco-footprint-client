@@ -15,11 +15,11 @@ export async function createChallenge2(
             name: name,
             totalParticipants: 5,
             currentParticipants: 0,
-            createdAt: '',
+            createdAt: (Date.now() / 1000).toString(),
             participants: [],
             participantRecords: [],
-            dateStart: Date.now().toString(),
-            dateEnd: getDateFromToday({ dayDiff: 30 }).toString(),
+            dateStart: (Date.now() / 1000).toString(),
+            dateEnd: (getDateFromToday({ dayDiff: 30 }) / 1000).toString(),
             description: description,
             state: 1
         }

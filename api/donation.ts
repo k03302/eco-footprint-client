@@ -1,5 +1,5 @@
 import { DonationItem, UserItem } from '@/core/model';
-import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/axios';
+import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete, axiosPutAdmin } from '@/utils/axios';
 import { getUserId, getUserIdAsync } from '@/utils/login';
 import { getItemPoint } from './user';
 
@@ -29,7 +29,7 @@ export async function updateDonation({ donationId, update }: {
     const donationInfo = await getDonation({ donationId });
     if (!donationInfo) return null;
     const updatedInfo = update(donationInfo);
-    return axiosPut('donation/' + donationId + '/update', updatedInfo, () => { }, error => { console.log(error.response.message, error.response.status) });
+    return axiosPutAdmin('donation/' + donationId + '/update', updatedInfo, () => { }, error => { console.log(error.response.message, error.response.status) });
 }
 
 export async function deleteDonation(

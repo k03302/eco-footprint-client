@@ -100,12 +100,11 @@ class MapBlockService {
                 return true;
             } else {
                 const timeStamp = Number(timeStampString);
-                const previousDate = new Date(timeStamp);
-                return hasDatePassed(previousDate);
+
+                return hasDatePassed(timeStamp);
             }
         } else {
-            const previousDate = new Date(this.lastInitStampCache);
-            return hasDatePassed(previousDate);
+            return hasDatePassed(this.lastInitStampCache);
         }
 
 

@@ -33,6 +33,7 @@ export default function App() {
             <ThemeButton title="initialize" onPress={() => {
                 initializeTestData({ userId: fakeIdToken, deleteUser: false });
             }} />
+            <Button title="pass" onPress={() => { router.push('/map') }}></Button>
         </View>
     );
 }

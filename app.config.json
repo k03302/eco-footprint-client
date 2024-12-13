@@ -46,7 +46,8 @@
                 {
                     "isAndroidBackgroundLocationEnabled": true
                 }
-            ]
+            ],
+            "expo-router"
         ],
         "androidNavigationBar": {
             "visible": "sticky-immersive"

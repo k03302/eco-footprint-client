@@ -40,8 +40,6 @@ class LocationService {
 
                         resolve(true);
                     }
-                }, {
-                    text: "앱 종료"
                 }
             ])
         })

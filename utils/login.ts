@@ -13,7 +13,7 @@ let idTokenCache: string | null = null;
 let userIdCache: string | null = null;
 
 
-const apiRoot = "https://eccofootprint.com/api";
+const apiRoot = "https://eccofootprint.com/api/";
 const registerUrl = apiRoot + 'user/register';
 const updateUserUrl = apiRoot + 'user/profile/';
 const uploadFileUrl = apiRoot + 'file/create';
@@ -80,7 +80,8 @@ export async function login(
                 });
 
         } else {
-            Alert.alert("로그인에 실패했습니다." + registerUrl + error.response.message + error.response.status + token);
+            Alert.alert("로그인에 실패했습니다.");
+            console.log(registerUrl, error.response.message, error.response.status);
             // router.replace('/');
             //onLoginFail();
         }

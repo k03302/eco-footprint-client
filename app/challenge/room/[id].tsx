@@ -59,7 +59,7 @@ export default function ChallengeScreen() {
         setMyProfileInfo(userInfo);
         setChallengeInfo(challInfo);
 
-        setDayLeft(getDayDifference({ from: Date.now(), to: Number(challInfo.dateEnd) }));
+        setDayLeft(getDayDifference({ from: Date.now(), to: Number(challInfo.dateEnd) * 1000 }));
         let participated = false;
         for (const participant of challInfo.participants) {
             if (participant.id = userInfo.id) {

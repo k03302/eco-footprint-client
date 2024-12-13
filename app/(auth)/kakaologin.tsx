@@ -6,7 +6,7 @@ import { router } from 'expo-router'
 import axios from 'axios';
 import { login } from "@/utils/login";
 
-const REDIRECT_URI = "http://52.79.165.93/";
+const REDIRECT_URI = "https://eccofootprint.com/api/kakaologin";
 const REST_API_KEY = "a0f7848c5e09023c767195b1b09be8a9";
 const INJECTED_JAVASCRIPT = `window.ReactNativeWebView.postMessage('message from webView')`;
 
@@ -18,7 +18,7 @@ const KaKaoLogin = () => {
         const data = event.nativeEvent.url;
         const authCode = getAuthCode(data);
         if (!authCode) {
-            Alert.alert('로그인에 실패했습니다. data: ' + data + event.nativeEvent);
+            Alert.alert('로그인에 실패했습니다.', data);
             router.replace('/');
         }
 
@@ -46,7 +46,6 @@ const KaKaoLogin = () => {
                 }
             });
         } catch (error) {
-            Alert.alert('로그인에 실패했습니다. error' + error);
             router.replace('/');
         }
     }

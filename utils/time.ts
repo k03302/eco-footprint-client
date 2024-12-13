@@ -1,4 +1,5 @@
-export function hasDatePassed(lastDate: Date) {
+export function hasDatePassed(lastDateStamp: number) {
+    const lastDate = new Date(lastDateStamp);
     const currentDate = new Date();
     return (currentDate.getFullYear() !== lastDate.getFullYear() ||
         currentDate.getMonth() !== lastDate.getMonth() ||
