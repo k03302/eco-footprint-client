@@ -1,50 +1,28 @@
-# Welcome to your Expo app 👋
+# 환경발자국 (Eco Footprint)
+- 환경을 위한 걷기 리워드앱
+- 서울시립대학교(University of Seoul) 캡스톤디자인 프로젝트
+- React Native의 Expo 프레임워크를 이용하여 개발 
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 데모 (Demonstration)
+[데모 영상](docs/introduction.mp4)
 
-## Get started
+## 릴리즈 (Release)
+-
 
-1. Install dependencies
+## 빌드 (How to Build)
+- 
 
-   ```bash
-   npm install
-   ```
+## 실행 (How to Execute)
+-
 
-2. Start the app
+## 프로젝트 제안 (1.Project proposal)
+[프로젝트 제안서](docs/1.project_proposal.pdf)
 
-   ```bash
-    npx expo start
-   ```
+## 경쟁력 분석 (2.Competitive analysis)
+[경쟁력 분석서](docs/2.competitive_analysis.pdf)
 
-In the output, you'll find options to open the app in a
+## 개념 설계 (3.Conceptual design)
+[개념 설계서](docs/3.conceptual_design.pdf)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 상세 설계 (4.Detailed design)
+[상세 설계서](docs/4.detail_design.pdf)
