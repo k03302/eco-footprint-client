@@ -1,11 +1,11 @@
-import { Button, View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
+import { Button, View, TouchableOpacity, Text, Image, StyleSheet, Alert } from 'react-native';
 import { useEffect, useState } from 'react'
 import { router } from 'expo-router'
 import { UserIcon } from '@/components/UserIcon';
 import { logout } from '@/utils/login';
 import { useIsFocused } from '@react-navigation/native';
 import { UserItem } from '@/core/model';
-import { getProfile } from '@/api/user';
+import { deleteProfile, getProfile } from '@/api/user';
 import { getImageSource } from '@/api/file';
 
 
@@ -22,8 +22,23 @@ export default function ProfileScreen() {
     }, [isFocused]);
 
     const logoutHandler = async () => {
-        await logout();
+        logout();
         router.replace('/');
+    }
+
+    const unregisterHandler = async () => {
+        Alert.alert("정말로 회원 탈퇴하시겠습니까?", "", [
+            {
+                text: "확인",
+                onPress: async () => {
+                    await deleteProfile({ myProfile: true });
+                    logoutHandler();
+                }
+            },
+            {
+                text: "취소"
+            }
+        ])
     }
 
     return (
@@ -56,6 +71,9 @@ export default function ProfileScreen() {
 
             <TouchableOpacity onPress={logoutHandler}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 20, marginTop: 20 }}>로그아웃</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={unregisterHandler}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 20, marginTop: 20 }}>회원탈퇴</Text>
             </TouchableOpacity>
 
         </View>
