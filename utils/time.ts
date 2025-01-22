@@ -17,7 +17,7 @@ export function getDayDifference({ from, to }: { from: number, to: number }): nu
     return Math.floor(differenceInMs / (1000 * 60 * 60 * 24));
 }
 
-export function getDateFromToday({ dayDiff }: { dayDiff: number }) {
+export function getTimeFromToday({ dayDiff }: { dayDiff: number }) {
     const currentTime = Date.now();
     const dayTime = 1000 * 60 * 60 * 24;
     return currentTime + dayDiff * dayTime
