@@ -72,7 +72,7 @@ export default function ChallengeScreen() {
         if (challengeType === '') {
             Alert.alert('챌린지 유형을 선택해주세요');
         } else {
-            Alert.alert('챌린지 개설에 50 리워드를 사용해요!', '', [{
+            Alert.alert('챌린지 개설에 500 리워드를 사용해요!', '최대 보상 리워드는 2600이에요!', [{
                 text: '확인',
                 onPress: handleConfirm
             }, {

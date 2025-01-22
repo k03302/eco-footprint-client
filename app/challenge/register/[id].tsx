@@ -45,7 +45,7 @@ export default function ChallengeScreen() {
     }
 
     const buttonPressHandler = () => {
-        Alert.alert('챌린지 참여에 50 리워드가 필요해요!', '', [{
+        Alert.alert('챌린지 참여에 500 리워드가 필요해요!', '최대 보상 리워드는 2600이에요!', [{
             text: '확인',
             onPress: onParticipate
         }, {

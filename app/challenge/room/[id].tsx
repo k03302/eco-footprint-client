@@ -9,7 +9,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { HorizontalLine } from '@/components/HorizontalLine';
 import { ChallengeGallery } from '@/components/challenge/Gallery';
 import { ChallengeModal } from '@/components/challenge/ChallengeModal';
-import { getDayDifference } from '@/utils/time';
+import { getDayDifference, hasDatePassed } from '@/utils/time';
 import { ThemeButton } from '@/components/ThemeButton';
 import { getProfile } from '@/api/user';
 import { addChallengeRecord, getChallenge, setApproveState } from '@/api/challenge';
@@ -31,12 +31,14 @@ export default function ChallengeScreen() {
     const [memButtonTitle, setMemButtonTitle] = useState<string>('');
     const [selectedMemRecord, setSelectedMemRecord] = useState<ChallengeRecordItem | null>(null);
     const [modalImage, setModalImage] = useState<ImageSourcePropType | undefined>(undefined);
-
+    const [recordButtonActive, setRecordButtonActive] = useState<boolean>(true);
 
 
 
     const [challengeInfo, setChallengeInfo] = useState<ChallengeItem | null>(null);
-    const [myProfileInfo, setMyProfileInfo] = useState<UserItem | null>(null);
+    const [otherUserInfoList, setOtherUserInfoList] = useState<UserItemMeta[] | null>(null);
+    const [myUserInfo, setMyUserInfo] = useState<UserItem | null>(null);
+    const [myTodayGallery, setMyTodayGallery] = useState<ChallengeRecordItem | null>(null);
 
     const isFocused = useIsFocused();
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
@@ -51,13 +53,16 @@ export default function ChallengeScreen() {
         // redirect to register page if user didn't registered to challenge
         const userInfo = await getProfile({ myProfile: true });
         const challInfo = await getChallenge({ challengeId });
+        console.log(challengeId);
         if (!userInfo || !challInfo) {
             onFetchError();
             return;
         }
 
-        setMyProfileInfo(userInfo);
+        setMyUserInfo(userInfo);
         setChallengeInfo(challInfo);
+        setOtherUserInfoList(challInfo.participants.filter(participant => (userInfo.id !== participant.id)));
+
 
         setDayLeft(getDayDifference({ from: Date.now(), to: Number(challInfo.dateEnd) * 1000 }));
         let participated = false;
@@ -75,6 +80,13 @@ export default function ChallengeScreen() {
 
         let approvedCount = 0;
         challInfo.participantRecords.forEach((record) => {
+            if (record.userId === userInfo.id) {
+                console.log((new Date(record.date)).getTime(), hasDatePassed((new Date(record.date)).getTime()));
+                if (!hasDatePassed((new Date(record.date)).getTime())) {
+                    console.log(record);
+                    setMyTodayGallery(record);
+                }
+            }
             if (record.approved) {
                 approvedCount += 1;
             }
@@ -113,7 +125,6 @@ export default function ChallengeScreen() {
 
         if (!result.canceled) {
             const uploadResult = await addChallengeRecord({ challengeId: challengeId, imageUri: result.assets[0].uri });
-            //console.log(uploadResult);
         }
 
         setHasToUpdate(true);
@@ -134,12 +145,13 @@ export default function ChallengeScreen() {
         if (record) {
             setModalImage(getImageSource({ imageId: record.imageId }));
             setImgDate(new Date(record.date));
+            setShowButton(false);
         } else {
             setModalImage(undefined);
             setImgDate(undefined);
+            setShowButton(true);
         }
         setShowMyImageModal(true);
-        setShowButton(true);
     }
 
     const onMemTodayImagePress = (record?: ChallengeRecordItem) => {
@@ -185,7 +197,7 @@ export default function ChallengeScreen() {
 
 
 
-    if (!challengeInfo || !myProfileInfo) {
+    if (!challengeInfo || !myUserInfo) {
         return <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
             <ActivityIndicator size="large"></ActivityIndicator>
         </View>
@@ -238,17 +250,21 @@ export default function ChallengeScreen() {
                 </View>
                 <View style={styles.recordcontainer}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>나의 챌린지 기록</Text>
-                    <ChallengeGallery userInfo={myProfileInfo} challengeInfo={challengeInfo}
-                        onTodayImagePress={onMyTodayImagePress} onDatedImagePress={onMyDatedImagePress} />
+                    <ChallengeGallery userInfo={myUserInfo} challengeInfo={challengeInfo}
+                        onTodayImagePress={onMyTodayImagePress} onDatedImagePress={onMyDatedImagePress} showCredit={true} />
                     <View style={{ alignItems: 'center' }}>
-                        <ThemeButton title="오늘 챌린지 기록하기" onPress={takePhotoAndUpload}></ThemeButton>
+                        <ThemeButton title="오늘 챌린지 기록하기" variant={myTodayGallery ? 'secondary' : 'primary'} onPress={() => {
+                            if (!myTodayGallery) {
+                                takePhotoAndUpload();
+                            }
+                        }}></ThemeButton>
                     </View>
                     <HorizontalLine />
                 </View>
                 <View style={styles.recordcontainer}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10 }}>멤버의 기록을 확인하세요!</Text>
                     {
-                        challengeInfo.participants
+                        otherUserInfoList && otherUserInfoList
                             .map((participant, index) => {
                                 return <ChallengeGallery
                                     userInfo={participant}
