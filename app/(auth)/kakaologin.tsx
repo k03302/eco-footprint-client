@@ -5,21 +5,26 @@ import { WebView } from 'react-native-webview';
 import { router } from 'expo-router'
 import axios from 'axios';
 import { login } from "@/utils/login";
+import { isRegistered } from "@/utils/register";
+import * as Crypto from 'expo-crypto';
+import { getItemPoint } from "@/api/user";
 
-const REDIRECT_URI = "https://eccofootprint.com/api/kakaologin";
+const REDIRECT_URI = "https://eccofootprint.com";
 const REST_API_KEY = "a0f7848c5e09023c767195b1b09be8a9";
 const INJECTED_JAVASCRIPT = `window.ReactNativeWebView.postMessage('message from webView')`;
 
 const KaKaoLogin = () => {
-    const [showButton, setShowButton] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => { console.log(error) }, [error])
 
     const messageHandler = async (event: any) => {
         const data = event.nativeEvent.url;
         const authCode = getAuthCode(data);
+
         if (!authCode) {
-            Alert.alert('로그인에 실패했습니다.', data);
-            router.replace('/');
+            console.log(data);
+            return;
         }
 
         try {
@@ -34,28 +39,42 @@ const KaKaoLogin = () => {
                 }
             })
 
-            const { id_token } = res.data;
-            login({
-                idToken: id_token.substring(0, 8), onLoginFail: () => {
-                    Alert.alert('로그인에 실패했습니다.');
-                    router.replace('/');
-                }, onLoginSuccess: () => {
-                    router.replace('/map');
-                }, onNeedRegister: () => {
-                    router.push('/register');
-                }
-            });
+            const { access_token } = res.data;
+
+            console.log("access_token", access_token);
+
+            const { id } = await getKaKaoUserData(access_token);
+
+            console.log(id);
+
+            login(id.toString());
+            if (await isRegistered()) {
+                router.replace('/map');
+            } else {
+                router.replace('/register');
+            }
+
         } catch (error) {
             router.replace('/');
         }
     }
+
+    const getKaKaoUserData = async (token: string) => {
+        const kakaoUser = await axios.get(`https://kapi.kakao.com/v2/user/me`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
+
+        return await kakaoUser.data
+    }
+
 
     const getAuthCode = (target: string) => {
         const exp = 'code=';
         const condition = target.indexOf(exp);
         if (condition !== -1) {
             const requestCode = target.substring(condition + exp.length);
-            console.log('access code: ', requestCode);
             return requestCode;
         }
 
