@@ -11,6 +11,7 @@ const IMAGE_SIZE = 75;
 const OBJECTIVE_CREDIT = 100;
 const MIN_CREDIT_FOR_REWARD = 30;
 const DEFAULT_REWARD = 600;
+const RATIONAL_REWARD_TOTAL = 1000;
 const REWARD_PER_CREDIT = 10;
 
 export const GalleryBlankImage = ({ imgSize }: { imgSize: number }) => {
@@ -41,13 +42,13 @@ export const ChallengeImageToday = ({ imgSize, imgSource, isApproved, onPress = 
                 <GalleryImage imgSize={imgSize}
                     imgSource={imgSource ? imgSource : require('@/assets/images/upload.png')} />
                 {
-                    imgSource ?
-                        <MaterialIcons
-                            name="star"
-                            size={24}
-                            color={isApproved ? "gold" : "gray"}
-                            style={styles.icon}
-                        /> : <></>
+                    imgSource &&
+                    <MaterialIcons
+                        name="star"
+                        size={24}
+                        color={isApproved ? "gold" : "gray"}
+                        style={styles.icon}
+                    />
                 }
             </TouchableOpacity>
         </View>
@@ -65,7 +66,7 @@ export const ChallengeImageDated = ({ imgSize, imgSource, isApproved, onPress = 
                 >
                     <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
                         {
-                            isApproved ? <Image style={{ width: imgSize, height: imgSize }} source={require('@/assets/images/approved.png')}></Image> : <></>
+                            isApproved && <Image style={{ width: imgSize, height: imgSize }} source={require('@/assets/images/approved.png')}></Image>
                         }
                     </View>
 
@@ -76,39 +77,59 @@ export const ChallengeImageDated = ({ imgSize, imgSource, isApproved, onPress = 
 }
 
 
-const _ChallengeGallery = ({ userInfo, challengeInfo, onTodayImagePress = () => { }, onDatedImagePress = () => { } }: {
+const _ChallengeGallery = ({ userInfo, challengeInfo, showCredit = true, onTodayImagePress = () => { }, onDatedImagePress = () => { } }: {
     userInfo: UserItemMeta, challengeInfo: ChallengeItem,
     onTodayImagePress?: (record?: ChallengeRecordItem) => void,
     onDatedImagePress?: (record?: ChallengeRecordItem) => void,
+    showCredit?: boolean
 }) => {
-    const [myGalleryList, setMyGalleryList] = useState<ChallengeRecordItem[]>([]);
-    const [credit, setCredit] = useState<number>(0);
+    const [todayGallery, setTodayGallery] = useState<ChallengeRecordItem | null>(null);
+    const [datedGalleryList, setDatedGalleryList] = useState<ChallengeRecordItem[] | null>(null);
+    const [myCredit, setMyCredit] = useState<number>(0);
+    const [totalCredit, setTotalCredit] = useState<number>(0);
+    const [myCreditPercent, setMyCreditPercent] = useState<number>(0);
+    const [showCreditInfo, setShowCreditInfo] = useState<boolean>(showCredit);
 
     useEffect(() => {
-
-        let approvedCount = 0;
-
         const challengeRecords = challengeInfo.participantRecords || [];
-        const myRecords = challengeRecords.filter((record) => {
-            const isMine = record.userId === userInfo.id;
-            if (isMine) {
+
+        const datedRecords = [];
+        let todayRecord = null;
+        let myApprovedCount = 0;
+        let totalApprovedCount = 0;
+
+        //console.log(challengeRecords);
+        for (const record of challengeRecords) {
+            if (record.userId === userInfo.id) {
+                const timestamp = (new Date(record.date)).getTime();
+
+
+                const now = new Date();
+                const last = new Date(record.date);
+                console.log(record.date, now, last, now.toLocaleString(), last.toLocaleString());
+                if (hasDatePassed(timestamp)) {
+                    datedRecords.push(record);
+                } else {
+                    todayRecord = record;
+                }
+
                 if (record.approved) {
-                    approvedCount += 1;
+                    myApprovedCount++;
                 }
             }
-            return isMine;
-        })
+            if (record.approved) {
+                totalApprovedCount++;
+            }
+        }
+        const _myCredit = (todayRecord ? 1 : 0) + datedRecords.length + myApprovedCount;
+        const _totalCredit = challengeRecords.length + totalApprovedCount;
 
-        const sortedRecords = myRecords.sort((a, b) => {
-            const first = new Date(a.date);
-            const next = new Date(b.date);
-            return new Date(next).getTime() - new Date(first).getTime();
-        })
-        setMyGalleryList(sortedRecords);
 
-        setCredit(myRecords.length + approvedCount);
-
-        console.log(challengeInfo !== null, challengeInfo.participantRecords);
+        setDatedGalleryList(datedRecords);
+        setTodayGallery(todayRecord);
+        setMyCredit(_myCredit);
+        setTotalCredit(_totalCredit);
+        setMyCreditPercent((_totalCredit > 0 ? Math.floor((_myCredit / _totalCredit) * 100) : 0));
     }, [userInfo, challengeInfo]);
 
 
@@ -119,68 +140,63 @@ const _ChallengeGallery = ({ userInfo, challengeInfo, onTodayImagePress = () => 
                 <UserIcon message={userInfo.username}
                     iconSize={1}
                     imgSource={userInfo.thumbnailId ? getImageSource({ imageId: userInfo.thumbnailId }) : undefined}
+                    onPress={() => { setShowCreditInfo(!showCreditInfo); }}
                 />
-                <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
-                    <Text>챌린지 기여</Text>
-                    <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>{credit}</Text>
-                </View>
-                <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
-                    <Text>포인트를 받기 위해 남은 기여</Text>
-                    <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>
-                        {
-                            Math.max(MIN_CREDIT_FOR_REWARD - credit, 0)
-                        }
-                    </Text>
-                </View>
-                <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
-                    <Text>받을 포인트</Text>
-                    <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>
-                        {credit >= MIN_CREDIT_FOR_REWARD ? DEFAULT_REWARD + credit * REWARD_PER_CREDIT : 0}
-                    </Text>
-                    <Image source={require("@/assets/images/point.png")} style={{ width: 10, height: 10, marginTop: 5 }} />
-                </View>
+                {
+                    showCreditInfo && <TouchableOpacity onPress={() => { setShowCreditInfo(!showCreditInfo) }}>
+                        <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
+                            <Text>챌린지 기여</Text>
+                            <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>{myCredit}</Text>
+
+                        </View>
+                        <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
+                            <Text>포인트를 받기 위해 남은 기여</Text>
+                            <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>
+                                {
+                                    Math.max(MIN_CREDIT_FOR_REWARD - myCredit, 0)
+                                }
+                            </Text>
+                        </View>
+                        <View style={{ marginRight: 30, flexDirection: 'row', gap: 10 }}>
+                            <Text>받을 수 있는 포인트</Text>
+
+                            <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>
+                                {DEFAULT_REWARD}
+                            </Text>
+                            <Image source={require("@/assets/images/point.png")} style={{ width: 10, height: 10, marginTop: 5 }} />
+                            <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>+</Text>
+                            <Text style={{ color: 'forestgreen', fontWeight: 'bold' }}>
+                                {Math.floor(RATIONAL_REWARD_TOTAL * myCreditPercent / 100)}
+                            </Text>
+                            <Image source={require("@/assets/images/point.png")} style={{ width: 10, height: 10, marginTop: 5 }} />
+
+                        </View>
+                    </TouchableOpacity>
+                }
             </View>
             <View style={{ flexDirection: 'row', backgroundColor: 'ghostwhite', padding: 8, borderRadius: 10 }}>
                 <ScrollView horizontal={true} showsVerticalScrollIndicator={false}>
                     {
-                        myGalleryList.length === 0 ? <ChallengeImageToday
+                        todayGallery ? <ChallengeImageToday
                             onPress={() => {
-                                onTodayImagePress()
+                                onTodayImagePress(todayGallery);
+                            }}
+                            imgSize={IMAGE_SIZE}
+                            isApproved={todayGallery.approved}
+                            imgSource={getImageSource({ imageId: todayGallery.imageId }) || require('@/assets/images/empty.png')}
+                            key={1000}
+                        /> : <ChallengeImageToday
+                            onPress={() => {
+                                onTodayImagePress();
                             }}
                             imgSize={IMAGE_SIZE}
                             isApproved={false}
-                            key={1000}
-                        /> : (
-                            !hasDatePassed(new Date(myGalleryList[0].date)) ? <ChallengeImageToday
-                                onPress={() => {
-                                    onTodayImagePress(myGalleryList[0])
-                                }}
-                                imgSize={IMAGE_SIZE}
-                                isApproved={myGalleryList[0].approved}
-                                imgSource={getImageSource({ imageId: myGalleryList[0].imageId })}
-                                key={0}
-                            /> : <>
-                                <ChallengeImageToday
-                                    onPress={() => {
-                                        onTodayImagePress()
-                                    }}
-                                    imgSize={IMAGE_SIZE}
-                                    isApproved={false}
-                                    key={-1}
-                                />
-                                <ChallengeImageDated
-                                    onPress={() => {
-                                        onDatedImagePress(myGalleryList[0])
-                                    }}
-                                    imgSize={IMAGE_SIZE}
-                                    imgSource={getImageSource({ imageId: myGalleryList[0].imageId }) || require('@/assets/images/empty.png')}
-                                    isApproved={myGalleryList[0].approved}
-                                    key={0} />
-                            </>
-                        )
+                            key={-1}
+                        />
                     }
+
                     {
-                        myGalleryList.slice(1, myGalleryList.length).map((record, index) => {
+                        datedGalleryList && datedGalleryList.map((record, index) => {
                             return <ChallengeImageDated
                                 onPress={() => {
                                     onDatedImagePress(record)
