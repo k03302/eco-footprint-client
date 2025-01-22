@@ -23,8 +23,8 @@ import { getImageSource } from '@/api/file';
 import { getAllDonations, getDonation } from '@/api/donation';
 
 
-const FORGROUND_LOCATION_PERIOD_SEC = 1;
-const BACKGROUND_LOCATION_PERIOD_SEC = 1;
+const FORGROUND_LOCATION_PERIOD_SEC = 0.5;
+const BACKGROUND_LOCATION_PERIOD_SEC = 5;
 
 
 const CAMERA_ANIMATION_DURATION = 100;
@@ -70,16 +70,12 @@ export default function App() {
     const [hasToUpdate, setHasToUpdate] = useState<boolean>(false);
 
 
-    const onFetchError = async () => {
-        Alert.alert('에러가 발생했습니다.');
-        router.back();
-    }
+
 
     const updatePageInfo = async () => {
         const userInfo = await getProfile({ myProfile: true });
         const donations = await getAllDonations();
         if (!userInfo || !donations) {
-            onFetchError();
             return;
         }
         setUserInfo(userInfo);
@@ -130,11 +126,13 @@ export default function App() {
 
 
     const onNewLocation = (newLocation: MapCoordData) => {
-        console.log(newLocation);
-        const isWalking = walkMonitorService.update(newLocation, 0);
-        if (isWalking) {
-            mapService.addPoint(newLocation.latitude, newLocation.longitude);
-        }
+        setUserLocation(newLocation);
+        mapService.addPoint(newLocation.latitude, newLocation.longitude);
+        mapService.hasToInitialize().then((result) => {
+            if (result) {
+                initializeMapState();
+            }
+        });
     }
 
     const onLocatonActiveChange = (active: boolean) => {
@@ -311,7 +309,7 @@ export default function App() {
 
         return () => {
             locationService.unRegisterForeground();
-            locationService.unRegisterBackground();
+            //locationService.unRegisterBackground();
         }
     }, []);
 
@@ -331,65 +329,6 @@ export default function App() {
             { text: 'OK', onPress: () => BackHandler.exitApp() },
         ]);
     }, []);
-
-
-
-
-
-
-    const mapPolygons = useMemo(() => {
-        return polygonList.map((polygonCoords, index) => <Polygon
-            coordinates={polygonCoords}
-            fillColor={POLYGON_FILL_COLOR}
-            strokeWidth={0}
-            zIndex={100}
-            key={`p${index}`}
-        />)
-    }, [polygonList])
-
-    const itemMarkers = useMemo(() => {
-        return itemList.map((itemCoord, index) => {
-
-            return (<Marker
-                tracksViewChanges={false}
-                coordinate={itemCoord}
-                key={`i${index}`}
-                onPress={() => {
-                    onItemPressed(itemCoord);
-                }}
-
-            >
-                <Image
-                    source={require('@/assets/images/sprout.png')}
-                    style={{ width: ITEM_ICON_SIZE, height: ITEM_ICON_SIZE }}
-                    resizeMode="contain"
-                />
-            </Marker>)
-        })
-    }, [itemList]);
-
-    const footstepMarkers = useMemo(() => {
-        return footstepList.map((footstepPose, index) => {
-            return (<Marker
-                tracksViewChanges={false}
-                coordinate={footstepPose.location}
-                rotation={footstepPose.rotation}
-                key={`f${index}`}
-            >
-                <Image
-                    source={require('@/assets/images/catpaw.png')}
-                    style={{ width: FOOTSTEP_ICON_SIZE, height: FOOTSTEP_ICON_SIZE }}
-                    resizeMode="contain"
-                />
-            </Marker>)
-        })
-    }, [footstepList])
-
-
-
-
-
-
 
 
 
@@ -417,7 +356,7 @@ export default function App() {
                     onRegionChangeComplete={onRegionChangeComplete}
                     onMapLoaded={onMapLoaded}
 
-                    // onLongPress={onMapLongPressed}
+                    onLongPress={onMapLongPressed}
 
                     showsBuildings={false}
                     showsCompass={false}
@@ -427,9 +366,51 @@ export default function App() {
                     {
                         userLocation && <Marker coordinate={userLocation} tracksViewChanges={false}></Marker>
                     }
-                    {mapPolygons}
-                    {itemMarkers}
-                    {footstepMarkers}
+                    {
+                        polygonList.map((polygonCoords, index) => <Polygon
+                            coordinates={polygonCoords}
+                            fillColor={POLYGON_FILL_COLOR}
+                            strokeWidth={0}
+                            zIndex={100}
+                            key={`p${index}`}
+                        />)
+                    }
+                    {
+                        itemList.map((itemCoord, index) => {
+
+                            return (<Marker
+                                tracksViewChanges={false}
+                                coordinate={itemCoord}
+                                key={`i${index}`}
+                                onPress={() => {
+                                    onItemPressed(itemCoord);
+                                }}
+
+                            >
+                                <Image
+                                    source={require('@/assets/images/sprout.png')}
+                                    style={{ width: ITEM_ICON_SIZE, height: ITEM_ICON_SIZE }}
+                                    resizeMode="contain"
+                                />
+                            </Marker>)
+                        })
+                    }
+                    {
+                        footstepList.map((footstepPose, index) => {
+                            return (<Marker
+                                tracksViewChanges={false}
+                                coordinate={footstepPose.location}
+                                rotation={footstepPose.rotation}
+                                key={`f${index}`}
+                            >
+                                <Image
+                                    source={require('@/assets/images/catpaw.png')}
+                                    style={{ width: FOOTSTEP_ICON_SIZE, height: FOOTSTEP_ICON_SIZE }}
+                                    resizeMode="contain"
+                                />
+                            </Marker>)
+                        })
+                    }
                 </MapView>
 
                 {/* point display */}
@@ -456,6 +437,15 @@ export default function App() {
                     backgroundColor: locationActive ? 'green' : 'gray',
                 }} />
 
+                <View style={{
+                    zIndex: 1001,
+                    position: 'absolute',
+                    top: 5, left: 30,
+                }}>
+                    {
+                        userLocation && <Text style={{ fontSize: 10 }}>{userLocation.latitude} / {userLocation.longitude}</Text>
+                    }
+                </View>
 
 
             </View>
