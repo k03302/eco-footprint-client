@@ -4,7 +4,11 @@
 - React Native의 Expo 프레임워크를 이용하여 개발 
 
 ## 데모 (Demonstration)
-[데모 영상](docs/introduction.mp4)
+
+
+https://github.com/user-attachments/assets/88d01592-effe-4e4f-937d-d06be924b3e5
+
+
 
 ## 릴리즈 (Release)
 -
