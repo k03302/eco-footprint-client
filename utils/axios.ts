@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import { getAdminIdToken, getIdToken } from './login';
 
-const apiRoot = "https://eccofootprint.com/api/";
+const apiRoot = process.env.EXPO_PUBLIC_SERVER_API;
 
 export async function filePost(
     {

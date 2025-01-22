@@ -3,7 +3,7 @@ import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/ax
 import { getIdToken } from '@/utils/login';
 import * as Crypto from 'expo-crypto';
 
-const secret = 'secret';
+const SERVER_SECRET = process.env.EXPO_PUBLIC_SECRET;
 
 export async function getProfile(
     { myProfile = false, userId = "" }:
@@ -35,7 +35,7 @@ export async function getItemPoint(
     const userId = getIdToken();
     const itemId = Date.now();
     if (!userId) return null;
-    const signatureMessage = `${userId}_${itemId}_${secret}`;
+    const signatureMessage = `${userId}_${itemId}_${SERVER_SECRET}`;
     const signature = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
         signatureMessage

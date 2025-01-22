@@ -3,7 +3,7 @@ import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete, filePut } from '@
 import { getIdToken } from '@/utils/login';
 import { ImageSourcePropType } from 'react-native';
 
-const apiRoot = "https://eccofootprint.com/api/";
+const apiRoot = process.env.EXPO_PUBLIC_SERVER_API;
 
 export async function uploadImage(
     { uri }:

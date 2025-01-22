@@ -9,8 +9,8 @@ import { isRegistered } from "@/utils/register";
 import * as Crypto from 'expo-crypto';
 import { getItemPoint } from "@/api/user";
 
-const REDIRECT_URI = "https://eccofootprint.com";
-const REST_API_KEY = "a0f7848c5e09023c767195b1b09be8a9";
+const REDIRECT_URI = process.env.EXPO_PUBLIC_REDIRECT_URI;
+const REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
 const INJECTED_JAVASCRIPT = `window.ReactNativeWebView.postMessage('message from webView')`;
 
 const KaKaoLogin = () => {

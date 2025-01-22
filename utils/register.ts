@@ -6,7 +6,7 @@ import { getProfile } from '@/api/user';
 import { axiosGet, axiosPost, axiosPut } from './axios';
 import { uploadImage } from '@/api/file';
 
-const apiRoot = "https://eccofootprint.com/api";
+const apiRoot = process.env.EXPO_PUBLIC_SERVER_API;
 const registerUrl = apiRoot + 'user/register';
 const updateUserUrl = apiRoot + 'user/profile/';
 const uploadFileUrl = apiRoot + 'file/create';
