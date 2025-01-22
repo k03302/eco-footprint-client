@@ -3,7 +3,10 @@ import { router } from 'expo-router'
 
 export function KakaoLoginButton() {
     return (
-        <TouchableOpacity onPress={() => router.push('/kakaologin')}>
+        <TouchableOpacity onPress={() => {
+
+            router.push('/kakaologin');
+        }}>
             <Image source={require("@/assets/images/kakao_login.png")}
                 style={styles.image_login_kakao} />
         </TouchableOpacity>
