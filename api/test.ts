@@ -2,8 +2,9 @@ import { updateDonation } from "@/api/donation";
 import { DonationItem, UserItem } from "@/core/model";
 import { deleteProfile, getProfile, updateProfile } from "@/api/user";
 import { deleteImage } from "@/api/file";
-import { login } from "@/utils/login";
-import { getAllChallenges } from "./challenge";
+import { login } from "@/utils/register";
+import { createChallenge, getAllChallenges } from "./challenge";
+import { getTimeFromToday } from "@/utils/time";
 
 
 export async function initializeTestData({ userId, deleteUser }: { userId: string, deleteUser: boolean }) {
@@ -28,7 +29,6 @@ export async function initializeTestData({ userId, deleteUser }: { userId: strin
             })
         }
     }
-
 
     // 북극곰
     await updateDonation(

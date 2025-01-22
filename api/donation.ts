@@ -1,24 +1,24 @@
 import { DonationItem, UserItem } from '@/core/model';
-import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete, axiosPutAdmin } from '@/utils/axios';
-import { getUserId, getUserIdAsync } from '@/utils/login';
+import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/axios';
 import { getItemPoint } from './user';
+import { getIdToken } from '@/utils/login';
 
 export async function createDonation(
     { donationItem }:
         { donationItem: DonationItem }
 ): Promise<DonationItem | null> {
-    return axiosPost('donation/create', donationItem)
+    return axiosPost({ path: 'donation/create', body: donationItem })
 }
 
 export async function getAllDonations(): Promise<DonationItem[] | null> {
-    return axiosGet('donation/all');
+    return axiosGet({ path: 'donation/all' });
 }
 
 export async function getDonation(
     { donationId }:
         { donationId: string }
 ): Promise<DonationItem | null> {
-    return axiosGet('donation/' + donationId);
+    return axiosGet({ path: 'donation/' + donationId });
 }
 
 export async function updateDonation({ donationId, update }: {
@@ -29,27 +29,33 @@ export async function updateDonation({ donationId, update }: {
     const donationInfo = await getDonation({ donationId });
     if (!donationInfo) return null;
     const updatedInfo = update(donationInfo);
-    return axiosPutAdmin('donation/' + donationId + '/update', updatedInfo, () => { }, error => { console.log(error.response.message, error.response.status) });
+    return axiosPut({
+        path: 'donation/' + donationId + '/update',
+        body: updatedInfo, admin: true,
+        onSuccess: () => { },
+        onError: error => { console.log(error.response.message, error.response.status) }
+    });
 }
 
 export async function deleteDonation(
     { donationId }:
         { donationId: string }
 ): Promise<boolean> {
-    return axiosDelete('donation/' + donationId + '/delete');
+    return axiosDelete({ path: 'donation/' + donationId + '/delete' });
 }
 
 export async function participateDonation(
     { donationId, rewardPoint }:
         { donationId: string, rewardPoint: number }
 ): Promise<DonationItem | null> {
-    const userId = getUserId();
-    // await axiosPost('ssv/verify', null, {
-
-    // }, (data) => { console.log("ssv success") }, (error) => { console.log(error.response.message, error.response.status, "ssv error") });
-    return axiosPost(`donation/${donationId}/participate/${userId}`, null, { rewardPoint },
-        (data) => { console.log(`donation/${donationId}/participate/${userId}`, data) },
-        (error) => { console.log(`donation/${donationId}/participate/${userId}`, error) }
+    const userId = getIdToken();
+    return axiosPost({
+        path: `donation/${donationId}/participate/${userId}`,
+        body: {},
+        params: { rewardPoint },
+        onSuccess: (data) => { console.log(`donation/${donationId}/participate/${userId}`, data) },
+        onError: (error) => { console.log(`donation/${donationId}/participate/${userId}`, error) }
+    }
     );
 }
 

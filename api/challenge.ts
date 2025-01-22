@@ -1,8 +1,8 @@
-import { ChallengeItem, ChallengeItemMeta } from '@/core/model';
+import { ChallengeItem, ChallengeItemMeta, ChallengeRecordItem } from '@/core/model';
 import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/axios';
-import { getUserIdAsync } from '@/utils/login';
-import { getDateFromToday } from '@/utils/time';
-import { uploadImage } from '@/api/file';
+import { getTimeFromToday, hasDatePassed } from '@/utils/time';
+import { updateImage, uploadImage } from '@/api/file';
+import { getIdToken } from '@/utils/login';
 
 
 export async function createChallenge2(
@@ -14,12 +14,12 @@ export async function createChallenge2(
             id: '',
             name: name,
             totalParticipants: 5,
-            currentParticipants: 0,
-            createdAt: (Date.now() / 1000).toString(),
+            currentParticipants: 3,
+            createdAt: (getTimeFromToday({ dayDiff: -30 }) / 1000).toString(),
             participants: [],
             participantRecords: [],
-            dateStart: (Date.now() / 1000).toString(),
-            dateEnd: (getDateFromToday({ dayDiff: 30 }) / 1000).toString(),
+            dateStart: (getTimeFromToday({ dayDiff: -30 }) / 1000).toString(),
+            dateEnd: (getTimeFromToday({ dayDiff: 0 }) / 1000).toString(),
             description: description,
             state: 1
         }
@@ -30,41 +30,71 @@ export async function createChallenge(
     { challengeInfo }:
         { challengeInfo: ChallengeItem }
 ): Promise<ChallengeItem | null> {
-    return axiosPost('challenge/create', challengeInfo);
+    return axiosPost({ path: 'challenge/create', body: challengeInfo });
 }
 
 
 export async function getAllChallenges(): Promise<ChallengeItemMeta[] | null> {
-    return axiosGet('challenge/all');
+    return axiosGet({ path: 'challenge/all' });
 }
 
 export async function getChallenge(
     { challengeId }:
         { challengeId: string }
 ): Promise<ChallengeItem | null> {
-    return axiosGet('challenge/' + challengeId);
+    return axiosGet({ path: 'challenge/' + challengeId });
 }
 
 export async function participateChallenge(
     { challengeId }:
         { challengeId: string }
 ): Promise<ChallengeItem | null> {
-    return axiosPost('challenge/' + challengeId + '/participate', {}, {
-        challengeId: challengeId
-    }, () => { }, error => { console.log(error.response.status, error.response.message) });
+    return axiosPost({
+        path: 'challenge/' + challengeId + '/participate',
+        body: {},
+        params: {
+            challengeId: challengeId
+        },
+        onSuccess: () => { },
+        onError: error => { console.log(error.response.status, error.response.message) }
+    });
 }
 
 export async function addChallengeRecord(
     { challengeId, imageUri }:
         { challengeId: string, imageUri: string }
 ): Promise<ChallengeItem | null> {
+    console.log('ok');
+
+
+    const challengeInfo = await getChallenge({ challengeId });
+    if (!challengeInfo) return null;
+
+    const userId = getIdToken();
+    if (!userId) return null;
+
+
+    for (const record of challengeInfo.participantRecords) {
+        if (record.userId === userId) {
+            const timestamp = (new Date(record.date)).getTime();
+            if (!hasDatePassed(timestamp)) {
+                return null;
+            }
+        }
+    }
+
     const imgInfo = await uploadImage({ uri: imageUri });
 
     if (!imgInfo) return null;
 
     const imageId = imgInfo.id;
-    console.log(imageId);
-    return axiosPost(`challenge/${challengeId}/add/${imageId}`, {}, { challengeId, imageId }, () => { }, error => { console.log(error) })
+    return axiosPost({
+        path: `challenge/${challengeId}/add/${imageId}`,
+        body: {},
+        params: { challengeId, imageId },
+        onSuccess: () => { },
+        onError: error => { console.log(error.response.status) }
+    })
 }
 
 
@@ -72,5 +102,22 @@ export async function setApproveState(
     { challengeId, recordId, approved }:
         { challengeId: string, recordId: string, approved: boolean }
 ): Promise<ChallengeItem | null> {
-    return null;
+    return axiosPut({
+        path: `challenge/${challengeId}/record/${recordId}/approve`,
+        body: {},
+        params: { 'approve': approved },
+        onSuccess: () => { },
+        onError: error => { console.log(error.response.status) }
+    });
+}
+
+export async function getChallengeReward(
+    { challengeId }: { challengeId: string }
+): Promise<ChallengeItem | null> {
+    return axiosGet({
+        path: `challenge/${challengeId}/clear`,
+        params: {
+            challengeId, userId: getIdToken()
+        }
+    })
 }

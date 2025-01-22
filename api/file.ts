@@ -1,6 +1,6 @@
 import { FileData } from '@/core/model';
-import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete } from '@/utils/axios';
-import { getIdToken, getIdTokenAsync, getUserIdAsync } from '@/utils/login';
+import { filePost, axiosPost, axiosGet, axiosPut, axiosDelete, filePut } from '@/utils/axios';
+import { getIdToken } from '@/utils/login';
 import { ImageSourcePropType } from 'react-native';
 
 const apiRoot = "https://eccofootprint.com/api/";
@@ -9,7 +9,7 @@ export async function uploadImage(
     { uri }:
         { uri: string }
 ): Promise<FileData | null> {
-    return await filePost('file/create', uri)
+    return await filePost({ path: 'file/create', fileUri: uri })
 }
 
 export function getImageSource(
@@ -25,9 +25,13 @@ export function getImageSource(
     return result;
 }
 
+export async function updateImage({ imageId, uri }: { imageId: string, uri: string }) {
+    return await filePut({ path: 'file/update/' + imageId, fileUri: uri, params: { fileId: imageId } });
+}
+
 export async function deleteImage(
     { imageId }:
         { imageId: string }
 ): Promise<boolean> {
-    return axiosDelete('file/delete/' + imageId);
+    return axiosDelete({ path: 'file/delete/' + imageId });
 }
